@@ -1,114 +1,365 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import styled from 'styled-components'
-import { Lock, LogOut, Trash2, Eye, EyeOff, ShieldAlert, CheckCircle2, AlertTriangle } from 'lucide-react'
-import api from '../services/api'
+import styled, { keyframes, css } from 'styled-components'
+import {
+  Lock, LogOut, Trash2, Eye, EyeOff, ShieldAlert,
+  CheckCircle2, AlertTriangle, User, Bell, Shield,
+  ChevronRight, Palette, Globe, Key, Smartphone,
+  Activity, Clock, Check,
+} from 'lucide-react'
+import { authService } from '../services/authService'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
 
-// ── Layout ──────────────────────────────────────────────────────────────────
-const PageWrap = styled.div`
-  max-width: 640px;
+/* ─── Animations ─── */
+const fadeUp = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+`
+const slideDown = keyframes`
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+`
+const spin = keyframes`to { transform: rotate(360deg); }`
+
+/* ─── Root layout ─── */
+const Root = styled.div`
+  display: flex;
+  gap: 1.75rem;
+  align-items: flex-start;
+  animation: ${fadeUp} 0.4s ease forwards;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1rem;
+  }
+`
+
+/* ══════════════════════════════════════
+   LEFT SIDEBAR
+══════════════════════════════════════ */
+const Sidebar = styled.aside`
+  width: 220px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.25rem;
+  position: sticky;
+  top: 1.5rem;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    position: static;
+    gap: 0.5rem;
+  }
 `
 
-const PageHeader = styled.div`
-  margin-bottom: 0.25rem;
+const SidebarSection = styled.div`
+  margin-bottom: 0.5rem;
+
+  @media (max-width: 768px) {
+    display: contents;
+  }
 `
 
-const PageTitle = styled.h1`
-  font-size: 1.625rem; font-weight: 700; color: #0f172a; margin: 0 0 0.25rem 0;
+const SidebarLabel = styled.p`
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: 0 0 0.375rem 0.625rem;
+
+  @media (max-width: 768px) { display: none; }
 `
 
-const PageDesc = styled.p`
-  font-size: 0.875rem; color: #64748b; margin: 0;
+const NavItem = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.625rem;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.15s;
+  color: ${({ $active }) => $active ? '#1e40af' : '#475569'};
+  background: ${({ $active }) => $active ? '#eff6ff' : 'transparent'};
+  border-color: ${({ $active }) => $active ? '#bfdbfe' : 'transparent'};
+
+  &:hover {
+    background: ${({ $active }) => $active ? '#eff6ff' : '#f8fafc'};
+    color: ${({ $active }) => $active ? '#1e40af' : '#0f172a'};
+    border-color: ${({ $active }) => $active ? '#bfdbfe' : '#e2e8f0'};
+  }
+
+  svg {
+    width: 15px; height: 15px;
+    color: ${({ $active }) => $active ? '#3b82f6' : '#94a3b8'};
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    width: auto;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8rem;
+  }
 `
 
-// ── Card ─────────────────────────────────────────────────────────────────────
-const Card = styled.div`
+const NavDot = styled.span`
+  margin-left: auto;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #3b82f6;
+  display: ${({ $active }) => $active ? 'block' : 'none'};
+
+  @media (max-width: 768px) { display: none; }
+`
+
+/* ══════════════════════════════════════
+   RIGHT CONTENT
+══════════════════════════════════════ */
+const Content = styled.main`
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`
+
+/* ─── Section header (clickable, accordion trigger) ─── */
+const SectionWrap = styled.div`
   background: white;
-  border: 1px solid ${props => props.$danger ? 'rgba(220,38,38,0.15)' : 'rgba(59,130,246,0.1)'};
-  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
   overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  ${({ $danger }) => $danger && css`
+    border-color: #fecaca;
+    &:hover { border-color: #fca5a5; }
+  `}
+
+  ${({ $open, $danger }) => $open && !$danger && css`
+    border-color: #bfdbfe;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.07);
+  `}
 `
 
-const CardHead = styled.div`
-  display: flex; align-items: center; gap: 0.625rem;
-  padding: 1.1rem 1.5rem;
-  border-bottom: 1px solid ${props => props.$danger ? '#fee2e2' : '#f1f5f9'};
-  background: ${props => props.$danger ? '#fff5f5' : 'transparent'};
+const SectionTrigger = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.125rem 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
 
-  svg { width: 17px; height: 17px; color: ${props => props.$danger ? '#dc2626' : '#3b82f6'}; }
+  &:hover { background: #f8fafc; }
+
+  ${({ $danger }) => $danger && css`
+    &:hover { background: #fff5f5; }
+  `}
 `
 
-const CardHeadTitle = styled.h2`
-  font-size: 0.9rem; font-weight: 600;
-  color: ${props => props.$danger ? '#dc2626' : '#0f172a'};
+const SectionIconWrap = styled.div`
+  width: 38px; height: 38px;
+  border-radius: 0.625rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  svg { width: 17px; height: 17px; }
+
+  ${({ $color }) => {
+    const map = {
+      blue:   css`background:#eff6ff; border:1px solid #bfdbfe; color:#3b82f6;`,
+      green:  css`background:#f0fdf4; border:1px solid #bbf7d0; color:#16a34a;`,
+      orange: css`background:#fff7ed; border:1px solid #fed7aa; color:#ea580c;`,
+      purple: css`background:#faf5ff; border:1px solid #e9d5ff; color:#9333ea;`,
+      slate:  css`background:#f8fafc; border:1px solid #e2e8f0; color:#64748b;`,
+      red:    css`background:#fef2f2; border:1px solid #fecaca; color:#dc2626;`,
+    }
+    return map[$color] || map.slate
+  }}
+`
+
+const SectionMeta = styled.div`flex: 1; min-width: 0;`
+
+const SectionTitle = styled.p`
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: ${({ $danger }) => $danger ? '#dc2626' : '#0f172a'};
+  margin: 0 0 2px;
+`
+
+const SectionDesc = styled.p`
+  font-size: 0.775rem;
+  color: #94a3b8;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `
 
-const CardBody = styled.div`
+const ChevronIcon = styled(ChevronRight)`
+  width: 16px !important; height: 16px !important;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  transform: ${({ $open }) => $open ? 'rotate(90deg)' : 'rotate(0deg)'};
+`
+
+/* ─── Section body (the panel content) ─── */
+const SectionBody = styled.div`
+  border-top: 1px solid ${({ $danger }) => $danger ? '#fecaca' : '#f1f5f9'};
   padding: 1.5rem;
+  animation: ${slideDown} 0.2s ease;
 `
 
-// ── Form elements ────────────────────────────────────────────────────────────
+/* ─── Divider inside body ─── */
+const InnerDivider = styled.div`
+  height: 1px;
+  background: #f1f5f9;
+  margin: 1.25rem 0;
+`
+
+/* ══════════════════════════════════════
+   FORM ELEMENTS
+══════════════════════════════════════ */
 const FormGroup = styled.div`
-  display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.1rem;
-  &:last-of-type { margin-bottom: 1.5rem; }
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
 `
 
 const Label = styled.label`
-  font-size: 0.8rem; font-weight: 600; color: #374151;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
 `
 
-const InputWrap = styled.div`
-  position: relative;
-`
+const InputWrap = styled.div`position: relative;`
 
 const Input = styled.input`
-  width: 100%; padding: 0.625rem 2.5rem 0.625rem 0.875rem;
-  border: 1px solid #e2e8f0; border-radius: 8px;
-  font-size: 0.9rem; font-family: inherit; color: #0f172a;
-  background: white; transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  padding: 0.625rem ${({ $hasIcon }) => $hasIcon ? '2.5rem' : '0.875rem'} 0.625rem 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: white;
+  transition: border-color 0.15s, box-shadow 0.15s;
   box-sizing: border-box;
-  &:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
   &:disabled { background: #f8fafc; color: #94a3b8; cursor: not-allowed; }
 `
 
 const EyeBtn = styled.button`
   position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
-  background: none; border: none; cursor: pointer; color: #94a3b8;
-  display: flex; align-items: center; padding: 0;
+  background: none; border: none; cursor: pointer; color: #94a3b8; padding: 0;
+  display: flex; align-items: center;
   &:hover { color: #64748b; }
-  svg { width: 16px; height: 16px; }
+  svg { width: 15px; height: 15px; }
 `
 
 const Hint = styled.p`
-  font-size: 0.75rem; color: #94a3b8; margin: 0.25rem 0 0 0;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0.2rem 0 0;
 `
 
-// ── Buttons ──────────────────────────────────────────────────────────────────
+const SelectInput = styled.select`
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #0f172a;
+  background: white;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+  }
+`
+
+/* ── Toggle switch ── */
+const ToggleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child { border-bottom: none; }
+`
+
+const ToggleMeta = styled.div``
+const ToggleTitle = styled.p`font-size: 0.875rem; font-weight: 500; color: #0f172a; margin: 0 0 2px;`
+const ToggleHint  = styled.p`font-size: 0.75rem; color: #94a3b8; margin: 0;`
+
+const ToggleTrack = styled.button`
+  width: 40px; height: 22px;
+  border-radius: 11px;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.2s;
+  background: ${({ $on }) => $on ? '#3b82f6' : '#e2e8f0'};
+`
+
+const ToggleThumb = styled.span`
+  position: absolute;
+  top: 3px;
+  left: ${({ $on }) => $on ? '21px' : '3px'};
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: white;
+  transition: left 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+`
+
+/* ── Buttons ── */
 const Btn = styled.button`
   display: flex; align-items: center; justify-content: center; gap: 0.5rem;
-  width: 100%; padding: 0.7rem 1.25rem;
-  border: none; border-radius: 8px;
-  font-size: 0.875rem; font-weight: 600; cursor: pointer;
-  transition: all 0.15s;
-  svg { width: 16px; height: 16px; }
-
-  &:disabled { opacity: 0.55; cursor: not-allowed; }
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; transition: all 0.15s;
+  border: 1px solid transparent;
+  svg { width: 15px; height: 15px; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 `
 
 const PrimaryBtn = styled(Btn)`
-  background: linear-gradient(135deg, #3b82f6, #1e40af); color: white;
-  &:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  &:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
 `
 
-const LogoutBtn = styled(Btn)`
-  background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;
-  &:hover:not(:disabled) { background: #dbeafe; }
+const OutlineBtn = styled(Btn)`
+  background: white; color: #374151;
+  border-color: #e2e8f0;
+  &:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
 `
 
 const DangerBtn = styled(Btn)`
@@ -117,59 +368,97 @@ const DangerBtn = styled(Btn)`
 `
 
 const OutlineDangerBtn = styled(Btn)`
-  background: white; color: #dc2626; border: 1px solid #fecaca;
-  &:hover:not(:disabled) { background: #fff5f5; border-color: #dc2626; }
+  background: white; color: #dc2626;
+  border-color: #fecaca;
+  &:hover:not(:disabled) { background: #fef2f2; border-color: #fca5a5; }
 `
 
-// ── Delete account stepper ───────────────────────────────────────────────────
-const StepRow = styled.div`
-  display: flex; gap: 0; margin-bottom: 1.5rem;
+const BtnRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  ${({ $end }) => $end && 'justify-content: flex-end;'}
 `
+
+/* ── Spinner ── */
+const SpinnerIcon = styled.div`
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: ${spin} 0.7s linear infinite;
+`
+
+/* ── Warning box ── */
+const WarningBox = styled.div`
+  display: flex; gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #fff7ed; border: 1px solid #fed7aa; border-radius: 0.5rem;
+  margin-bottom: 1.25rem;
+  svg { width: 16px; height: 16px; color: #ea580c; flex-shrink: 0; margin-top: 1px; }
+  p { font-size: 0.8rem; color: #9a3412; margin: 0; line-height: 1.55; }
+`
+
+/* ── Delete stepper ── */
+const StepRow = styled.div`display: flex; gap: 0; margin-bottom: 1.5rem;`
 
 const Step = styled.div`
   flex: 1; display: flex; flex-direction: column; align-items: center; position: relative;
   &:not(:last-child)::after {
-    content: '';
-    position: absolute; top: 14px; left: 50%; right: -50%;
+    content: ''; position: absolute;
+    top: 13px; left: 50%; right: -50%;
     height: 2px;
-    background: ${props => props.$done ? '#3b82f6' : '#e2e8f0'};
-    transition: background 0.3s;
-    z-index: 0;
+    background: ${({ $done }) => $done ? '#3b82f6' : '#e2e8f0'};
+    transition: background 0.3s; z-index: 0;
   }
 `
 
 const StepDot = styled.div`
-  width: 28px; height: 28px; border-radius: 50%; z-index: 1;
+  width: 26px; height: 26px; border-radius: 50%; z-index: 1;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.75rem; font-weight: 700;
-  background: ${props => props.$active ? '#dc2626' : props.$done ? '#3b82f6' : '#e2e8f0'};
-  color: ${props => (props.$active || props.$done) ? 'white' : '#94a3b8'};
+  font-size: 0.72rem; font-weight: 700;
   transition: background 0.3s;
-  svg { width: 13px; height: 13px; }
+  background: ${({ $active, $done }) => $active ? '#dc2626' : $done ? '#3b82f6' : '#e2e8f0'};
+  color: ${({ $active, $done }) => ($active || $done) ? 'white' : '#94a3b8'};
+  svg { width: 12px; height: 12px; }
 `
 
 const StepLabel = styled.span`
-  font-size: 0.7rem; color: ${props => props.$active ? '#dc2626' : '#94a3b8'};
-  margin-top: 0.35rem; text-align: center; font-weight: ${props => props.$active ? '600' : '400'};
+  font-size: 0.68rem; margin-top: 0.3rem; text-align: center;
+  color: ${({ $active }) => $active ? '#dc2626' : '#94a3b8'};
+  font-weight: ${({ $active }) => $active ? '600' : '400'};
 `
 
-const WarningBox = styled.div`
-  background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px;
-  padding: 0.875rem 1rem; margin-bottom: 1.25rem;
-  display: flex; gap: 0.625rem;
-  svg { width: 17px; height: 17px; color: #ea580c; flex-shrink: 0; margin-top: 1px; }
-  p { font-size: 0.825rem; color: #9a3412; margin: 0; line-height: 1.5; }
-`
-
-const DeleteConfirmInput = styled(Input)`
+const ConfirmInput = styled(Input)`
   font-family: 'Courier New', monospace;
   text-align: center;
   letter-spacing: 0.1em;
   font-size: 1rem;
-  &::placeholder { font-family: inherit; letter-spacing: 0; font-size: 0.85rem; }
+  &::placeholder { font-family: inherit; letter-spacing: 0; font-size: 0.82rem; }
 `
 
-// ── Password field with show/hide ────────────────────────────────────────────
+/* ── Info row (readonly display) ── */
+const InfoRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child { border-bottom: none; }
+`
+const InfoLabel = styled.p`font-size: 0.8rem; color: #64748b; margin: 0; font-weight: 500;`
+const InfoValue = styled.p`font-size: 0.875rem; color: #0f172a; margin: 0; font-weight: 500;`
+const InfoBadge = styled.span`
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+  padding: 2px 10px; border-radius: 20px;
+  background: ${({ $color }) => $color === 'green' ? '#f0fdf4' : '#eff6ff'};
+  border: 1px solid ${({ $color }) => $color === 'green' ? '#bbf7d0' : '#bfdbfe'};
+  color: ${({ $color }) => $color === 'green' ? '#16a34a' : '#3b82f6'};
+`
+
+/* ══════════════════════════════════════
+   SUB-COMPONENTS
+══════════════════════════════════════ */
 const PasswordField = ({ id, label, value, onChange, disabled, placeholder, hint }) => {
   const [show, setShow] = useState(false)
   return (
@@ -180,7 +469,7 @@ const PasswordField = ({ id, label, value, onChange, disabled, placeholder, hint
           id={id} type={show ? 'text' : 'password'}
           value={value} onChange={onChange}
           disabled={disabled} placeholder={placeholder}
-          required
+          $hasIcon required
         />
         <EyeBtn type="button" onClick={() => setShow(s => !s)} tabIndex={-1}>
           {show ? <EyeOff /> : <Eye />}
@@ -191,25 +480,69 @@ const PasswordField = ({ id, label, value, onChange, disabled, placeholder, hint
   )
 }
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+const Toggle = ({ label, hint, value, onChange }) => (
+  <ToggleRow>
+    <ToggleMeta>
+      <ToggleTitle>{label}</ToggleTitle>
+      {hint && <ToggleHint>{hint}</ToggleHint>}
+    </ToggleMeta>
+    <ToggleTrack $on={value} onClick={() => onChange(!value)}>
+      <ToggleThumb $on={value} />
+    </ToggleTrack>
+  </ToggleRow>
+)
+
+/* Accordion section */
+const Section = ({ icon, iconColor = 'blue', title, desc, children, danger, defaultOpen }) => {
+  const [open, setOpen] = useState(defaultOpen || false)
+  return (
+    <SectionWrap $open={open} $danger={danger}>
+      <SectionTrigger onClick={() => setOpen(o => !o)} $danger={danger}>
+        <SectionIconWrap $color={iconColor}>{icon}</SectionIconWrap>
+        <SectionMeta>
+          <SectionTitle $danger={danger}>{title}</SectionTitle>
+          <SectionDesc>{desc}</SectionDesc>
+        </SectionMeta>
+        <ChevronIcon $open={open} />
+      </SectionTrigger>
+      {open && <SectionBody $danger={danger}>{children}</SectionBody>}
+    </SectionWrap>
+  )
+}
+
+/* ══════════════════════════════════════
+   NAV SECTIONS CONFIG
+══════════════════════════════════════ */
+const NAV = [
+  { id: 'account',   label: 'Account',   icon: <User />,    group: 'General' },
+  { id: 'security',  label: 'Security',  icon: <Shield />,  group: 'General' },
+  { id: 'notifs',    label: 'Notifications', icon: <Bell />, group: 'General' },
+  { id: 'appearance',label: 'Appearance',icon: <Palette />, group: 'Preferences' },
+  { id: 'privacy',   label: 'Privacy',   icon: <Globe />,   group: 'Preferences' },
+  { id: 'danger',    label: 'Danger Zone',icon: <ShieldAlert />, group: 'Account' },
+]
+
+/* ══════════════════════════════════════
+   PAGE
+══════════════════════════════════════ */
 const SettingsPage = () => {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  // ── Change password state
+  /* ── active nav ── */
+  const [activeNav, setActiveNav] = useState('account')
+
+  /* ── change password ── */
   const [pw, setPw] = useState({ current: '', next: '', confirm: '' })
   const [pwLoading, setPwLoading] = useState(false)
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
     if (pw.next !== pw.confirm) return toast.error('New passwords do not match')
-    if (pw.next.length < 6) return toast.error('Password must be at least 6 characters')
+    if (pw.next.length < 6)    return toast.error('Password must be at least 6 characters')
     setPwLoading(true)
     try {
-      await api.put('/vault/auth/change-password', {
-        currentPassword: pw.current,
-        newPassword: pw.next,
-      })
+      await authService.changePassword(pw.current, pw.next)
       toast.success('Password changed successfully')
       setPw({ current: '', next: '', confirm: '' })
     } catch (err) {
@@ -219,20 +552,15 @@ const SettingsPage = () => {
     }
   }
 
-  // ── Logout
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-    toast.success('Logged out successfully')
-  }
+  /* ── logout ── */
+  const handleLogout = () => { logout(); navigate('/login'); toast.success('Logged out') }
 
-  // ── Delete account — 3 steps
-  const [deleteStep, setDeleteStep] = useState(0)   // 0 = idle, 1, 2, 3
+  /* ── delete account ── */
+  const [deleteStep, setDeleteStep]         = useState(0)
   const [deletePassword, setDeletePassword] = useState('')
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading]   = useState(false)
 
-  const startDelete = () => setDeleteStep(1)
   const cancelDelete = () => { setDeleteStep(0); setDeletePassword(''); setDeleteConfirmText('') }
 
   const handleDeleteStep1 = async (e) => {
@@ -240,15 +568,11 @@ const SettingsPage = () => {
     if (!deletePassword) return toast.error('Enter your password')
     setDeleteLoading(true)
     try {
-      // Verify password by attempting a dummy password-check endpoint
-      // or just proceed to step 2 (backend validates on final DELETE)
-      await api.post('/vault/auth/verify-password', { password: deletePassword })
+      await authService.verifyPassword(deletePassword)
       setDeleteStep(2)
-    } catch {
-      toast.error('Incorrect password')
-    } finally {
-      setDeleteLoading(false)
-    }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Incorrect password')
+    } finally { setDeleteLoading(false) }
   }
 
   const handleDeleteStep2 = (e) => {
@@ -260,192 +584,382 @@ const SettingsPage = () => {
   const handleDeleteFinal = async () => {
     setDeleteLoading(true)
     try {
-      await api.delete('/vault/auth/account', {
-        data: { password: deletePassword }
-      })
+      await authService.deleteAccount(deletePassword)
       toast.success('Account permanently deleted')
-      logout()
-      navigate('/')
+      logout(); navigate('/')
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to delete account')
       setDeleteLoading(false)
     }
   }
 
-  return (
-    <PageWrap>
-      <PageHeader>
-        <PageTitle>Settings</PageTitle>
-        <PageDesc>Manage your password, session, and account lifecycle.</PageDesc>
-      </PageHeader>
+  /* ── notification toggles ── */
+  const [notifs, setNotifs] = useState({
+    loginAlerts: true,
+    weeklyDigest: false,
+    productUpdates: true,
+    securityAlerts: true,
+  })
 
-      {/* ── Change password ── */}
-      <Card>
-        <CardHead>
-          <Lock />
-          <CardHeadTitle>Change password</CardHeadTitle>
-        </CardHead>
-        <CardBody>
-          <form onSubmit={handleChangePassword}>
-            <PasswordField
-              id="current" label="Current password"
-              value={pw.current} onChange={e => setPw(p => ({ ...p, current: e.target.value }))}
-              disabled={pwLoading} placeholder="Enter your current password"
-            />
-            <PasswordField
-              id="next" label="New password"
-              value={pw.next} onChange={e => setPw(p => ({ ...p, next: e.target.value }))}
-              disabled={pwLoading} placeholder="At least 6 characters"
-              hint="Minimum 6 characters."
-            />
-            <PasswordField
-              id="confirm" label="Confirm new password"
-              value={pw.confirm} onChange={e => setPw(p => ({ ...p, confirm: e.target.value }))}
-              disabled={pwLoading} placeholder="Repeat your new password"
-            />
-            <PrimaryBtn type="submit" disabled={pwLoading}>
-              <Lock />
-              {pwLoading ? 'Updating…' : 'Update password'}
-            </PrimaryBtn>
-          </form>
-        </CardBody>
-      </Card>
+  /* ── appearance ── */
+  const [theme, setTheme]       = useState('system')
+  const [language, setLanguage] = useState('en')
+  const [timezone, setTimezone] = useState('UTC')
 
-      {/* ── Session ── */}
-      <Card>
-        <CardHead>
-          <LogOut />
-          <CardHeadTitle>Session</CardHeadTitle>
-        </CardHead>
-        <CardBody>
-          <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 1.25rem 0', lineHeight: '1.6' }}>
-            Logging out will end your current session. You can log back in any time with your credentials.
-          </p>
-          <LogoutBtn type="button" onClick={handleLogout}>
-            <LogOut /> Sign out of PersonalDB
-          </LogoutBtn>
-        </CardBody>
-      </Card>
+  /* ── privacy toggles ── */
+  const [privacy, setPrivacy] = useState({
+    activityLog: true,
+    analyticsSharing: false,
+    publicProfile: false,
+  })
 
-      {/* ── Delete account ── */}
-      <Card $danger>
-        <CardHead $danger>
-          <ShieldAlert />
-          <CardHeadTitle $danger>Delete account</CardHeadTitle>
-        </CardHead>
-        <CardBody>
-          {deleteStep === 0 && (
-            <>
-              <WarningBox>
-                <AlertTriangle />
-                <p>
-                  This action is <strong>irreversible</strong>. All your vault items, portfolio data,
-                  and API keys will be permanently erased with no way to recover them.
-                </p>
-              </WarningBox>
-              <OutlineDangerBtn type="button" onClick={startDelete}>
-                <Trash2 /> I want to delete my account
-              </OutlineDangerBtn>
-            </>
-          )}
+  /* ── groups ── */
+  const groups = [...new Set(NAV.map(n => n.group))]
 
-          {deleteStep >= 1 && (
-            <>
-              {/* Step indicator */}
-              <StepRow>
-                {['Verify password', 'Confirm', 'Delete'].map((label, i) => (
-                  <Step key={label} $done={deleteStep > i + 1}>
-                    <StepDot $active={deleteStep === i + 1} $done={deleteStep > i + 1}>
-                      {deleteStep > i + 1 ? <CheckCircle2 /> : i + 1}
-                    </StepDot>
-                    <StepLabel $active={deleteStep === i + 1}>{label}</StepLabel>
-                  </Step>
-                ))}
-              </StepRow>
+  /* ── content panels per nav ── */
+  const renderContent = () => {
+    switch (activeNav) {
 
-              {/* Step 1 — password */}
-              {deleteStep === 1 && (
-                <form onSubmit={handleDeleteStep1}>
-                  <PasswordField
-                    id="del-pw" label="Enter your current password to continue"
-                    value={deletePassword}
-                    onChange={e => setDeletePassword(e.target.value)}
-                    disabled={deleteLoading} placeholder="Your account password"
-                  />
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>
-                      Cancel
-                    </OutlineDangerBtn>
-                    <DangerBtn type="submit" disabled={deleteLoading} style={{ flex: 1 }}>
-                      {deleteLoading ? 'Verifying…' : 'Continue →'}
-                    </DangerBtn>
-                  </div>
-                </form>
-              )}
+      /* ══ ACCOUNT ══ */
+      case 'account': return (
+        <>
+          <Section icon={<User />} iconColor="blue" title="Profile information"
+            desc="Your name, username and account details" defaultOpen>
+            <InfoRow>
+              <InfoLabel>Username</InfoLabel>
+              <InfoValue>@{user?.username || '—'}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>Email address</InfoLabel>
+              <InfoValue>{user?.email || '—'}</InfoValue>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>Account status</InfoLabel>
+              <InfoBadge $color="green">Active</InfoBadge>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>Plan</InfoLabel>
+              <InfoBadge $color="blue">Free</InfoBadge>
+            </InfoRow>
+            <InfoRow>
+              <InfoLabel>Member since</InfoLabel>
+              <InfoValue>
+                {user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                  : '—'}
+              </InfoValue>
+            </InfoRow>
+          </Section>
 
-              {/* Step 2 — type "Delete" */}
-              {deleteStep === 2 && (
-                <form onSubmit={handleDeleteStep2}>
-                  <FormGroup>
-                    <Label htmlFor="del-confirm">
-                      Type <strong style={{ color: '#dc2626', fontFamily: 'Courier New' }}>Delete</strong> to confirm
-                    </Label>
-                    <DeleteConfirmInput
-                      id="del-confirm"
-                      type="text"
-                      placeholder='Type "Delete" here'
-                      value={deleteConfirmText}
-                      onChange={e => setDeleteConfirmText(e.target.value)}
-                      autoComplete="off"
+          <Section icon={<Activity />} iconColor="slate" title="Session"
+            desc="Manage your active session">
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
+              Logging out ends your current session. You can sign back in any time with your credentials.
+            </p>
+            <OutlineBtn type="button" onClick={handleLogout}>
+              <LogOut /> Sign out
+            </OutlineBtn>
+          </Section>
+        </>
+      )
+
+      /* ══ SECURITY ══ */
+      case 'security': return (
+        <>
+          <Section icon={<Key />} iconColor="blue" title="Change password"
+            desc="Update your account password" defaultOpen>
+            <form onSubmit={handleChangePassword}>
+              <PasswordField
+                id="cur" label="Current password"
+                value={pw.current} onChange={e => setPw(p => ({ ...p, current: e.target.value }))}
+                disabled={pwLoading} placeholder="Enter current password"
+              />
+              <PasswordField
+                id="nxt" label="New password"
+                value={pw.next} onChange={e => setPw(p => ({ ...p, next: e.target.value }))}
+                disabled={pwLoading} placeholder="At least 6 characters"
+                hint="Minimum 6 characters."
+              />
+              <PasswordField
+                id="cnf" label="Confirm new password"
+                value={pw.confirm} onChange={e => setPw(p => ({ ...p, confirm: e.target.value }))}
+                disabled={pwLoading} placeholder="Repeat new password"
+              />
+              <BtnRow $end>
+                <PrimaryBtn type="submit" disabled={pwLoading}>
+                  {pwLoading ? <SpinnerIcon /> : <Lock />}
+                  {pwLoading ? 'Updating…' : 'Update password'}
+                </PrimaryBtn>
+              </BtnRow>
+            </form>
+          </Section>
+
+          <Section icon={<Smartphone />} iconColor="purple" title="Two-factor authentication"
+            desc="Add an extra layer of security to your account">
+            <InfoRow>
+              <InfoLabel>Status</InfoLabel>
+              <InfoBadge $color="blue">Not enabled</InfoBadge>
+            </InfoRow>
+            <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '1rem 0 0', lineHeight: 1.6 }}>
+              Two-factor authentication adds an extra step when signing in to keep your account secure.
+            </p>
+            <BtnRow $end>
+              <OutlineBtn type="button" onClick={() => toast('Coming soon!')}>
+                <Shield /> Enable 2FA
+              </OutlineBtn>
+            </BtnRow>
+          </Section>
+
+          <Section icon={<Clock />} iconColor="slate" title="Login history"
+            desc="Recent sign-in activity on your account">
+            {[
+              { device: 'Chrome on macOS', location: 'Chennai, IN', time: 'Just now', current: true },
+              { device: 'Safari on iPhone', location: 'Chennai, IN', time: '2 days ago' },
+            ].map((s, i) => (
+              <InfoRow key={i}>
+                <InfoLabel>
+                  {s.device}
+                  {s.current && (
+                    <span style={{ marginLeft: 6, fontSize: '0.65rem', color: '#16a34a',
+                      background: '#f0fdf4', border: '1px solid #bbf7d0',
+                      borderRadius: 20, padding: '1px 7px', fontWeight: 600 }}>
+                      Current
+                    </span>
+                  )}
+                  <br />
+                  <span style={{ color: '#94a3b8', fontSize: '0.72rem' }}>{s.location}</span>
+                </InfoLabel>
+                <InfoValue style={{ fontSize: '0.78rem', color: '#64748b' }}>{s.time}</InfoValue>
+              </InfoRow>
+            ))}
+          </Section>
+        </>
+      )
+
+      /* ══ NOTIFICATIONS ══ */
+      case 'notifs': return (
+        <>
+          <Section icon={<Bell />} iconColor="orange" title="Email notifications"
+            desc="Choose which emails you receive" defaultOpen>
+            <Toggle label="Login alerts" hint="Get notified when your account is accessed"
+              value={notifs.loginAlerts}
+              onChange={v => setNotifs(p => ({ ...p, loginAlerts: v }))} />
+            <Toggle label="Weekly digest" hint="A summary of your vault activity every week"
+              value={notifs.weeklyDigest}
+              onChange={v => setNotifs(p => ({ ...p, weeklyDigest: v }))} />
+            <Toggle label="Product updates" hint="New features and improvements"
+              value={notifs.productUpdates}
+              onChange={v => setNotifs(p => ({ ...p, productUpdates: v }))} />
+            <Toggle label="Security alerts" hint="Critical alerts about your account security"
+              value={notifs.securityAlerts}
+              onChange={v => setNotifs(p => ({ ...p, securityAlerts: v }))} />
+            <BtnRow $end>
+              <PrimaryBtn type="button" onClick={() => toast.success('Preferences saved')}>
+                <Check /> Save preferences
+              </PrimaryBtn>
+            </BtnRow>
+          </Section>
+        </>
+      )
+
+      /* ══ APPEARANCE ══ */
+      case 'appearance': return (
+        <>
+          <Section icon={<Palette />} iconColor="purple" title="Theme & display"
+            desc="Customize how the app looks" defaultOpen>
+            <FormGroup>
+              <Label>Theme</Label>
+              <SelectInput value={theme} onChange={e => setTheme(e.target.value)}>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System default</option>
+              </SelectInput>
+            </FormGroup>
+            <FormGroup>
+              <Label>Language</Label>
+              <SelectInput value={language} onChange={e => setLanguage(e.target.value)}>
+                <option value="en">English</option>
+                <option value="ta">Tamil</option>
+                <option value="hi">Hindi</option>
+              </SelectInput>
+            </FormGroup>
+            <FormGroup>
+              <Label>Timezone</Label>
+              <SelectInput value={timezone} onChange={e => setTimezone(e.target.value)}>
+                <option value="UTC">UTC</option>
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="America/New_York">America/New_York (EST)</option>
+                <option value="Europe/London">Europe/London (GMT)</option>
+              </SelectInput>
+            </FormGroup>
+            <BtnRow $end>
+              <PrimaryBtn type="button" onClick={() => toast.success('Appearance saved')}>
+                <Check /> Save
+              </PrimaryBtn>
+            </BtnRow>
+          </Section>
+        </>
+      )
+
+      /* ══ PRIVACY ══ */
+      case 'privacy': return (
+        <>
+          <Section icon={<Globe />} iconColor="green" title="Privacy controls"
+            desc="Control what data is collected and shared" defaultOpen>
+            <Toggle label="Activity log" hint="Keep a log of actions taken in your vault"
+              value={privacy.activityLog}
+              onChange={v => setPrivacy(p => ({ ...p, activityLog: v }))} />
+            <Toggle label="Analytics sharing" hint="Help improve the app by sharing usage data"
+              value={privacy.analyticsSharing}
+              onChange={v => setPrivacy(p => ({ ...p, analyticsSharing: v }))} />
+            <Toggle label="Public profile" hint="Allow others to find your public portfolio"
+              value={privacy.publicProfile}
+              onChange={v => setPrivacy(p => ({ ...p, publicProfile: v }))} />
+            <BtnRow $end>
+              <PrimaryBtn type="button" onClick={() => toast.success('Privacy settings saved')}>
+                <Check /> Save
+              </PrimaryBtn>
+            </BtnRow>
+          </Section>
+        </>
+      )
+
+      /* ══ DANGER ZONE ══ */
+      case 'danger': return (
+        <>
+          <Section icon={<LogOut />} iconColor="slate" title="Sign out"
+            desc="End your current session">
+            <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0 0 1.25rem', lineHeight: 1.6 }}>
+              Logging out ends your current session securely. You can sign back in any time.
+            </p>
+            <OutlineBtn type="button" onClick={handleLogout}>
+              <LogOut /> Sign out of account
+            </OutlineBtn>
+          </Section>
+
+          <Section icon={<ShieldAlert />} iconColor="red" title="Delete account"
+            desc="Permanently erase your account and all data" danger>
+            {deleteStep === 0 && (
+              <>
+                <WarningBox>
+                  <AlertTriangle />
+                  <p>
+                    This action is <strong>irreversible</strong>. All vault items, portfolio data,
+                    and files will be permanently erased with no way to recover them.
+                  </p>
+                </WarningBox>
+                <OutlineDangerBtn type="button" onClick={() => setDeleteStep(1)}>
+                  <Trash2 /> I want to delete my account
+                </OutlineDangerBtn>
+              </>
+            )}
+
+            {deleteStep >= 1 && (
+              <>
+                <StepRow>
+                  {['Verify', 'Confirm', 'Delete'].map((lbl, i) => (
+                    <Step key={lbl} $done={deleteStep > i + 1}>
+                      <StepDot $active={deleteStep === i + 1} $done={deleteStep > i + 1}>
+                        {deleteStep > i + 1 ? <CheckCircle2 /> : i + 1}
+                      </StepDot>
+                      <StepLabel $active={deleteStep === i + 1}>{lbl}</StepLabel>
+                    </Step>
+                  ))}
+                </StepRow>
+
+                {deleteStep === 1 && (
+                  <form onSubmit={handleDeleteStep1}>
+                    <PasswordField
+                      id="dpw" label="Enter your password to continue"
+                      value={deletePassword}
+                      onChange={e => setDeletePassword(e.target.value)}
+                      disabled={deleteLoading} placeholder="Your account password"
                     />
-                  </FormGroup>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>
-                      Cancel
-                    </OutlineDangerBtn>
-                    <DangerBtn
-                      type="submit"
-                      disabled={deleteConfirmText !== 'Delete'}
-                      style={{ flex: 1 }}
-                    >
-                      Continue →
-                    </DangerBtn>
-                  </div>
-                </form>
-              )}
+                    <BtnRow>
+                      <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>Cancel</OutlineDangerBtn>
+                      <DangerBtn type="submit" disabled={deleteLoading} style={{ flex: 1 }}>
+                        {deleteLoading ? <SpinnerIcon /> : null}
+                        {deleteLoading ? 'Verifying…' : 'Continue →'}
+                      </DangerBtn>
+                    </BtnRow>
+                  </form>
+                )}
 
-              {/* Step 3 — final confirmation */}
-              {deleteStep === 3 && (
-                <div>
-                  <WarningBox>
-                    <AlertTriangle />
-                    <p>
-                      You are about to <strong>permanently delete</strong> the account{' '}
-                      <strong>@{user?.username}</strong>. This cannot be undone.
-                      Click the button below to proceed.
-                    </p>
-                  </WarningBox>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>
-                      Cancel
-                    </OutlineDangerBtn>
-                    <DangerBtn
-                      type="button"
-                      onClick={handleDeleteFinal}
-                      disabled={deleteLoading}
-                      style={{ flex: 1 }}
-                    >
-                      <Trash2 />
-                      {deleteLoading ? 'Deleting…' : 'Delete permanently'}
-                    </DangerBtn>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardBody>
-      </Card>
-    </PageWrap>
+                {deleteStep === 2 && (
+                  <form onSubmit={handleDeleteStep2}>
+                    <FormGroup>
+                      <Label>Type <strong style={{ color: '#dc2626', fontFamily: 'Courier New' }}>Delete</strong> to confirm</Label>
+                      <ConfirmInput
+                        type="text" placeholder='Type "Delete" here'
+                        value={deleteConfirmText}
+                        onChange={e => setDeleteConfirmText(e.target.value)}
+                        autoComplete="off"
+                      />
+                    </FormGroup>
+                    <BtnRow>
+                      <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>Cancel</OutlineDangerBtn>
+                      <DangerBtn type="submit" disabled={deleteConfirmText !== 'Delete'} style={{ flex: 1 }}>
+                        Continue →
+                      </DangerBtn>
+                    </BtnRow>
+                  </form>
+                )}
+
+                {deleteStep === 3 && (
+                  <>
+                    <WarningBox>
+                      <AlertTriangle />
+                      <p>
+                        You are about to <strong>permanently delete</strong> the account{' '}
+                        <strong>@{user?.username}</strong>. This cannot be undone.
+                      </p>
+                    </WarningBox>
+                    <BtnRow>
+                      <OutlineDangerBtn type="button" onClick={cancelDelete} style={{ flex: 1 }}>Cancel</OutlineDangerBtn>
+                      <DangerBtn type="button" onClick={handleDeleteFinal} disabled={deleteLoading} style={{ flex: 1 }}>
+                        {deleteLoading ? <SpinnerIcon /> : <Trash2 />}
+                        {deleteLoading ? 'Deleting…' : 'Delete permanently'}
+                      </DangerBtn>
+                    </BtnRow>
+                  </>
+                )}
+              </>
+            )}
+          </Section>
+        </>
+      )
+
+      default: return null
+    }
+  }
+
+  return (
+    <Root>
+      {/* ── Sidebar ── */}
+      <Sidebar>
+        {groups.map(group => (
+          <SidebarSection key={group}>
+            <SidebarLabel>{group}</SidebarLabel>
+            {NAV.filter(n => n.group === group).map(n => (
+              <NavItem
+                key={n.id}
+                $active={activeNav === n.id}
+                onClick={() => setActiveNav(n.id)}
+              >
+                {n.icon}
+                {n.label}
+                <NavDot $active={activeNav === n.id} />
+              </NavItem>
+            ))}
+          </SidebarSection>
+        ))}
+      </Sidebar>
+
+      {/* ── Content panels ── */}
+      <Content>
+        {renderContent()}
+      </Content>
+    </Root>
   )
 }
 
