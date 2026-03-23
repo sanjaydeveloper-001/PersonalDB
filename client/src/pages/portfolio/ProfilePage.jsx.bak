@@ -1,0 +1,454 @@
+import { useState, useEffect, useRef } from 'react'
+import styled, { keyframes } from 'styled-components'
+import {
+  User, Camera, Save, MapPin, Phone, Mail, Globe,
+  Linkedin, Github, Twitter, FileText, Briefcase, Hash
+} from 'lucide-react'
+import { portfolioService } from '../../services/portfolioService'
+import toast from 'react-hot-toast'
+
+const Container = styled.div`
+  max-width: 900px;
+  margin: 0 auto;
+`
+
+const Header = styled.div`
+  margin-bottom: 2rem;
+`
+
+const Title = styled.h1`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  svg {
+    color: #3b82f6;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+`
+
+const Subtitle = styled.p`
+  color: #64748b;
+  font-size: 0.95rem;
+`
+
+const Card = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+`
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+`
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`
+
+const Label = styled.label`
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 0.6rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    color: #3b82f6;
+    width: 18px;
+    height: 18px;
+  }
+`
+
+const Input = styled.input`
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: #eff6ff;
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+`
+
+const TextArea = styled.textarea`
+  padding: 0.75rem 1rem;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0f172a;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: #eff6ff;
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+    cursor: not-allowed;
+  }
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    button {
+      width: 100%;
+    }
+  }
+`
+
+const SaveButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  padding: 0.85rem 1.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  color: #64748b;
+  gap: 0.5rem;
+
+  svg {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`
+
+const ProfilePage = () => {
+  const [form, setForm] = useState({
+    name: '',
+    age: '',
+    domain: '',
+    summary: '',
+    location: '',
+    phone: '',
+    email: '',
+    cvLink: '',
+    profilePhoto: '',
+    contact: [],
+    social: [],
+  })
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    portfolioService.getProfile()
+      .then(({ data }) => {
+        if (data) {
+          setForm(prev => ({ ...prev, ...data }))
+          if (data.profilePhotoUrl) {
+            setPhotoPreview(data.profilePhotoUrl)
+          } else if (data.profilePhoto && data.profilePhoto.startsWith('http')) {
+            setPhotoPreview(data.profilePhoto)
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const set = (field) => (e) => setForm(prev => ({ ...prev, [field]: e.target.value }))
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setPhotoFile(null)
+      setPhotoPreview('')
+      setForm(prev => ({ ...prev, profilePhoto: '' }))
+      return
+    }
+
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const dataToSave = { ...form }
+      if (photoFile) {
+        const fd = new FormData()
+        fd.append('image', photoFile)
+        const { data } = await portfolioService.uploadImage(fd)
+        dataToSave.profilePhoto = data.key
+      }
+      await portfolioService.updateProfile(dataToSave)
+      alert('Profile saved successfully!')
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container>
+        <LoadingContainer>
+          <Loader />
+          Loading profile...
+        </LoadingContainer>
+      </Container>
+    )
+  }
+
+  return (
+    <Container>
+      <Header>
+        <Title>
+          <User size={32} />
+          Profile
+        </Title>
+        <Subtitle>Manage your professional profile information</Subtitle>
+      </Header>
+
+      <Card>
+        <Form onSubmit={handleSubmit}>
+          <div style={{ display: 'grid', gap: '1rem', marginBottom: '1rem' }}>
+            <Label>Profile Photo</Label>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input type="file" accept="image/*" onChange={handlePhotoChange} />
+              {photoPreview ? (
+                <img
+                  src={photoPreview}
+                  alt="Profile preview"
+                  style={{ width: '110px', height: '110px', objectFit: 'cover', borderRadius: '12px', border: '1px solid #E2E8F0' }}
+                />
+              ) : (
+                <div style={{ width: '110px', height: '110px', borderRadius: '12px', border: '1px dashed #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94A3B8' }}>
+                  No photo
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Grid>
+            <FormGroup>
+              <Label htmlFor="name">
+                <User size={18} />
+                Full Name
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Your full name"
+                value={form.name}
+                onChange={set('name')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="age">
+                <Globe size={18} />
+                Age
+              </Label>
+              <Input
+                id="age"
+                type="number"
+                placeholder="Your age"
+                value={form.age}
+                onChange={set('age')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="domain">
+                <MapPin size={18} />
+                Domain
+              </Label>
+              <Input
+                id="domain"
+                type="text"
+                placeholder="e.g. Full Stack Developer"
+                value={form.domain}
+                onChange={set('domain')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="location">
+                <MapPin size={18} />
+                Location
+              </Label>
+              <Input
+                id="location"
+                type="text"
+                placeholder="City, Country"
+                value={form.location}
+                onChange={set('location')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="email">
+                <Mail size={18} />
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                value={form.email}
+                onChange={set('email')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="phone">
+                <Phone size={18} />
+                Phone
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+1 (555) 000-0000"
+                value={form.phone}
+                onChange={set('phone')}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="cvLink">
+                <Globe size={18} />
+                CV / Resume Link
+              </Label>
+              <Input
+                id="cvLink"
+                type="url"
+                placeholder="https://drive.google.com/..."
+                value={form.cvLink}
+                onChange={set('cvLink')}
+              />
+            </FormGroup>
+
+            <FormGroup style={{ gridColumn: '1 / -1' }}>
+              <Label htmlFor="summary">Summary</Label>
+              <TextArea
+                id="summary"
+                placeholder="Write a short professional summary..."
+                value={form.summary}
+                onChange={set('summary')}
+              />
+            </FormGroup>
+          </Grid>
+
+          <FormGroup>
+            <Label htmlFor="summary">Summary</Label>
+            <TextArea
+              id="summary"
+              placeholder="Tell us about your background and skills..."
+              value={form.summary}
+              onChange={set('summary')}
+            />
+          </FormGroup>
+
+          <ButtonGroup>
+            <SaveButton type="submit" disabled={saving}>
+              <Save size={18} />
+              {saving ? 'Saving...' : 'Save Profile'}
+            </SaveButton>
+          </ButtonGroup>
+        </Form>
+      </Card>
+    </Container>
+  )
+}
+
+
+export default ProfilePage

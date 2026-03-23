@@ -1,0 +1,388 @@
+import { useState, useEffect } from 'react'
+import styled, { keyframes } from 'styled-components'
+import { Cpu, Plus, X, Save, Zap, Layers, Heart, Code2 } from 'lucide-react'
+import { portfolioService } from '../../services/portfolioService'
+import toast from 'react-hot-toast'
+
+const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  @media (max-width: 768px) {
+    gap: 1rem;
+  }
+`
+
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+`
+
+const Title = styled.h1`
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+`
+
+const TitleIcon = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+`
+
+const SaveButton = styled.button`
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`
+
+const InputSection = styled.div`
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+`
+
+const CategorySelect = styled.select`
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  background: white;
+  color: #0f172a;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`
+
+const SkillInput = styled.input`
+  flex: 1;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  min-width: 200px;
+  transition: all 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background-color: #f0f7ff;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    min-width: unset;
+  }
+`
+
+const AddButton = styled.button`
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+`
+
+const CategoriesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`
+
+const CategorySection = styled.div`
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+  }
+`
+
+const CategoryTitle = styled.h3`
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    border-radius: 50%;
+  }
+`
+
+const SkillsGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+`
+
+const SkillTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+  padding: 0.5rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+    color: white;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  }
+`
+
+const RemoveButton = styled.button`
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.2);
+    color: #ef4444;
+  }
+  
+  svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+`
+
+const EmptyState = styled.p`
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 1rem;
+`
+
+const LoadingContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #64748b;
+`
+
+const Spinner = styled.div`
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 0.5rem;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`
+
+const CATEGORIES = ['Languages', 'Frameworks', 'Tools', 'Databases', 'Other']
+
+const SkillsPage = () => {
+  const [skills, setSkills] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [input, setInput] = useState('')
+  const [category, setCategory] = useState('Languages')
+
+  useEffect(() => {
+    portfolioService.getSkills()
+      .then(({ data }) => setSkills(data || {}))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const addSkill = () => {
+    const trimmed = input.trim()
+    if (!trimmed) return
+    setSkills(prev => ({
+      ...prev,
+      [category]: [...(prev[category] || []), trimmed],
+    }))
+    setInput('')
+  }
+
+  const removeSkill = (cat, skill) => {
+    setSkills(prev => ({ ...prev, [cat]: prev[cat].filter(s => s !== skill) }))
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await portfolioService.updateSkills(skills)
+      toast.success('Skills saved')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return (
+    <LoadingContainer>
+      <Spinner /> Loading...
+    </LoadingContainer>
+  )
+
+  return (
+    <PageContainer>
+      <Header>
+        <Title>
+          <TitleIcon><Sparkles /></TitleIcon>
+          Skills
+        </Title>
+        <SaveButton onClick={handleSave} disabled={saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
+        </SaveButton>
+      </Header>
+
+      <InputSection>
+        <CategorySelect value={category} onChange={(e) => setCategory(e.target.value)}>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </CategorySelect>
+        <SkillInput
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Add a skill..."
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
+        />
+        <AddButton onClick={addSkill} disabled={!input.trim()}>
+          <Plus /> Add
+        </AddButton>
+      </InputSection>
+
+      <CategoriesContainer>
+        {CATEGORIES.map(cat => (
+          skills[cat]?.length > 0 && (
+            <CategorySection key={cat}>
+              <CategoryTitle>{cat}</CategoryTitle>
+              <SkillsGrid>
+                {skills[cat].map(skill => (
+                  <SkillTag key={skill}>
+                    {skill}
+                    <RemoveButton onClick={() => removeSkill(cat, skill)} title="Remove">
+                      <X />
+                    </RemoveButton>
+                  </SkillTag>
+                ))}
+              </SkillsGrid>
+            </CategorySection>
+          )
+        ))}
+        {!CATEGORIES.some(cat => skills[cat]?.length > 0) && (
+          <EmptyState>No skills added yet. Add one above to get started!</EmptyState>
+        )}
+      </CategoriesContainer>
+    </PageContainer>
+  )
+}
+
+export default SkillsPage
