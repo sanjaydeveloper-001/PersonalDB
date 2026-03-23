@@ -7,4 +7,5 @@ export const resumeService = {
   }),
   deleteResume: (id) => api.delete(`/vault/resume/${id}`),
   getPublicUrl: (id) => api.get(`/vault/resume/${id}/url`),
+  addEmptySlot: () => api.post('/vault/resume/add-slot'), // NEW: Add empty slot
 }

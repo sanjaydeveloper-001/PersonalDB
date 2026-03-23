@@ -3,7 +3,7 @@ import { getVaultDB } from '../../config/db.js';
 
 const resumeSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  position: { type: Number, min: 1, max: 3, required: true },
+  position: { type: Number, min: 1, required: true },
   publicToken: { type: String, required: true, unique: true },
   file: {
     key: String,
@@ -13,6 +13,7 @@ const resumeSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+// Unique compound index: user can't have duplicate positions
 resumeSchema.index({ user: 1, position: 1 }, { unique: true });
 
 export default getVaultDB().model('Resume', resumeSchema);

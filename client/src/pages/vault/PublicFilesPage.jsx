@@ -4,7 +4,7 @@ import { resumeService } from '../../services/resumeService'
 import { useConfirm } from '../../hooks/useConfirm'
 import {
   Upload, Trash2, ExternalLink, FileText, Image,
-  File, RefreshCw, Copy, Check, Link, AlertCircle,
+  File, RefreshCw, Copy, Check, Link, Plus,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -140,6 +140,63 @@ const Card = styled.div`
     background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
     pointer-events: none;
   }
+`
+
+/* ─── Add Slot Card ─── */
+const AddSlotCard = styled(Card)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+  border: 2px dashed #cbd5e1;
+  transition: all 0.3s ease;
+  min-height: 280px;
+
+  &:hover {
+    border-color: #06b6d4;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f9ff 100%);
+    transform: scale(1.02);
+    box-shadow: 0 8px 28px rgba(6, 182, 212, 0.12);
+  }
+`
+
+const AddSlotIcon = styled.div`
+  font-size: 3rem;
+  color: #06b6d4;
+  margin-bottom: 0.75rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: rgba(6, 182, 212, 0.1);
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+
+  ${AddSlotCard}:hover & {
+    background: rgba(6, 182, 212, 0.2);
+    transform: scale(1.1);
+  }
+
+  svg { width: 2rem; height: 2rem; }
+`
+
+const AddSlotText = styled.div`
+  color: #475569;
+  font-weight: 600;
+  font-size: 1rem;
+  text-align: center;
+`
+
+const AddSlotHint = styled.div`
+  color: #94a3b8;
+  font-weight: 400;
+  font-size: 0.75rem;
+  text-align: center;
+  margin-top: 0.5rem;
 `
 
 /* ─── Slot badge ─── */
@@ -534,7 +591,7 @@ const SlotCard = ({ position, resume, onUpload, onDelete, uploading }) => {
             <LinkBox>
               <LinkLabel><Link /> Public Link</LinkLabel>
               <LinkRow>
-                <LinkUrl>{PUBLIC_API_URL}{resume.publicToken}</LinkUrl>
+                <LinkUrl>{PUBLIC_API_URL}public/{resume.publicToken}</LinkUrl>
                 <CopyBtn $copied={copied} onClick={handleCopy} title="Copy link">
                   {copied ? <Check /> : <Copy />}
                 </CopyBtn>
@@ -577,6 +634,7 @@ const PublicFilesPage = () => {
   const [resumes, setResumes]     = useState([])
   const [uploading, setUploading] = useState({})
   const [loading, setLoading]     = useState(true)
+  const [addingSlot, setAddingSlot] = useState(false)
   const { confirm, ConfirmModal } = useConfirm()
 
   useEffect(() => { fetchResumes() }, [])
@@ -609,13 +667,16 @@ const PublicFilesPage = () => {
   }
 
   const handleDelete = async (position) => {
+    const resume = resumes.find(r => r.position === position)
+    if (!resume) return
+
     const ok = await confirm({
       title: 'Remove file',
       message: 'Remove this file? The slot will become empty again.',
     })
     if (!ok) return
     try {
-      await resumeService.deleteResume(position)
+      await resumeService.deleteResume(resume._id)
       toast.success('File removed')
       fetchResumes()
     } catch {
@@ -623,6 +684,22 @@ const PublicFilesPage = () => {
     }
   }
 
+  // NEW: Handle add slot
+  const handleAddSlot = async () => {
+    setAddingSlot(true)
+    try {
+      await resumeService.addEmptySlot()
+      toast.success('New slot added! Upload a file to use it.')
+      fetchResumes()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to add slot')
+    } finally {
+      setAddingSlot(false)
+    }
+  }
+
+  // Calculate max position and filled count
+  const maxPosition = Math.max(...resumes.map(r => r.position), 0)
   const filledCount = resumes.filter(r => r.file?.originalName).length
 
   if (loading) return (
@@ -640,23 +717,25 @@ const PublicFilesPage = () => {
             <TitleIcon><FileText /></TitleIcon>
             Public Files
           </Title>
-          <Subtitle>Upload any file to get a shareable public link</Subtitle>
+          <Subtitle>Upload any file to get a shareable public link. Start with 3 default slots</Subtitle>
         </TitleGroup>
 
         <UsageBar>
-          {[1, 2, 3].map(n => (
+          {/* Show filled slots (min 3 visual indicators) */}
+          {[1, 2, 3, ...Array.from({ length: Math.max(maxPosition - 3, 0) }, (_, i) => i + 4)].map(n => (
             <UsageSeg
               key={n}
               $filled={!!resumes.find(r => r.position === n)?.file?.originalName}
             />
           ))}
-          <UsageLabel>{filledCount}/3 slots used</UsageLabel>
+          <UsageLabel>{filledCount}/{Math.max(maxPosition, 3)} slots used</UsageLabel>
         </UsageBar>
       </Header>
 
       {/* ── Slot cards ── */}
       <Grid>
-        {[1, 2, 3].map(position => (
+        {/* Default 3 slots + any additional slots user created */}
+        {[1, 2, 3, ...Array.from({ length: Math.max(maxPosition - 3, 0) }, (_, i) => i + 4)].map(position => (
           <SlotCard
             key={position}
             position={position}
@@ -666,11 +745,21 @@ const PublicFilesPage = () => {
             uploading={!!uploading[position]}
           />
         ))}
+
+        {/* ── Add More Slots Button ── */}
+        {/* Show "Add Slot" button always (when user has less than 10 slots for safety) */}
+        {maxPosition < 20 && (
+          <AddSlotCard onClick={handleAddSlot} style={{ opacity: addingSlot ? 0.6 : 1, pointerEvents: addingSlot ? 'none' : 'auto' }}>
+            <AddSlotIcon>{addingSlot ? <SpinIcon /> : <Plus />}</AddSlotIcon>
+            <AddSlotText>{addingSlot ? 'Creating slot...' : 'Add New Slot'}</AddSlotText>
+            <AddSlotHint>Click to add more space for files</AddSlotHint>
+          </AddSlotCard>
+        )}
       </Grid>
 
       {/* ── Footer note ── */}
       <FooterNote>
-        💡 Upload any file — PDF, image, document, spreadsheet and more. Each slot holds one file with its own shareable public link. Replacing a file updates the link automatically.
+        💡 <strong>3 default slots included!</strong> Upload any file to get a shareable public link. Need more space? Click "<strong>Add New Slot</strong>" to expand. Each slot holds one file with its own link.
       </FooterNote>
 
       <ConfirmModal />
