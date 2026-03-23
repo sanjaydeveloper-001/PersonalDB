@@ -50,13 +50,13 @@ export const logoutUser = (req, res) => {
 
 export const getMe = async (req, res) => {
   try {
-    res.json(await User.findById(req.user._id).select('-password -placeAnswerHash -friendAnswerHash'));
+    const user = await User.findById(req.user._id).select('-password -placeAnswerHash -friendAnswerHash');
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// NEW: Verify password endpoint
 export const verifyPassword = async (req, res) => {
   try {
     const { password } = req.body;
@@ -81,7 +81,6 @@ export const verifyPassword = async (req, res) => {
   }
 };
 
-// NEW: Change password endpoint
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -113,7 +112,6 @@ export const changePassword = async (req, res) => {
   }
 };
 
-// NEW: Delete account endpoint
 export const deleteAccount = async (req, res) => {
   try {
     const { password } = req.body;
@@ -144,6 +142,97 @@ export const deleteAccount = async (req, res) => {
   }
 };
 
+// NEW: Get notification preferences
+export const getNotificationPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('preferences.notifications');
+    res.json(user?.preferences?.notifications || {
+      loginAlerts: true,
+      weeklyDigest: false,
+      productUpdates: true,
+      securityAlerts: true,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// NEW: Update notification preferences
+export const updateNotificationPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.preferences = user.preferences || {};
+    user.preferences.notifications = req.body;
+    await user.save();
+
+    res.json({ message: 'Notification preferences updated', preferences: user.preferences.notifications });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// NEW: Get appearance preferences
+export const getAppearancePreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('preferences.appearance');
+    res.json(user?.preferences?.appearance || {
+      theme: 'system',
+      language: 'en',
+      timezone: 'UTC',
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// NEW: Update appearance preferences
+export const updateAppearancePreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.preferences = user.preferences || {};
+    user.preferences.appearance = req.body;
+    await user.save();
+
+    res.json({ message: 'Appearance preferences updated', preferences: user.preferences.appearance });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// NEW: Get privacy preferences
+export const getPrivacyPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('preferences.privacy');
+    res.json(user?.preferences?.privacy || {
+      activityLog: true,
+      analyticsSharing: false,
+      publicProfile: false,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// NEW: Update privacy preferences
+export const updatePrivacyPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    user.preferences = user.preferences || {};
+    user.preferences.privacy = req.body;
+    await user.save();
+
+    res.json({ message: 'Privacy preferences updated', preferences: user.preferences.privacy });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const verifySecurity = async (req, res) => {
   try {
     const { username, birthYear, placeAnswer, friendAnswer } = req.body;
@@ -168,7 +257,6 @@ export const verifySecurity = async (req, res) => {
       return res.status(401).json({ message: 'Security answers do not match' });
     }
 
-    // Generate a temporary token for password reset
     const resetToken = generateToken(user._id);
     res.json({ message: 'Identity verified', token: resetToken });
   } catch (error) {

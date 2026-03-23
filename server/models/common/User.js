@@ -1,31 +1,51 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { getVaultDB } from '../../config/db.js';
+import { getPortfolioDB } from '../../config/db.js';
 
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true, trim: true },
-  password: { type: String, required: true },
-  birthYear: { type: Number, default: null, min: 1900, max: new Date().getFullYear() - 16 },
-  placeAnswerHash: { type: String, default: '' },
-  friendAnswerHash: { type: String, default: '' },
-  apiKeys: [{
-    name: { type: String, required: true },
-    key: { type: String, required: true },
-    keyHash: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    lastUsed: { type: Date, default: null },
-    requestCount: { type: Number, default: 0 },
-  }],
-}, { timestamps: true });
+const userSchema = new mongoose.Schema(
+  {
+    username: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true, minlength: 6 },
+    email: { type: String, sparse: true },
+    birthYear: { type: Number },
+    placeAnswerHash: { type: String },
+    friendAnswerHash: { type: String },
+    
+    // Preferences nested object
+    preferences: {
+      notifications: {
+        loginAlerts: { type: Boolean, default: true },
+        weeklyDigest: { type: Boolean, default: false },
+        productUpdates: { type: Boolean, default: true },
+        securityAlerts: { type: Boolean, default: true },
+      },
+      appearance: {
+        theme: { type: String, enum: ['light', 'dark', 'system'], default: 'system' },
+        language: { type: String, enum: ['en', 'ta', 'hi'], default: 'en' },
+        timezone: { type: String, default: 'UTC' },
+      },
+      privacy: {
+        activityLog: { type: Boolean, default: true },
+        analyticsSharing: { type: Boolean, default: false },
+        publicProfile: { type: Boolean, default: false },
+      },
+    },
+  },
+  { timestamps: true }
+);
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, await bcrypt.genSalt(10));
-  next();
+  try {
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
-export default getVaultDB().model('User', userSchema);
+export default getPortfolioDB().model('User', userSchema);

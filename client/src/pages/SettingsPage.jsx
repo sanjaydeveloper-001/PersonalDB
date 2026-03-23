@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styled, { keyframes, css } from 'styled-components'
 import {
@@ -222,13 +222,6 @@ const SectionBody = styled.div`
   border-top: 1px solid ${({ $danger }) => $danger ? '#fecaca' : '#f1f5f9'};
   padding: 1.5rem;
   animation: ${slideDown} 0.2s ease;
-`
-
-/* ─── Divider inside body ─── */
-const InnerDivider = styled.div`
-  height: 1px;
-  background: #f1f5f9;
-  margin: 1.25rem 0;
 `
 
 /* ══════════════════════════════════════
@@ -600,11 +593,49 @@ const SettingsPage = () => {
     productUpdates: true,
     securityAlerts: true,
   })
+  const [notifsLoading, setNotifsLoading] = useState(false)
+
+  useEffect(() => {
+    authService.getNotificationPreferences()
+      .then(data => setNotifs(data))
+      .catch(() => {})
+  }, [])
+
+  const handleSaveNotifications = async () => {
+    setNotifsLoading(true)
+    try {
+      await authService.updateNotificationPreferences(notifs)
+      toast.success('Notification preferences saved')
+    } catch {
+      toast.error('Failed to save notification preferences')
+    } finally {
+      setNotifsLoading(false)
+    }
+  }
 
   /* ── appearance ── */
   const [theme, setTheme]       = useState('system')
   const [language, setLanguage] = useState('en')
   const [timezone, setTimezone] = useState('UTC')
+  const [appearanceLoading, setAppearanceLoading] = useState(false)
+
+  useEffect(() => {
+    authService.getAppearancePreferences()
+      .then(data => { setTheme(data.theme); setLanguage(data.language); setTimezone(data.timezone) })
+      .catch(() => {})
+  }, [])
+
+  const handleSaveAppearance = async () => {
+    setAppearanceLoading(true)
+    try {
+      await authService.updateAppearancePreferences({ theme, language, timezone })
+      toast.success('Appearance preferences saved')
+    } catch {
+      toast.error('Failed to save appearance preferences')
+    } finally {
+      setAppearanceLoading(false)
+    }
+  }
 
   /* ── privacy toggles ── */
   const [privacy, setPrivacy] = useState({
@@ -612,6 +643,25 @@ const SettingsPage = () => {
     analyticsSharing: false,
     publicProfile: false,
   })
+  const [privacyLoading, setPrivacyLoading] = useState(false)
+
+  useEffect(() => {
+    authService.getPrivacyPreferences()
+      .then(data => setPrivacy(data))
+      .catch(() => {})
+  }, [])
+
+  const handleSavePrivacy = async () => {
+    setPrivacyLoading(true)
+    try {
+      await authService.updatePrivacyPreferences(privacy)
+      toast.success('Privacy preferences saved')
+    } catch {
+      toast.error('Failed to save privacy preferences')
+    } finally {
+      setPrivacyLoading(false)
+    }
+  }
 
   /* ── groups ── */
   const groups = [...new Set(NAV.map(n => n.group))]
@@ -754,8 +804,9 @@ const SettingsPage = () => {
               value={notifs.securityAlerts}
               onChange={v => setNotifs(p => ({ ...p, securityAlerts: v }))} />
             <BtnRow $end>
-              <PrimaryBtn type="button" onClick={() => toast.success('Preferences saved')}>
-                <Check /> Save preferences
+              <PrimaryBtn type="button" onClick={handleSaveNotifications} disabled={notifsLoading}>
+                {notifsLoading ? <SpinnerIcon /> : <Check />}
+                {notifsLoading ? 'Saving…' : 'Save preferences'}
               </PrimaryBtn>
             </BtnRow>
           </Section>
@@ -793,8 +844,9 @@ const SettingsPage = () => {
               </SelectInput>
             </FormGroup>
             <BtnRow $end>
-              <PrimaryBtn type="button" onClick={() => toast.success('Appearance saved')}>
-                <Check /> Save
+              <PrimaryBtn type="button" onClick={handleSaveAppearance} disabled={appearanceLoading}>
+                {appearanceLoading ? <SpinnerIcon /> : <Check />}
+                {appearanceLoading ? 'Saving…' : 'Save'}
               </PrimaryBtn>
             </BtnRow>
           </Section>
@@ -816,8 +868,9 @@ const SettingsPage = () => {
               value={privacy.publicProfile}
               onChange={v => setPrivacy(p => ({ ...p, publicProfile: v }))} />
             <BtnRow $end>
-              <PrimaryBtn type="button" onClick={() => toast.success('Privacy settings saved')}>
-                <Check /> Save
+              <PrimaryBtn type="button" onClick={handleSavePrivacy} disabled={privacyLoading}>
+                {privacyLoading ? <SpinnerIcon /> : <Check />}
+                {privacyLoading ? 'Saving…' : 'Save'}
               </PrimaryBtn>
             </BtnRow>
           </Section>

@@ -6,9 +6,15 @@ import {
   getMe, 
   verifySecurity, 
   resetPassword,
-  verifyPassword,        // NEW
-  changePassword,        // NEW
-  deleteAccount          // NEW
+  verifyPassword,
+  changePassword,
+  deleteAccount,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  getAppearancePreferences,
+  updateAppearancePreferences,
+  getPrivacyPreferences,
+  updatePrivacyPreferences,
 } from '../../controllers/vault/authController.js';
 import { protect } from '../../middleware/auth.js';
 
@@ -20,11 +26,21 @@ router.post('/login', loginUser);
 router.post('/verify-security', verifySecurity);
 router.post('/reset-password', resetPassword);
 
-// Protected routes (require authentication)
+// Protected routes
 router.post('/logout', protect, logoutUser);
 router.get('/me', protect, getMe);
-router.post('/verify-password', protect, verifyPassword);        // NEW
-router.put('/change-password', protect, changePassword);         // NEW
-router.delete('/account', protect, deleteAccount);               // NEW
+router.post('/verify-password', protect, verifyPassword);
+router.put('/change-password', protect, changePassword);
+router.delete('/account', protect, deleteAccount);
+
+// Preference routes
+router.get('/preferences/notifications', protect, getNotificationPreferences);
+router.put('/preferences/notifications', protect, updateNotificationPreferences);
+
+router.get('/preferences/appearance', protect, getAppearancePreferences);
+router.put('/preferences/appearance', protect, updateAppearancePreferences);
+
+router.get('/preferences/privacy', protect, getPrivacyPreferences);
+router.put('/preferences/privacy', protect, updatePrivacyPreferences);
 
 export default router;

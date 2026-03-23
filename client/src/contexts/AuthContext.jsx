@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import api from '../services/api'
+import { authService } from '../services/authService'
 import toast from 'react-hot-toast'
 
 const AuthContext = createContext()
@@ -15,10 +15,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await api.get('/auth/me')
-        setUser(data)
-      } catch {
-        // not logged in
+        const userData = await authService.getMe()
+        setUser(userData)
+      } catch (error) {
+        // User is not logged in (401) - this is expected on first page load
+        // Silently ignore this error
+        setUser(null)
       } finally {
         setLoading(false)
       }
@@ -28,8 +30,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const { data } = await api.post('/auth/login', { username, password })
-      setUser(data)
+      const userData = await authService.login({ username, password })
+      setUser(userData)
       toast.success('Logged in successfully')
       navigate('/dashboard')
     } catch (error) {
@@ -39,10 +41,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password, birthYear, placeAnswer, friendAnswer) => {
     try {
-      const { data } = await api.post('/auth/register', {
+      const userData = await authService.register({
         username, password, birthYear, placeAnswer, friendAnswer,
       })
-      setUser(data)
+      setUser(userData)
       toast.success('Account created')
       navigate('/dashboard')
     } catch (error) {
@@ -52,11 +54,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout')
+      await authService.logout()
       setUser(null)
       toast.success('Logged out')
       navigate('/login')
-    } catch {
+    } catch (error) {
       toast.error('Logout failed')
     }
   }
