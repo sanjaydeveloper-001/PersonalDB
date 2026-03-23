@@ -45,7 +45,8 @@ async function startServer() {
   app.use('/api/portfolio/interests', interestRoutes);
   app.use('/api/portfolio/upload', portfolioUploadRoutes);
 
-  app.use('/api/vault/auth', authRoutes);
+  app.use('/api/auth', authRoutes);
+  
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);
   app.use('/api/vault/upload', vaultUploadRoutes);

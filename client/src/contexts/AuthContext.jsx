@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await api.get('/vault/auth/me')
+        const { data } = await api.get('/auth/me')
         setUser(data)
       } catch {
         // not logged in
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      const { data } = await api.post('/vault/auth/login', { username, password })
+      const { data } = await api.post('/auth/login', { username, password })
       setUser(data)
       toast.success('Logged in successfully')
       navigate('/dashboard')
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password, birthYear, placeAnswer, friendAnswer) => {
     try {
-      const { data } = await api.post('/vault/auth/register', {
+      const { data } = await api.post('/auth/register', {
         username, password, birthYear, placeAnswer, friendAnswer,
       })
       setUser(data)
@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/vault/auth/logout')
+      await api.post('/auth/logout')
       setUser(null)
       toast.success('Logged out')
       navigate('/login')
