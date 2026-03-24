@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { Briefcase, FileText, Star, Target, BarChart3, Globe, Lock, Shield, Folder, Key, Eye, RefreshCw } from 'lucide-react';
+import SearchBar from '../components/common/SearchBar';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -718,6 +719,7 @@ const Home = () => {
       {/* Header */}
       <Header>
         <Logo to="/">PersonalDB</Logo>
+        <SearchBar width="280px" />
         <AuthButtons>
           <AuthButton className="login" to="/login">
             Login

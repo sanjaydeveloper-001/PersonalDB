@@ -42,6 +42,7 @@ async function startServer() {
   const publicRoutes = (await import('./routes/public.js')).default;
   const apiKeyRoutes = (await import('./routes/apiKeyRoutes.js')).default;
   const apiPortfolioRoutes = (await import('./routes/apiPortfolioRoutes.js')).default;
+  const userRoutes = (await import('./routes/userRoutes.js')).default;
 
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
@@ -64,6 +65,7 @@ async function startServer() {
 
   app.use('/api', publicRoutes);
   app.use('/api/keys', apiKeyRoutes);
+  app.use('/api/users', userRoutes);
 
   app.get('/', (req, res) => res.send('Personal Database API is running...'));
 

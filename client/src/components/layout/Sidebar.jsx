@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
+import SearchBar from '../common/SearchBar'
 
 // ── Container ──────────────────────────────────────────────────────────────
 const SidebarContainer = styled.aside`
@@ -81,6 +82,14 @@ const Nav = styled.nav`
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 2px; }
+`
+
+const SearchWrapper = styled.div`
+  padding: 0 0 0.5rem 0;
+  opacity: ${props => props.$hidden ? 0 : 1};
+  pointer-events: ${props => props.$hidden ? 'none' : 'auto'};
+  transition: opacity 0.2s ease;
+  overflow: hidden;
 `
 
 const Divider = styled.div`
@@ -276,6 +285,9 @@ const Sidebar = ({ collapsed, onToggle }) => {
       </Header>
 
       <Nav>
+        <SearchWrapper $hidden={collapsed}>
+          <SearchBar width="100%" placeholder="Search users…" />
+        </SearchWrapper>
         {sections.map(renderSection)}
 
         <Divider />
