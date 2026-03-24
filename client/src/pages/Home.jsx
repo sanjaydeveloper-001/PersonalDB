@@ -754,7 +754,9 @@ const Home = () => {
       <Header>
         <Logo to="/">PersonalDB</Logo>
         <SearchBarWrapper>
-          <SearchBar placeholder="Search users..." />
+          <SearchBar onSelectUser={(username) => {
+  console.log('User selected:', username);
+}} />
         </SearchBarWrapper>
         <AuthButtons>
           <AuthButton className="login" to="/login">

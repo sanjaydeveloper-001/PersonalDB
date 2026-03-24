@@ -1,47 +1,29 @@
 import api from './api';
 
-class SearchService {
-  constructor() {
-    this.cache = new Map();
-    this.cacheExpiry = 5 * 60 * 1000; // 5 minutes
-  }
-
-  async searchUsers(query) {
-    if (!query || query.trim().length < 2) {
-      return [];
-    }
-
-    const cacheKey = query.toLowerCase();
-    const cached = this.cache.get(cacheKey);
-
-    // Return cached results if available and not expired
-    if (cached && Date.now() - cached.timestamp < this.cacheExpiry) {
-      return cached.data;
-    }
-
+const searchService = {
+  // Search public users by username
+  searchPublicUsers: async (query) => {
     try {
-      const response = await api.get('/users/search', {
-        params: { q: query.trim() }
+      const response = await api.get('/search/users', {
+        params: { query }
       });
-
-      const data = response.data.data || [];
-
-      // Cache the results
-      this.cache.set(cacheKey, {
-        data,
-        timestamp: Date.now()
-      });
-
-      return data;
+      return response.data.users || [];
     } catch (error) {
       console.error('Search error:', error);
       return [];
     }
-  }
+  },
 
-  clearCache() {
-    this.cache.clear();
+  // Get all public users
+  getAllPublicUsers: async () => {
+    try {
+      const response = await api.get('/search/users/all');
+      return response.data.users || [];
+    } catch (error) {
+      console.error('Error fetching public users:', error);
+      return [];
+    }
   }
-}
+};
 
-export default new SearchService();
+export default searchService;

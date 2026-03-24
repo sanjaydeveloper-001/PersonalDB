@@ -216,7 +216,9 @@ const Dashboard = () => {
       <SearchSection>
         <h3>Search Users</h3>
         <SearchBarWrapper>
-          <SearchBar placeholder="Find user profiles..." />
+          <SearchBar onSelectUser={(username) => {
+  console.log('User selected:', username);
+}} />
         </SearchBarWrapper>
       </SearchSection>
 
