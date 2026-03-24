@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { Briefcase, FileText, Star, Target, BarChart3, Globe, Lock, Shield, Folder, Key, Eye, RefreshCw } from 'lucide-react';
+import SearchBar from '../components/common/SearchBar';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -22,6 +23,11 @@ const Header = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 2rem;
+
+  @media (max-width: 1024px) {
+    flex-wrap: wrap;
+  }
 `;
 
 const Logo = styled(Link)`
@@ -29,9 +35,23 @@ const Logo = styled(Link)`
   font-size: 1.5rem;
   color: #1e40af;
   transition: color 0.3s ease;
+  flex-shrink: 0;
 
   &:hover {
     color: #1e3a8a;
+  }
+`;
+
+const SearchBarWrapper = styled.div`
+  flex: 1;
+  max-width: 400px;
+  min-width: 250px;
+
+  @media (max-width: 768px) {
+    max-width: 100%;
+    order: 3;
+    flex-basis: 100%;
+    margin-top: 1rem;
   }
 `;
 
@@ -39,6 +59,11 @@ const AuthButtons = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    gap: 0.5rem;
+  }
 `;
 
 const AuthButton = styled(Link)`
@@ -57,6 +82,11 @@ const AuthButton = styled(Link)`
     &:hover {
       background: #eff6ff;
     }
+
+    @media (max-width: 768px) {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+    }
   }
 
   &.signup {
@@ -67,6 +97,11 @@ const AuthButton = styled(Link)`
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    @media (max-width: 768px) {
+      padding: 6px 14px;
+      font-size: 0.85rem;
     }
   }
 `;
@@ -718,6 +753,9 @@ const Home = () => {
       {/* Header */}
       <Header>
         <Logo to="/">PersonalDB</Logo>
+        <SearchBarWrapper>
+          <SearchBar placeholder="Search users..." />
+        </SearchBarWrapper>
         <AuthButtons>
           <AuthButton className="login" to="/login">
             Login
@@ -910,6 +948,16 @@ const Home = () => {
           </InfoSidebar>
         </ReviewsContainer>
       </ReviewsSection>
+
+      {/* CTA Section */}
+      <CTASection>
+        <h2>Ready to get started?</h2>
+        <p>Join thousands of professionals managing their portfolios and secure data with PersonalDB</p>
+        <ButtonGroup>
+          <PrimaryBtn to="/register">Create Account</PrimaryBtn>
+          <SecondaryBtn to="/login">Sign In</SecondaryBtn>
+        </ButtonGroup>
+      </CTASection>
 
       {/* Footer */}
       <FooterSection>

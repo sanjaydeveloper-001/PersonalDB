@@ -43,6 +43,8 @@ async function startServer() {
   const apiKeyRoutes = (await import('./routes/apiKeyRoutes.js')).default;
   const apiPortfolioRoutes = (await import('./routes/apiPortfolioRoutes.js')).default;
 
+  const userRoutes = (await import('./routes/userRoutes.js')).default;
+
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
   app.use('/api/portfolio/education', educationRoutes);
@@ -61,7 +63,7 @@ async function startServer() {
 
   // ✅ NEW ROUTES (API Key + JWT, for external apps)
   app.use('/api/getport', apiPortfolioRoutes);
-
+  app.use('/api/users', userRoutes);
   app.use('/api', publicRoutes);
   app.use('/api/keys', apiKeyRoutes);
 

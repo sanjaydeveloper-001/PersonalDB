@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import { useAuth } from '../../contexts/AuthContext'
+import SearchBar from '../../components/common/SearchBar'
 import {
   Lock, Briefcase, Terminal, User, Settings,
   ArrowRight, Shield, Globe, Key, FolderKanban,
@@ -12,6 +13,31 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2.5rem;
+`
+
+const SearchSection = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  margin-bottom: 1rem;
+
+  h3 {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #94a3b8;
+    margin: 0 0 1rem 0;
+  }
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+`
+
+const SearchBarWrapper = styled.div`
+  max-width: 400px;
 `
 
 const Hero = styled.div`
@@ -36,7 +62,9 @@ const HeroTitle = styled.h1`
   margin: 0 0 0.75rem 0;
   line-height: 1.2;
 
-  @media (max-width: 768px) { font-size: 1.5rem; }
+  @media (max-width: 768px) { 
+    font-size: 1.5rem; 
+  }
 `
 
 const HeroDesc = styled.p`
@@ -88,35 +116,61 @@ const CardTop = styled.div`
 `
 
 const CardIconWrap = styled.div`
-  width: 44px; height: 44px;
+  width: 44px; 
+  height: 44px;
   border-radius: 10px;
   background: ${props => props.$bg || '#eff6ff'};
-  display: flex; align-items: center; justify-content: center;
-  svg { width: 20px; height: 20px; color: ${props => props.$color || '#3b82f6'}; }
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  
+  svg { 
+    width: 20px; 
+    height: 20px; 
+    color: ${props => props.$color || '#3b82f6'}; 
+  }
 `
 
 const CardArrow = styled(ArrowRight)`
-  width: 16px; height: 16px; color: #cbd5e1;
+  width: 16px; 
+  height: 16px; 
+  color: #cbd5e1;
   transition: color 0.15s, transform 0.15s;
-  ${FeatureCard}:hover & { color: #3b82f6; transform: translateX(3px); }
+  
+  ${FeatureCard}:hover & { 
+    color: #3b82f6; 
+    transform: translateX(3px); 
+  }
 `
 
 const CardTitle = styled.h3`
-  font-size: 1rem; font-weight: 600; color: #0f172a; margin: 0;
+  font-size: 1rem; 
+  font-weight: 600; 
+  color: #0f172a; 
+  margin: 0;
 `
 
 const CardDesc = styled.p`
-  font-size: 0.85rem; color: #64748b; margin: 0; line-height: 1.5;
+  font-size: 0.85rem; 
+  color: #64748b; 
+  margin: 0; 
+  line-height: 1.5;
 `
 
 const SubLinkList = styled.div`
-  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.25rem;
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 0.4rem; 
+  margin-top: 0.25rem;
 `
 
 const SubTag = styled.span`
-  font-size: 0.72rem; font-weight: 500;
-  background: #f1f5f9; color: #64748b;
-  padding: 0.2rem 0.55rem; border-radius: 5px;
+  font-size: 0.72rem; 
+  font-weight: 500;
+  background: #f1f5f9; 
+  color: #64748b;
+  padding: 0.2rem 0.55rem; 
+  border-radius: 5px;
 `
 
 const QuickGrid = styled.div`
@@ -126,15 +180,31 @@ const QuickGrid = styled.div`
 `
 
 const QuickCard = styled(Link)`
-  display: flex; align-items: center; gap: 0.75rem;
-  background: white; border: 1px solid rgba(59,130,246,0.1);
-  border-radius: 10px; padding: 1rem 1.1rem;
-  text-decoration: none; color: #334155;
-  font-size: 0.875rem; font-weight: 500;
+  display: flex; 
+  align-items: center; 
+  gap: 0.75rem;
+  background: white; 
+  border: 1px solid rgba(59,130,246,0.1);
+  border-radius: 10px; 
+  padding: 1rem 1.1rem;
+  text-decoration: none; 
+  color: #334155;
+  font-size: 0.875rem; 
+  font-weight: 500;
   transition: all 0.15s ease;
 
-  svg { width: 16px; height: 16px; color: #3b82f6; flex-shrink: 0; }
-  &:hover { background: #eff6ff; border-color: #bfdbfe; color: #1e40af; }
+  svg { 
+    width: 16px; 
+    height: 16px; 
+    color: #3b82f6; 
+    flex-shrink: 0; 
+  }
+  
+  &:hover { 
+    background: #eff6ff; 
+    border-color: #bfdbfe; 
+    color: #1e40af; 
+  }
 `
 
 const Dashboard = () => {
@@ -142,6 +212,14 @@ const Dashboard = () => {
 
   return (
     <Container>
+      {/* Search Section */}
+      <SearchSection>
+        <h3>Search Users</h3>
+        <SearchBarWrapper>
+          <SearchBar placeholder="Find user profiles..." />
+        </SearchBarWrapper>
+      </SearchSection>
+
       {/* Hero */}
       <Hero>
         <HeroGreeting>Welcome back</HeroGreeting>
