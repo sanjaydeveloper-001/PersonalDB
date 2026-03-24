@@ -10,8 +10,14 @@ const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-app.use(cors({ origin: [process.env.CLIENT_URL1, process.env.CLIENT_URL2], credentials: true }));
 
+// CORS configuration
+app.use(cors({ 
+  origin: [process.env.CLIENT_URL1, process.env.CLIENT_URL2, 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 async function startServer() {
 
   await connectPortfolioDB();
@@ -35,7 +41,9 @@ async function startServer() {
   const vaultUploadRoutes = (await import('./routes/vault/uploadRoutes.js')).default;
   const publicRoutes = (await import('./routes/public.js')).default;
   const apiKeyRoutes = (await import('./routes/apiKeyRoutes.js')).default;
+  const apiPortfolioRoutes = (await import('./routes/apiPortfolioRoutes.js')).default;
 
+  // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
   app.use('/api/portfolio/education', educationRoutes);
   app.use('/api/portfolio/experience', experienceRoutes);
@@ -50,6 +58,9 @@ async function startServer() {
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);
   app.use('/api/vault/upload', vaultUploadRoutes);
+
+  // ✅ NEW ROUTES (API Key + JWT, for external apps)
+  app.use('/api/getport', apiPortfolioRoutes);
 
   app.use('/api', publicRoutes);
   app.use('/api/keys', apiKeyRoutes);

@@ -1,7 +1,7 @@
 import express from 'express';
-import { protect } from '../../middleware/auth.js';
+import { protectEither } from '../../middleware/protectEither.js';
 import { getProfile, updateProfile } from '../../controllers/portfolio/profileController.js';
 
 const router = express.Router();
-router.route('/').get(protect, getProfile).put(protect, updateProfile);
+router.route('/').get(protectEither, getProfile).put(protectEither, updateProfile);
 export default router;

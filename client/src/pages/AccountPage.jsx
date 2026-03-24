@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 
 // ── Styled ──────────────────────────────────────────────────────────────────
 const PageWrap = styled.div`
-  max-width: 760px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;

@@ -12,7 +12,6 @@ import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
 
-import ApiDocsPage from './pages/ApiDocsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 
@@ -56,7 +55,6 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/security-questions" element={<SecurityQuestions />} />
-            <Route path="/api-docs" element={<ApiDocsPage />} />
             <Route path="/u/:username" element={<PublicProfilePage />} />
 
             {/* Protected — all inside MainLayout */}

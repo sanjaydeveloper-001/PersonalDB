@@ -2,6 +2,15 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { getPortfolioDB } from '../../config/db.js';
 
+const apiKeySchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  key: { type: String, required: true },
+  keyHash: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+  lastUsed: { type: Date, default: null },
+  requestCount: { type: Number, default: 0 },
+});
+
 const userSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true, trim: true },
@@ -10,6 +19,9 @@ const userSchema = new mongoose.Schema(
     birthYear: { type: Number },
     placeAnswerHash: { type: String },
     friendAnswerHash: { type: String },
+    
+    // API Keys
+    apiKeys: [apiKeySchema],
     
     // Preferences nested object
     preferences: {

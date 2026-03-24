@@ -11,6 +11,7 @@ const hashApiKey = (key) => {
   return crypto.createHash('sha256').update(key).digest('hex');
 };
 
+// Get all API keys for the user
 export const getApiKeys = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
@@ -33,9 +34,12 @@ export const getApiKeys = async (req, res) => {
   }
 };
 
+// Generate a new API key
 export const generateApiKey_endpoint = async (req, res) => {
   try {
     const { name } = req.body;
+    
+    // Validation
     if (!name || name.trim() === '') {
       return res.status(400).json({ message: 'Key name is required' });
     }
@@ -43,18 +47,23 @@ export const generateApiKey_endpoint = async (req, res) => {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Limit to 10 API keys per user
+    // Check if user already has 10 keys
     if (user.apiKeys && user.apiKeys.length >= 10) {
-      return res.status(403).json({ message: 'Maximum 10 API keys allowed' });
+      return res.status(403).json({ 
+        message: 'Maximum 10 API keys allowed. Please delete an existing key to create a new one.' 
+      });
     }
 
+    // Generate the API key
     const newKey = generateApiKey();
     const keyHash = hashApiKey(newKey);
 
+    // Initialize apiKeys array if it doesn't exist
     if (!user.apiKeys) {
       user.apiKeys = [];
     }
 
+    // Add the new key
     user.apiKeys.push({
       name: name.trim(),
       key: newKey,
@@ -64,15 +73,16 @@ export const generateApiKey_endpoint = async (req, res) => {
       requestCount: 0,
     });
 
+    // Save user with new key
     await user.save();
 
-    // Return the full key only once
+    // Return the full key only once (NEVER return it again)
     res.status(201).json({
       _id: user.apiKeys[user.apiKeys.length - 1]._id,
       name: name.trim(),
       key: newKey,
       createdAt: new Date(),
-      message: 'Please save this key securely. It will not be shown again.',
+      message: 'API key created successfully. This is the only time it will be displayed. Please save it securely.',
     });
   } catch (error) {
     console.error('Generate API Key Error:', error);
@@ -80,6 +90,7 @@ export const generateApiKey_endpoint = async (req, res) => {
   }
 };
 
+// Revoke an API key
 export const revokeApiKey = async (req, res) => {
   try {
     const { id } = req.params;
@@ -95,40 +106,35 @@ export const revokeApiKey = async (req, res) => {
       return res.status(404).json({ message: 'API key not found' });
     }
 
+    const keyName = user.apiKeys[keyIndex].name;
     user.apiKeys.splice(keyIndex, 1);
     await user.save();
 
-    res.json({ message: 'API key revoked successfully' });
+    res.json({ message: `API key "${keyName}" revoked successfully` });
   } catch (error) {
     console.error('Revoke API Key Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
+// Get API usage statistics
 export const getApiUsage = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const totalRequests = (user.apiKeys || []).reduce((sum, key) => sum + key.requestCount, 0);
+    const totalRequests = (user.apiKeys || []).reduce((sum, key) => sum + (key.requestCount || 0), 0);
 
     const requestsByKey = (user.apiKeys || []).map(key => ({
       _id: key._id,
       name: key.name,
-      requestCount: key.requestCount,
+      requestCount: key.requestCount || 0,
       lastUsed: key.lastUsed,
     }));
-
-    // Storage used - placeholder (could integrate with S3 later)
-    const storageUsed = 150; // MB (example)
-    const storageLimit = 1024; // 1 GB in MB
 
     res.json({
       totalRequests,
       requestsByKey,
-      storageUsed,
-      storageLimit,
-      requestsThisMonth: totalRequests, // Could track monthly separately
       activeKeys: user.apiKeys.filter(k => k.lastUsed).length,
       totalKeys: user.apiKeys.length,
     });
@@ -137,6 +143,7 @@ export const getApiUsage = async (req, res) => {
   }
 };
 
+// Verify an API key (used in middleware)
 export const verifyApiKey = async (keyString) => {
   try {
     const keyHash = hashApiKey(keyString);
