@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled, { keyframes, createGlobalStyle } from 'styled-components';
+import { useAuth } from '../contexts/AuthContext';
 import {
   Mail, MapPin, Globe, Linkedin, Github, ExternalLink,
   Code2, Award, Briefcase, BookOpen, User, Home,
   AlertCircle, Layers, ArrowUpRight, Sparkles, Phone,
-  Calendar, Image as ImageIcon, ChevronLeft
+  Calendar, Image as ImageIcon, ChevronLeft, X
 } from 'lucide-react';
 import { publicService } from '../services/publicService';
 
@@ -45,19 +46,38 @@ const fadeUp = keyframes`
   from { opacity:0; transform:translateY(28px) scale(0.98); }
   to   { opacity:1; transform:translateY(0) scale(1); }
 `;
+
+const fadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
+`;
+
+const slideUp = keyframes`
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const slideOut = keyframes`
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(20px); }
+`;
+
 const drift = keyframes`
   0%,100% { transform: translateY(0) rotate(0deg); }
-  33%      { transform: translateY(-12px) rotate(2deg); }
-  66%      { transform: translateY(6px) rotate(-1deg); }
+  33% { transform: translateY(-12px) rotate(2deg); }
+  66% { transform: translateY(6px) rotate(-1deg); }
 `;
-const spin = keyframes`to{ transform: rotate(360deg); }`;
+
+const spin = keyframes`to { transform: rotate(360deg); }`;
+
 const shimmerMove = keyframes`
-  0%   { background-position: -800px 0; }
-  100% { background-position:  800px 0; }
+  0% { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
 `;
+
 const glowPulse = keyframes`
   0%,100% { box-shadow: 0 0 0 0 rgba(29,78,216,0.4); }
-  50%      { box-shadow: 0 0 0 10px rgba(29,78,216,0); }
+  50% { box-shadow: 0 0 0 10px rgba(29,78,216,0); }
 `;
 
 /* ─────────────── PAGE ─────────────── */
@@ -77,18 +97,21 @@ const Orb = styled.div`
   animation: ${drift} ${p => p.dur || '8s'} ease-in-out infinite;
   animation-delay: ${p => p.delay || '0s'};
 `;
+
 const OrbA = styled(Orb)`
   width: 600px; height: 600px;
   top: -180px; right: -180px;
   background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
   @media(max-width:640px){ width:300px; height:300px; top:-100px; right:-100px; }
 `;
+
 const OrbB = styled(Orb)`
   width: 500px; height: 500px;
   bottom: 20vh; left: -200px;
   background: radial-gradient(circle, rgba(29,78,216,0.12) 0%, transparent 70%);
   @media(max-width:640px){ width:250px; height:250px; left:-120px; }
 `;
+
 const OrbC = styled(Orb)`
   width: 300px; height: 300px;
   top: 50vh; right: 10vw;
@@ -105,6 +128,208 @@ const Inner = styled.div`
   @media(max-width:640px){ padding: 0 1rem 4rem; }
 `;
 
+/* ─────────────── LOGIN OVERLAY (NON-BLOCKING) ─────────────── */
+const OverlayContainer = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, ${p => p.$show ? '0.5' : '0'});
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: ${p => p.$show ? '9999' : '-1'};
+  padding: 1rem;
+  animation: ${p => p.$show ? fadeIn : 'none'} 0.3s ease;
+  backdrop-filter: ${p => p.$show ? 'blur(4px)' : 'none'};
+  pointer-events: ${p => p.$show ? 'auto' : 'none'};
+  transition: all 0.3s ease;
+`;
+
+const OverlayContent = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  position: relative;
+  animation: ${p => p.$isClosing ? slideOut : slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+
+  @media (max-width: 640px) {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1.75rem 1.25rem;
+    max-width: 90%;
+  }
+`;
+
+const CloseOverlayBtn = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: #f1f5f9;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #e2e8f0;
+    color: #1e40af;
+    transform: rotate(90deg);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  @media (max-width: 480px) {
+    width: 32px;
+    height: 32px;
+  }
+`;
+
+const OverlayIcon = styled.div`
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+  animation: ${slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+
+  svg {
+    width: 40px;
+    height: 40px;
+    color: white;
+  }
+
+  @media (max-width: 480px) {
+    width: 70px;
+    height: 70px;
+    svg { width: 35px; height: 35px; }
+  }
+`;
+
+const OverlayTitle = styled.h2`
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.75rem;
+  animation: ${slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+
+  @media (max-width: 640px) {
+    font-size: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 1.3rem;
+  }
+`;
+
+const OverlayDesc = styled.p`
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+  animation: ${slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+
+  @media (max-width: 480px) {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+`;
+
+const TimerText = styled.p`
+  color: #1e40af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  animation: ${slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+`;
+
+const OverlayButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: ${slideUp} 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+
+  @media (max-width: 540px) {
+    flex-direction: column;
+  }
+
+  @media (max-width: 480px) {
+    gap: 0.75rem;
+  }
+`;
+
+const OverlayBtn = styled.button`
+  padding: 0.85rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Outfit', system-ui, sans-serif;
+
+  ${props => props.$primary ? `
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  ` : `
+    background: #f1f5f9;
+    color: #1e40af;
+    border: 2px solid #dbeafe;
+
+    &:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  `}
+
+  @media (max-width: 540px) {
+    width: 100%;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+`;
+
 /* ─────────────── TOP NAV ─────────────── */
 const TopNav = styled.div`
   position: relative;
@@ -118,7 +343,6 @@ const TopNav = styled.div`
   @media(max-width:640px){ padding: 1rem 1rem 0; gap: 0.875rem; }
 `;
 
-/* ── UPDATED: ghost link style, no background/border ── */
 const NavBtn = styled.button`
   display: inline-flex;
   align-items: center;
@@ -478,7 +702,7 @@ const LabelIcon = styled.div`
   @media(max-width:480px){ width: 2.25rem; height: 2.25rem; }
 `;
 
-/* ─────────────── TIMELINE — UPDATED ─────────────── */
+/* ─────────────── TIMELINE ─────────────── */
 const Timeline = styled.div`
   display: flex;
   flex-direction: column;
@@ -839,14 +1063,6 @@ const CertIssuer = styled.p`
   color: var(--blue-vivid);
 `;
 
-const CertDate = styled.p`
-  font-size: 0.75rem;
-  color: var(--ink-faint);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-`;
-
 const CertLink = styled.a`
   display: inline-flex;
   align-items: center;
@@ -1013,14 +1229,52 @@ const HomeBtn = styled.button`
 const fmt = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : null;
 const na  = (v) => (v && String(v).trim() !== '') ? v : 'N/A';
 
-/* ══════════════════════════════════════════════════ */
+/* ═════════════════════════════════════════════════ */
 const PublicProfilePage = () => {
   const { username } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [portfolio, setPortfolio] = useState(null);
-  const [loading, setLoading]     = useState(true);
-  const [error, setError]         = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [imageUrls, setImageUrls] = useState({});
+  
+  // ✅ FIXED: Check sessionStorage first, then check if user exists
+  const [showOverlay, setShowOverlay] = useState(() => {
+    const dismissed = sessionStorage.getItem('overlayDismissed');
+    // If dismissed in session, don't show overlay
+    if (dismissed === 'true') return false;
+    // Otherwise, show overlay only if user is NOT logged in
+    return !user;
+  });
+  
+  const [isClosing, setIsClosing] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(10);
+
+  // ✅ Auto-close overlay after 10 seconds or on manual close
+  useEffect(() => {
+    if (!showOverlay) return;
+
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          handleCloseOverlay();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showOverlay]);
+
+  // ✅ Handle close and store in sessionStorage
+  const handleCloseOverlay = () => {
+    setIsClosing(true);
+    // Store in sessionStorage so it doesn't show again in this session
+    sessionStorage.setItem('overlayDismissed', 'true');
+    setTimeout(() => setShowOverlay(false), 400);
+  };
 
   const fetchImageUrl = async (path) => {
     if (!path) return null;
@@ -1069,30 +1323,34 @@ const PublicProfilePage = () => {
     if (username) load();
   }, [username]);
 
-  if (loading) return (
-    <>
-      <GlobalStyle />
-      <LoadPage>
-        <Spinner />
-        <ShimmerBar />
-        <LoadText>Loading portfolio</LoadText>
-      </LoadPage>
-    </>
-  );
+  if (loading) {
+    return (
+      <>
+        <GlobalStyle />
+        <LoadPage>
+          <Spinner />
+          <ShimmerBar />
+          <LoadText>Loading portfolio</LoadText>
+        </LoadPage>
+      </>
+    );
+  }
 
-  if (error || !portfolio) return (
-    <>
-      <GlobalStyle />
-      <ErrorWrap>
-        <ErrorBox>
-          <ErrorIcon><AlertCircle /></ErrorIcon>
-          <ErrorTitle>{error ? 'Profile Not Found' : 'No Portfolio Yet'}</ErrorTitle>
-          <ErrorMsg>{error || "This user hasn't set up their portfolio yet. Check back soon."}</ErrorMsg>
-          <HomeBtn onClick={() => navigate('/')}><Home size={16} /> Back to Home</HomeBtn>
-        </ErrorBox>
-      </ErrorWrap>
-    </>
-  );
+  if (error || !portfolio) {
+    return (
+      <>
+        <GlobalStyle />
+        <ErrorWrap>
+          <ErrorBox>
+            <ErrorIcon><AlertCircle /></ErrorIcon>
+            <ErrorTitle>{error ? 'Profile Not Found' : 'No Portfolio Yet'}</ErrorTitle>
+            <ErrorMsg>{error || "This user hasn't set up their portfolio yet. Check back soon."}</ErrorMsg>
+            <HomeBtn onClick={() => navigate('/')}><Home size={16} /> Back to Home</HomeBtn>
+          </ErrorBox>
+        </ErrorWrap>
+      </>
+    );
+  }
 
   const {
     profile = {}, education = [], experience = [],
@@ -1108,10 +1366,41 @@ const PublicProfilePage = () => {
   return (
     <>
       <GlobalStyle />
+      
+      {/* NON-BLOCKING OVERLAY - Shows for 10 seconds or until closed */}
+      <OverlayContainer $show={showOverlay}>
+        <OverlayContent $isClosing={isClosing}>
+          <CloseOverlayBtn onClick={handleCloseOverlay}>
+            <X />
+          </CloseOverlayBtn>
+          <OverlayIcon>
+            <User />
+          </OverlayIcon>
+          <OverlayTitle>Create Your Public Profile</OverlayTitle>
+          <OverlayDesc>
+            Share your professional portfolio with the world. Login or create an account to build your public profile today!
+          </OverlayDesc>
+          <TimerText>Closes in {timeLeft}s</TimerText>
+          <OverlayButtons>
+            <OverlayBtn 
+              $primary 
+              onClick={() => navigate('/login')}
+            >
+              Sign In
+            </OverlayBtn>
+            <OverlayBtn 
+              onClick={() => navigate('/register')}
+            >
+              Create Account
+            </OverlayBtn>
+          </OverlayButtons>
+        </OverlayContent>
+      </OverlayContainer>
+
       <Page>
-        <OrbA dur="9s"  delay="0s" />
+        <OrbA dur="9s" delay="0s" />
         <OrbB dur="11s" delay="2s" />
-        <OrbC dur="7s"  delay="1s" />
+        <OrbC dur="7s" delay="1s" />
 
         {/* ═══ TOP NAV ═══ */}
         <TopNav>
@@ -1127,7 +1416,6 @@ const PublicProfilePage = () => {
         </TopNav>
 
         <Inner>
-
           {/* ═══ HERO ═══ */}
           <HeroSection>
             <HeroGrid>
@@ -1146,19 +1434,19 @@ const PublicProfilePage = () => {
                 </HeroDomain>
 
                 <HeroMeta>
-                  {profile.email    && <MetaPill><Mail />    {profile.email}</MetaPill>}
-                  {profile.phone    && <MetaPill><Phone />   {profile.phone}</MetaPill>}
-                  {profile.location && <MetaPill><MapPin />  {profile.location}</MetaPill>}
+                  {profile.email && <MetaPill><Mail /> {profile.email}</MetaPill>}
+                  {profile.phone && <MetaPill><Phone /> {profile.phone}</MetaPill>}
+                  {profile.location && <MetaPill><MapPin /> {profile.location}</MetaPill>}
                   {!profile.email && !profile.phone && !profile.location && (
                     <MetaPill><User />No contact info added</MetaPill>
                   )}
                 </HeroMeta>
 
                 <HeroSocials>
-                  {profile.website  && <SocialIcon href={profile.website}  target="_blank" rel="noopener noreferrer" title="Website"><Globe /></SocialIcon>}
+                  {profile.website && <SocialIcon href={profile.website} target="_blank" rel="noopener noreferrer" title="Website"><Globe /></SocialIcon>}
                   {profile.linkedin && <SocialIcon href={profile.linkedin} target="_blank" rel="noopener noreferrer" title="LinkedIn"><Linkedin /></SocialIcon>}
-                  {profile.github   && <SocialIcon href={profile.github}   target="_blank" rel="noopener noreferrer" title="GitHub"><Github /></SocialIcon>}
-                  {profile.email    && <SocialIcon href={`mailto:${profile.email}`} title="Email"><Mail /></SocialIcon>}
+                  {profile.github && <SocialIcon href={profile.github} target="_blank" rel="noopener noreferrer" title="GitHub"><Github /></SocialIcon>}
+                  {profile.email && <SocialIcon href={`mailto:${profile.email}`} title="Email"><Mail /></SocialIcon>}
                 </HeroSocials>
               </HeroLeft>
 
@@ -1173,9 +1461,9 @@ const PublicProfilePage = () => {
                 </AvatarFrame>
 
                 <StatsBadge>
-                  <StatItem><span>{education.length      || '—'}</span><span>Education</span></StatItem>
-                  <StatItem><span>{experience.length     || '—'}</span><span>Roles</span></StatItem>
-                  <StatItem><span>{projects.length       || '—'}</span><span>Projects</span></StatItem>
+                  <StatItem><span>{education.length || '—'}</span><span>Education</span></StatItem>
+                  <StatItem><span>{experience.length || '—'}</span><span>Roles</span></StatItem>
+                  <StatItem><span>{projects.length || '—'}</span><span>Projects</span></StatItem>
                   <StatItem><span>{certifications.length || '—'}</span><span>Certs</span></StatItem>
                 </StatsBadge>
               </HeroRight>
@@ -1268,7 +1556,8 @@ const PublicProfilePage = () => {
             )}
           </SectionWrap>
 
-          {/* ═══ PROJECTS ═══ */}
+
+          {/* ═══ Projects ═══ */}
           <SectionWrap delay="0.35s">
             <SectionLabel>
               <LabelIcon><Code2 /></LabelIcon>
