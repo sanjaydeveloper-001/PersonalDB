@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { Briefcase, FileText, Star, Target, BarChart3, Globe, Lock, Shield, Folder, Key, Eye, RefreshCw } from 'lucide-react';
+import { Briefcase, FileText, Star, Target, BarChart3, Globe, Lock, Shield, Folder, Key, Eye, RefreshCw, Github, Twitter, Linkedin, Mail, ArrowRight } from 'lucide-react';
 import SearchBar from '../components/common/SearchBar';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -103,6 +104,53 @@ const AuthButton = styled(Link)`
       padding: 6px 14px;
       font-size: 0.85rem;
     }
+  }
+`;
+
+const DashboardButton = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 8px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  }
+
+  svg {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover svg {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 768px) {
+    padding: 6px 14px;
+    font-size: 0.85rem;
+  }
+`;
+
+const WelcomeBadge = styled.span`
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+
+  strong {
+    color: #1e40af;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
   }
 `;
 
@@ -274,18 +322,6 @@ const SecondaryBtn = styled(Link)`
     width: 100%;
     text-align: center;
   }
-`;
-
-const HeroVisual = styled.div`
-  display: none;
-`;
-
-const DashboardPreview = styled.div`
-  display: none;
-`;
-
-const StatsGrid = styled.div`
-  display: none;
 `;
 
 const FeaturesSection = styled.section`
@@ -594,7 +630,6 @@ const InfoSidebar = styled.div`
   border-radius: 12px;
   border: 1px solid rgba(59, 130, 246, 0.1);
   height: fit-content;
-  sticky: 50px;
 
   @media (max-width: 768px) {
     position: static;
@@ -712,11 +747,10 @@ const CTASection = styled.section`
   }
 `;
 
+/* ── Redesigned Footer ── */
 const FooterSection = styled.footer`
-  padding: 4rem 2rem;
-  text-align: center;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border-top: 1px solid rgba(59, 130, 246, 0.1);
+  background: #0f172a;
+  color: #94a3b8;
   position: relative;
   overflow: hidden;
 
@@ -726,27 +760,165 @@ const FooterSection = styled.footer`
     top: 0;
     left: 0;
     right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
-    pointer-events: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #3b82f6, #1e40af, transparent);
+  }
+`;
+
+const FooterTop = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 3rem;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 4rem 2rem 3rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
   }
 
-  p {
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding: 3rem 1.5rem 2rem;
+  }
+`;
+
+const FooterBrand = styled.div`
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    display: inline-block;
+
+    span {
+      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  }
+
+  .tagline {
+    font-size: 0.9rem;
+    line-height: 1.7;
     color: #64748b;
-    font-size: 0.95rem;
-    margin: 0;
-    position: relative;
-    z-index: 1;
-    font-weight: 500;
+    max-width: 260px;
+    margin-bottom: 1.5rem;
   }
 
-  @media (max-width: 768px) {
-    padding: 2.5rem 1.5rem;
+  .socials {
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .social-link {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+      color: #3b82f6;
+      transform: translateY(-2px);
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+`;
+
+const FooterColumn = styled.div`
+  .col-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #ffffff;
+    margin-bottom: 1.25rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  li a, li span {
+    font-size: 0.9rem;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    cursor: pointer;
+
+    &:hover {
+      color: #94a3b8;
+    }
+  }
+`;
+
+const FooterBottom = styled.div`
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 1.5rem 2rem;
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .copy {
+    font-size: 0.85rem;
+    color: #475569;
+  }
+
+  .badges {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    &::before {
+      content: '•';
+      color: #3b82f6;
+    }
   }
 `;
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('portfolio');
+  const { user } = useAuth();
 
   return (
     <HomeContainer>
@@ -755,16 +927,29 @@ const Home = () => {
         <Logo to="/">PersonalDB</Logo>
         <SearchBarWrapper>
           <SearchBar onSelectUser={(username) => {
-  console.log('User selected:', username);
-}} />
+            console.log('User selected:', username);
+          }} />
         </SearchBarWrapper>
         <AuthButtons>
-          <AuthButton className="login" to="/login">
-            Login
-          </AuthButton>
-          <AuthButton className="signup" to="/register">
-            Sign Up
-          </AuthButton>
+          {user ? (
+            <>
+              <WelcomeBadge>
+                Hey, <strong>{user.username}</strong>!
+              </WelcomeBadge>
+              <DashboardButton to="/dashboard">
+                Dashboard <ArrowRight size={16} />
+              </DashboardButton>
+            </>
+          ) : (
+            <>
+              <AuthButton className="login" to="/login">
+                Login
+              </AuthButton>
+              <AuthButton className="signup" to="/register">
+                Sign Up
+              </AuthButton>
+            </>
+          )}
         </AuthButtons>
       </Header>
 
@@ -773,21 +958,21 @@ const Home = () => {
         <ExperienceSelector>
           <span className="label">Switch between:</span>
           <div className="buttons">
-            <button 
-              className={activeTab === 'portfolio' ? 'active' : ''} 
+            <button
+              className={activeTab === 'portfolio' ? 'active' : ''}
               onClick={() => setActiveTab('portfolio')}
             >
               Portfolio Showcase
             </button>
-            <button 
-              className={activeTab === 'vault' ? 'active' : ''} 
+            <button
+              className={activeTab === 'vault' ? 'active' : ''}
               onClick={() => setActiveTab('vault')}
             >
               Secure Vault
             </button>
           </div>
         </ExperienceSelector>
-        
+
         <HeroHeadline>
           {activeTab === 'portfolio' ? (
             <>Build Your Professional <span className="accent">Portfolio</span></>
@@ -795,16 +980,22 @@ const Home = () => {
             <>Protect Your Most Sensitive <span className="accent">Information</span></>
           )}
         </HeroHeadline>
-        
+
         <HeroSubtitle>
           {activeTab === 'portfolio'
             ? 'Showcase your skills, projects, and experience to impress employers and clients'
             : 'Military-grade encryption for complete peace of mind and data security'}
         </HeroSubtitle>
-        
+
         <ButtonGroup>
-          <PrimaryBtn to="/register">Start for Free</PrimaryBtn>
-          <SecondaryBtn to="/portfolio">Explore Features</SecondaryBtn>
+          {user ? (
+            <PrimaryBtn to="/dashboard">Go to Dashboard</PrimaryBtn>
+          ) : (
+            <>
+              <PrimaryBtn to="/register">Start for Free</PrimaryBtn>
+              <SecondaryBtn to="/portfolio">Explore Features</SecondaryBtn>
+            </>
+          )}
         </ButtonGroup>
       </HeroSection>
 
@@ -887,7 +1078,7 @@ const Home = () => {
       <ReviewsSection>
         <SectionTitle>User Testimonials</SectionTitle>
         <Subtitle>Join thousands of professionals already using PersonalDB</Subtitle>
-        
+
         <ReviewsContainer>
           <ReviewsContent>
             <ReviewsGrid>
@@ -930,22 +1121,10 @@ const Home = () => {
           <InfoSidebar>
             <div className="sidebar-title">More Information</div>
             <div className="sidebar-items">
-              <div className="sidebar-item">
-                <span>→</span>
-                <span>Getting Started Guide</span>
-              </div>
-              <div className="sidebar-item">
-                <span>→</span>
-                <span>Documentation</span>
-              </div>
-              <div className="sidebar-item">
-                <span>→</span>
-                <span>Video Tutorials</span>
-              </div>
-              <div className="sidebar-item">
-                <span>→</span>
-                <span>Pricing Plans</span>
-              </div>
+              <div className="sidebar-item"><span>→</span><span>Getting Started Guide</span></div>
+              <div className="sidebar-item"><span>→</span><span>Documentation</span></div>
+              <div className="sidebar-item"><span>→</span><span>Video Tutorials</span></div>
+              <div className="sidebar-item"><span>→</span><span>Pricing Plans</span></div>
             </div>
           </InfoSidebar>
         </ReviewsContainer>
@@ -956,14 +1135,75 @@ const Home = () => {
         <h2>Ready to get started?</h2>
         <p>Join thousands of professionals managing their portfolios and secure data with PersonalDB</p>
         <ButtonGroup>
-          <PrimaryBtn to="/register">Create Account</PrimaryBtn>
-          <SecondaryBtn to="/login">Sign In</SecondaryBtn>
+          {user ? (
+            <PrimaryBtn to="/dashboard">Go to Dashboard</PrimaryBtn>
+          ) : (
+            <>
+              <PrimaryBtn to="/register">Create Account</PrimaryBtn>
+              <SecondaryBtn to="/login">Sign In</SecondaryBtn>
+            </>
+          )}
         </ButtonGroup>
       </CTASection>
 
       {/* Footer */}
       <FooterSection>
-        <p>&copy; 2024 PersonalDB. All rights reserved. Your privacy matters to us.</p>
+        <FooterTop>
+          <FooterBrand>
+            <div className="logo">Personal<span>DB</span></div>
+            <p className="tagline">
+              Your all-in-one platform for professional portfolio building and secure personal data management.
+            </p>
+            <div className="socials">
+              <a className="social-link" href="#"><Github /></a>
+              <a className="social-link" href="#"><Twitter /></a>
+              <a className="social-link" href="#"><Linkedin /></a>
+              <a className="social-link" href="#"><Mail /></a>
+            </div>
+          </FooterBrand>
+
+          <FooterColumn>
+            <div className="col-title">Product</div>
+            <ul>
+              <li><span>Portfolio</span></li>
+              <li><span>Secure Vault</span></li>
+              <li><span>Resume Builder</span></li>
+              <li><span>Analytics</span></li>
+              <li><span>Pricing</span></li>
+            </ul>
+          </FooterColumn>
+
+          <FooterColumn>
+            <div className="col-title">Resources</div>
+            <ul>
+              <li><span>Documentation</span></li>
+              <li><span>Getting Started</span></li>
+              <li><span>Video Tutorials</span></li>
+              <li><span>Blog</span></li>
+              <li><span>Changelog</span></li>
+            </ul>
+          </FooterColumn>
+
+          <FooterColumn>
+            <div className="col-title">Company</div>
+            <ul>
+              <li><span>About Us</span></li>
+              <li><span>Careers</span></li>
+              <li><span>Privacy Policy</span></li>
+              <li><span>Terms of Service</span></li>
+              <li><span>Contact</span></li>
+            </ul>
+          </FooterColumn>
+        </FooterTop>
+
+        <FooterBottom>
+          <p className="copy">&copy; {new Date().getFullYear()} PersonalDB. All rights reserved.</p>
+          <div className="badges">
+            <span className="badge">SOC 2 Compliant</span>
+            <span className="badge">256-bit Encryption</span>
+            <span className="badge">GDPR Ready</span>
+          </div>
+        </FooterBottom>
       </FooterSection>
     </HomeContainer>
   );

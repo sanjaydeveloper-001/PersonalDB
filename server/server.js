@@ -42,6 +42,7 @@ async function startServer() {
   const publicRoutes = (await import('./routes/public.js')).default;
   const apiKeyRoutes = (await import('./routes/apiKeyRoutes.js')).default;
   const apiPortfolioRoutes = (await import('./routes/apiPortfolioRoutes.js')).default;
+  const publicFileRoutes = (await import('./routes/publicFileRoutes.js')).default;
 
   const searchRoutes = (await import('./routes/searchRoutes.js')).default; 
 
@@ -56,6 +57,7 @@ async function startServer() {
   app.use('/api/portfolio/upload', portfolioUploadRoutes);
 
   app.use('/api/auth', authRoutes);
+  app.use('/public', publicFileRoutes);
   
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);

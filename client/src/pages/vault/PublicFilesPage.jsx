@@ -15,7 +15,7 @@ import toast from 'react-hot-toast'
 ──────────────────────────────────────────────────────────────── */
 const BASE_URL = (import.meta.env.VITE_PUBLIC_API_URL || window.location.origin).replace(/\/$/, '')
 
-const buildPublicUrl = (token) => `${BASE_URL}/public/${token}`
+const buildPublicUrl = (token) => `${BASE_URL}/${token}`
 
 /* ─── Animations ─── */
 const spin = keyframes`to { transform: rotate(360deg); }`
