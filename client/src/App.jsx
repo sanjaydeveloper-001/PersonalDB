@@ -13,7 +13,7 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
 
 import NotFoundPage from './pages/NotFoundPage'
-import PublicProfilePage from './pages/PublicProfilePage'
+// import PublicProfilePage from './pages/PublicProfilePage'
 
 // Dashboard
 import Dashboard from './pages/dashboard/Dashboard'
@@ -40,6 +40,7 @@ import AnalyticsPage from './pages/developer/AnalyticsPage'
 // Standalone
 import AccountPage from './pages/AccountPage.jsx'
 import SettingsPage from './pages/SettingsPage'
+import PortfolioSettingsPage from './pages/Portfoliosettingspage.jsx'
 
 function App() {
   return (
@@ -55,7 +56,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/security-questions" element={<SecurityQuestions />} />
-            <Route path="/u/:username" element={<PublicProfilePage />} />
+            {/* <Route path="/u/:username" element={<PublicProfilePage />} /> */}
 
             {/* Protected — all inside MainLayout */}
             <Route path="/dashboard/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
@@ -84,6 +85,7 @@ function App() {
               {/* Standalone */}
               <Route path="account"  element={<AccountPage />} />
               <Route path="settings" element={<SettingsPage />} />
+              <Route path="portsettings" element={<PortfolioSettingsPage />} />
             </Route>
 
             {/* Fallback */}

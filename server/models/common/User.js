@@ -22,6 +22,20 @@ const userSchema = new mongoose.Schema(
     
     // API Keys
     apiKeys: [apiKeySchema],
+
+    //Role
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user',
+    },
+
+    // Template preferences
+    selectedTemplateId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Template',
+      default: null,
+    },
     
     // Preferences nested object
     preferences: {

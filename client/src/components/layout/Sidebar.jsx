@@ -7,6 +7,7 @@ import {
   Database, ChevronLeft, ChevronRight, Terminal, Key, BarChart3, FileCode2, X,
   ChevronRight as ChevronRightIcon
 } from 'lucide-react'
+import { RiUserSettingsLine } from "react-icons/ri"
 import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -625,6 +626,18 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
             </StandaloneLink>
           </StandaloneWrap>
 
+          {/* Portfolio Settings */}
+          <StandaloneWrap $collapsed={collapsed}>
+            <StandaloneLink
+              to="/dashboard/portsettings"
+              $collapsed={collapsed}
+              onClick={handleLinkClick}
+            >
+              <RiUserSettingsLine />
+              <span>Port Settings</span>
+              {collapsed && <Tooltip>Port Settings</Tooltip>}
+            </StandaloneLink>
+          </StandaloneWrap>
           {/* Settings */}
           <StandaloneWrap $collapsed={collapsed}>
             <StandaloneLink
