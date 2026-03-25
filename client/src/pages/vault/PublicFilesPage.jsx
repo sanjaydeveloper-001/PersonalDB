@@ -8,17 +8,20 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const PUBLIC_API_URL = import.meta.env.VITE_PUBLIC_API_URL
+/* ─── Build a full public URL from a token ─────────────────────
+   Pulls the base from the env var, strips any trailing slash,
+   then appends /public/<token> — so no matter how the env var
+   is written you always get a clean URL.
+──────────────────────────────────────────────────────────────── */
+const BASE_URL = (import.meta.env.VITE_PUBLIC_API_URL || window.location.origin).replace(/\/$/, '')
+
+const buildPublicUrl = (token) => `${BASE_URL}/public/${token}`
 
 /* ─── Animations ─── */
 const spin = keyframes`to { transform: rotate(360deg); }`
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
-`
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
 `
 
 /* ─── Page ─── */
@@ -528,15 +531,18 @@ const formatSize = (bytes) => {
 ═══════════════════════════════════════════ */
 const SlotCard = ({ position, resume, onUpload, onDelete, uploading }) => {
   const [copied, setCopied] = useState(false)
-  const inputEmptyRef  = useRef()
+  const inputEmptyRef   = useRef()
   const inputReplaceRef = useRef()
 
   const hasFile = !!resume?.file?.originalName
   const { Icon, type, tag } = fileIconInfo(resume?.file)
 
+  // ── Single source of truth for the public URL ──
+  const publicUrl = resume?.publicToken ? buildPublicUrl(resume.publicToken) : null
+
   const handleCopy = () => {
-    const url = `${PUBLIC_API_URL}${resume.publicToken}`
-    navigator.clipboard.writeText(url)
+    if (!publicUrl) return
+    navigator.clipboard.writeText(publicUrl)
     setCopied(true)
     toast.success('Link copied!')
     setTimeout(() => setCopied(false), 2000)
@@ -586,12 +592,12 @@ const SlotCard = ({ position, resume, onUpload, onDelete, uploading }) => {
             <TypeTag $type={type}>{tag}</TypeTag>
           </FileInfoBlock>
 
-          {/* Public link */}
-          {resume.publicToken && (
+          {/* Public link — same URL used for both display and copy */}
+          {publicUrl && (
             <LinkBox>
               <LinkLabel><Link /> Public Link</LinkLabel>
               <LinkRow>
-                <LinkUrl>{PUBLIC_API_URL}public/{resume.publicToken}</LinkUrl>
+                <LinkUrl>{publicUrl}</LinkUrl>
                 <CopyBtn $copied={copied} onClick={handleCopy} title="Copy link">
                   {copied ? <Check /> : <Copy />}
                 </CopyBtn>
@@ -684,7 +690,6 @@ const PublicFilesPage = () => {
     }
   }
 
-  // NEW: Handle add slot
   const handleAddSlot = async () => {
     setAddingSlot(true)
     try {
@@ -698,9 +703,9 @@ const PublicFilesPage = () => {
     }
   }
 
-  // Calculate max position and filled count
-  const maxPosition = Math.max(...resumes.map(r => r.position), 0)
-  const filledCount = resumes.filter(r => r.file?.originalName).length
+  const maxPosition  = Math.max(...resumes.map(r => r.position), 0)
+  const filledCount  = resumes.filter(r => r.file?.originalName).length
+  const slotNumbers  = [1, 2, 3, ...Array.from({ length: Math.max(maxPosition - 3, 0) }, (_, i) => i + 4)]
 
   if (loading) return (
     <LoadingContainer>
@@ -721,8 +726,7 @@ const PublicFilesPage = () => {
         </TitleGroup>
 
         <UsageBar>
-          {/* Show filled slots (min 3 visual indicators) */}
-          {[1, 2, 3, ...Array.from({ length: Math.max(maxPosition - 3, 0) }, (_, i) => i + 4)].map(n => (
+          {slotNumbers.map(n => (
             <UsageSeg
               key={n}
               $filled={!!resumes.find(r => r.position === n)?.file?.originalName}
@@ -734,8 +738,7 @@ const PublicFilesPage = () => {
 
       {/* ── Slot cards ── */}
       <Grid>
-        {/* Default 3 slots + any additional slots user created */}
-        {[1, 2, 3, ...Array.from({ length: Math.max(maxPosition - 3, 0) }, (_, i) => i + 4)].map(position => (
+        {slotNumbers.map(position => (
           <SlotCard
             key={position}
             position={position}
@@ -746,10 +749,11 @@ const PublicFilesPage = () => {
           />
         ))}
 
-        {/* ── Add More Slots Button ── */}
-        {/* Show "Add Slot" button always (when user has less than 10 slots for safety) */}
         {maxPosition < 20 && (
-          <AddSlotCard onClick={handleAddSlot} style={{ opacity: addingSlot ? 0.6 : 1, pointerEvents: addingSlot ? 'none' : 'auto' }}>
+          <AddSlotCard
+            onClick={handleAddSlot}
+            style={{ opacity: addingSlot ? 0.6 : 1, pointerEvents: addingSlot ? 'none' : 'auto' }}
+          >
             <AddSlotIcon>{addingSlot ? <SpinIcon /> : <Plus />}</AddSlotIcon>
             <AddSlotText>{addingSlot ? 'Creating slot...' : 'Add New Slot'}</AddSlotText>
             <AddSlotHint>Click to add more space for files</AddSlotHint>
