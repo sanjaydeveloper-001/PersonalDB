@@ -311,15 +311,21 @@ const SearchBar = ({ onSelectUser }) => {
     const timer = setTimeout(async () => {
       if (query.trim().length > 0) {
         setLoading(true);
-        const users = await searchService.searchPublicUsers(query);
-        setResults(users);
-        setShowDropdown(true);
-        setActiveIndex(-1);
+        try {
+          const users = await searchService.searchPublicUsers(query);
+          setResults(users || []);
+          setShowDropdown(true);
+          setActiveIndex(-1);
+        } catch (error) {
+          console.error('Search error:', error);
+          setResults([]);
+        } finally {
+          setLoading(false);
+        }
       } else {
         setResults([]);
         setShowDropdown(false);
       }
-      setLoading(false);
     }, 300);
     return () => clearTimeout(timer);
   }, [query]);

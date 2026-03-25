@@ -46,6 +46,7 @@ async function startServer() {
 
   const searchRoutes = (await import('./routes/searchRoutes.js')).default; 
   const templateRoutes = (await import('./routes/templateRoutes.js')).default;
+  const adminRoutes = (await import('./routes/adminRoutes.js')).default;  
 
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
@@ -60,6 +61,7 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/public', publicFileRoutes);
   app.use('/api/templates', templateRoutes);
+  app.use('/api/admin', adminRoutes);
   
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);

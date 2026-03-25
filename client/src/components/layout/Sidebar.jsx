@@ -5,15 +5,15 @@ import {
   Lock, Trash2, Globe, Settings, User, GraduationCap, Briefcase,
   FolderKanban, Code, Award, Heart, ChevronDown,
   Database, ChevronLeft, ChevronRight, Terminal, Key, BarChart3, FileCode2, X,
-  ChevronRight as ChevronRightIcon
+  LayoutGrid, Users
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
 import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
 /* ─── Constants ───────────────────────────────────────────── */
-const RAIL_W = 62       // collapsed icon rail width
-const EXPANDED_W = 264  // full sidebar width
+const RAIL_W = 62
+const EXPANDED_W = 264
 
 /* ─── Animations ──────────────────────────────────────────── */
 const fadeIn = keyframes`
@@ -37,10 +37,9 @@ const SidebarContainer = styled.aside`
   position: relative;
   z-index: 100;
 
-  /* Desktop: animate between rail and expanded */
   width: ${({ $collapsed }) => ($collapsed ? `${RAIL_W}px` : `${EXPANDED_W}px`)};
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: visible; /* allow tooltip to overflow */
+  overflow: visible;
 
   @media (max-width: 768px) {
     position: fixed;
@@ -57,7 +56,7 @@ const SidebarContainer = styled.aside`
   }
 `
 
-/* ─── Toggle Button (desktop) ─────────────────────────────── */
+/* ─── Toggle Button ─────────────────────────────────────── */
 const ToggleBtn = styled.button`
   position: absolute;
   top: 20px;
@@ -109,6 +108,7 @@ const Header = styled.div`
 const LogoMark = styled.div`
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 9px;
   background: linear-gradient(135deg, #3b82f6, #1e40af);
   display: flex;
@@ -181,7 +181,7 @@ const Divider = styled.div`
   transition: margin 0.28s;
 `
 
-/* ─── Tooltip (collapsed mode) ───────────────────────────── */
+/* ─── Tooltip ───────────────────────────────────────────── */
 const Tooltip = styled.span`
   position: absolute;
   left: calc(100% + 10px);
@@ -211,11 +211,24 @@ const Tooltip = styled.span`
   }
 `
 
-/* ─── Section (accordion) ─────────────────────────────────── */
+/* ─── Section Styles ─────────────────────────────────────── */
 const SectionWrap = styled.div`
   position: relative;
   padding: 0 ${({ $collapsed }) => ($collapsed ? '6px' : '8px')};
   transition: padding 0.28s;
+`
+
+const SectionLabel = styled.p`
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin: ${({ $collapsed }) => ($collapsed ? '0.75rem 0 0.25rem' : '1.25rem 1rem 0.5rem 1rem')};
+  padding: 0;
+  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
+  transition: opacity 0.18s ease, margin 0.28s ease;
+  pointer-events: none;
 `
 
 const Trigger = styled.button`
@@ -237,7 +250,6 @@ const Trigger = styled.button`
     background: ${({ $collapsed }) => ($collapsed ? 'transparent' : '#eff6ff')};
   }
 
-  /* Collapsed highlight ring */
   ${({ $collapsed, $open }) =>
     $collapsed && $open &&
     css`
@@ -250,7 +262,6 @@ const Trigger = styled.button`
       }
     `}
 
-  /* Show tooltip on hover in collapsed mode */
   &:hover > ${Tooltip} {
     opacity: 1;
     animation: ${tooltipIn} 0.15s ease forwards;
@@ -451,6 +462,15 @@ const UserName = styled.span`
   text-overflow: ellipsis;
 `
 
+const UserRole = styled.span`
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`
+
 const ThemeWrap = styled.div`
   flex-shrink: 0;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
@@ -460,7 +480,7 @@ const ThemeWrap = styled.div`
   pointer-events: ${({ $collapsed }) => ($collapsed ? 'none' : 'auto')};
 `
 
-/* ─── Overlay (mobile) ────────────────────────────────────── */
+/* ─── Overlay ─────────────────────────────────────────────── */
 const Overlay = styled.div`
   display: none;
 
@@ -474,7 +494,7 @@ const Overlay = styled.div`
   }
 `
 
-/* ─── Nav data ────────────────────────────────────────────── */
+/* ─── Data ────────────────────────────────────────────────── */
 const sections = [
   {
     key: 'vault',
@@ -515,10 +535,17 @@ const sections = [
   },
 ]
 
+const standaloneItems = [
+  { name: 'Account',       path: '/dashboard/account',        icon: User },
+  { name: 'Port Settings', path: '/dashboard/portsettings',   icon: RiUserSettingsLine },
+  { name: 'Settings',      path: '/dashboard/settings',       icon: Settings },
+]
+
 /* ─── Component ───────────────────────────────────────────── */
 const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
   const { user } = useAuth()
   const location = useLocation()
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
 
   const getDefaultOpen = () => {
     const matched = sections.find(s =>
@@ -596,29 +623,33 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
         {/* Nav */}
         <Nav>
+          {/* Main sections */}
           {sections.map(renderSection)}
 
           <Divider $collapsed={collapsed} />
 
-          {/* Account */}
-          <StandaloneWrap $collapsed={collapsed}>
-            <StandaloneLink
-              to="/dashboard/account"
-              $collapsed={collapsed}
-              onClick={handleLinkClick}
-            >
-              <User />
-              <span>Account</span>
-              {collapsed && <Tooltip>Account</Tooltip>}
-            </StandaloneLink>
-          </StandaloneWrap>
+          {/* Standalone items */}
+          {standaloneItems.map(({ name, path, icon: Icon }) => (
+            <StandaloneWrap key={path} $collapsed={collapsed}>
+              <StandaloneLink
+                to={path}
+                $collapsed={collapsed}
+                onClick={handleLinkClick}
+              >
+                <Icon />
+                <span>{name}</span>
+                {collapsed && <Tooltip>{name}</Tooltip>}
+              </StandaloneLink>
+            </StandaloneWrap>
+          ))}
 
-          {/* Public Profile */}
+          {/* Public Profile Link */}
           <StandaloneWrap $collapsed={collapsed}>
             <StandaloneLink
               to={`/u/${user?.username}`}
               $collapsed={collapsed}
               onClick={handleLinkClick}
+              target="_blank"
             >
               <Globe />
               <span>Public Profile</span>
@@ -626,30 +657,44 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
             </StandaloneLink>
           </StandaloneWrap>
 
-          {/* Portfolio Settings */}
-          <StandaloneWrap $collapsed={collapsed}>
-            <StandaloneLink
-              to="/dashboard/portsettings"
-              $collapsed={collapsed}
-              onClick={handleLinkClick}
-            >
-              <RiUserSettingsLine />
-              <span>Port Settings</span>
-              {collapsed && <Tooltip>Port Settings</Tooltip>}
-            </StandaloneLink>
-          </StandaloneWrap>
-          {/* Settings */}
-          <StandaloneWrap $collapsed={collapsed}>
-            <StandaloneLink
-              to="/dashboard/settings"
-              $collapsed={collapsed}
-              onClick={handleLinkClick}
-            >
-              <Settings />
-              <span>Settings</span>
-              {collapsed && <Tooltip>Settings</Tooltip>}
-            </StandaloneLink>
-          </StandaloneWrap>
+          {/* Admin Section - Only show if user is admin */}
+          {isAdmin && (
+            <>
+              <Divider $collapsed={collapsed} />
+              <SectionLabel $collapsed={collapsed}>Admin</SectionLabel>
+              
+              <SectionWrap $collapsed={collapsed}>
+                <Trigger
+                  $open={openKey === 'admin'}
+                  $collapsed={collapsed}
+                  onClick={() => toggle('admin')}
+                  title={collapsed ? 'Admin' : undefined}
+                >
+                  <TriggerIcon $open={openKey === 'admin'}>
+                    <BarChart3 />
+                  </TriggerIcon>
+                  <TriggerLabel $open={openKey === 'admin'} $collapsed={collapsed}>
+                    Admin Panel
+                  </TriggerLabel>
+                  <Chevron $open={openKey === 'admin'} $collapsed={collapsed} />
+                  {collapsed && <Tooltip>Admin Panel</Tooltip>}
+                </Trigger>
+
+                <SubMenu $open={openKey === 'admin'} $height={108} $collapsed={collapsed}>
+                  <SubInner>
+                    <SubLink to="/dashboard/admin/templates" onClick={handleLinkClick}>
+                      <LayoutGrid size={14} style={{ marginRight: '4px' }} />
+                      Templates
+                    </SubLink>
+                    <SubLink to="/dashboard/admin/users" onClick={handleLinkClick}>
+                      <Users size={14} style={{ marginRight: '4px' }} />
+                      Users
+                    </SubLink>
+                  </SubInner>
+                </SubMenu>
+              </SectionWrap>
+            </>
+          )}
         </Nav>
 
         {/* User area */}
@@ -657,6 +702,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
           <Avatar>{user?.username?.[0]?.toUpperCase()}</Avatar>
           <UserInfo $collapsed={collapsed}>
             <UserName>{user?.username}</UserName>
+            {isAdmin && <UserRole>👑 {user?.role === 'superadmin' ? 'Super Admin' : 'Admin'}</UserRole>}
           </UserInfo>
           <ThemeWrap $collapsed={collapsed}>
             <ThemeToggle />

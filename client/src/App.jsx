@@ -13,7 +13,6 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
 
 import NotFoundPage from './pages/NotFoundPage'
-// import PublicProfilePage from './pages/PublicProfilePage'
 
 // Dashboard
 import Dashboard from './pages/dashboard/Dashboard'
@@ -42,6 +41,12 @@ import AccountPage from './pages/AccountPage.jsx'
 import SettingsPage from './pages/SettingsPage'
 import PortfolioSettingsPage from './pages/Portfoliosettingspage.jsx'
 
+// Admin
+import AdminLayout from './pages/admin/AdminLayout.jsx'
+import AdminTemplates from './pages/admin/AdminTemplates.jsx'
+import AdminUsers from './pages/admin/AdminUsers.jsx'
+import PublicProfilePage from './pages/PublicProfilePage.jsx'
+
 function App() {
   return (
     <BrowserRouter>
@@ -56,7 +61,9 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/security-questions" element={<SecurityQuestions />} />
-            {/* <Route path="/u/:username" element={<PublicProfilePage />} /> */}
+
+            {/* Public Profile - Anyone can view */}
+            <Route path="/u/:username" element={<PublicProfilePage />} />
 
             {/* Protected — all inside MainLayout */}
             <Route path="/dashboard/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
@@ -80,12 +87,18 @@ function App() {
               <Route path="developer/docs"      element={<DocsPage />} />
               <Route path="developer/keys"      element={<KeysPage />} />
               <Route path="developer/analytics" element={<AnalyticsPage />} />
-              <Route path="developer" element={<Navigate to="developer/docs" replace />} />
 
               {/* Standalone */}
               <Route path="account"  element={<AccountPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="portsettings" element={<PortfolioSettingsPage />} />
+
+              {/* Admin Routes */}
+              <Route path="admin/*" element={<AdminLayout />}>
+                <Route path="templates" element={<AdminTemplates />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route index element={<Navigate to="templates" replace />} />
+              </Route>
             </Route>
 
             {/* Fallback */}
