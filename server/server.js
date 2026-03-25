@@ -64,7 +64,7 @@ async function startServer() {
   // ✅ NEW ROUTES (API Key + JWT, for external apps)
   app.use('/api/getport', apiPortfolioRoutes);
   app.use('/api/search', searchRoutes);
-  app.use('/api', publicRoutes);
+  app.use('/api', publicRoutes); 
   app.use('/api/keys', apiKeyRoutes);
 
   app.get('/', (req, res) => res.send('Personal Database API is running...'));
