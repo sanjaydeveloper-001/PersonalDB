@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import styled, { keyframes, css } from 'styled-components'
 import {
   Lock, Trash2, Globe, Settings, User, GraduationCap, Briefcase,
@@ -8,6 +8,7 @@ import {
   LayoutGrid, Users
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
+import { MdOutlineDashboard } from "react-icons/md";
 import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -614,15 +615,33 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
         {/* Header */}
         <Header $collapsed={collapsed}>
-          <LogoMark onClick={() => collapsed && setCollapsed(false)}>
-            <Database />
-          </LogoMark>
+          <Link
+            to="/"
+          >
+            <LogoMark onClick={() => collapsed && setCollapsed(false)}>
+              <Database />
+            </LogoMark>
+          </Link>
           <LogoText $collapsed={collapsed}>PersonalDB</LogoText>
           <CloseBtn onClick={onCloseMobile}><X /></CloseBtn>
         </Header>
 
         {/* Nav */}
         <Nav>
+          
+          <StandaloneWrap $collapsed={collapsed}>
+            <StandaloneLink
+              to={`/dashboard`}
+              $collapsed={collapsed}
+            >
+              <MdOutlineDashboard />
+              <span>Dashboard</span>
+              {collapsed && <Tooltip>DashBoard</Tooltip>}
+            </StandaloneLink>
+          </StandaloneWrap>
+
+          <Divider $collapsed={collapsed} />
+
           {/* Main sections */}
           {sections.map(renderSection)}
 

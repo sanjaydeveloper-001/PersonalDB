@@ -6,6 +6,7 @@ import Project from '../models/portfolio/Project.js';
 import Skill from '../models/portfolio/Skill.js';
 import Certification from '../models/portfolio/Certification.js';
 import Interest from '../models/portfolio/Interest.js';
+import { generateSignedUrl } from './vault/uploadController.js'; // <-- Added import
 
 export const getPublicPortfolio = async (req, res) => {
   try {
@@ -29,6 +30,11 @@ export const getPublicPortfolio = async (req, res) => {
       Certification.find({ user: userId }).sort('-issuedDate').lean(),
       Interest.findOne({ user: userId }).lean()
     ]);
+    
+    // Add signed URL for profile photo if it exists in S3
+    if (profile && profile.profilePhoto && profile.profilePhoto.startsWith('portfolio/')) {
+      profile.profilePhotoUrl = await generateSignedUrl(profile.profilePhoto, 3600);
+    }
     
     // Return consolidated portfolio data
     res.json({
