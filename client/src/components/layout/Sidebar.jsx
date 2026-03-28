@@ -132,11 +132,15 @@ const LogoText = styled.span`
   color: #1e40af;
   white-space: nowrap;
   overflow: hidden;
+  display: inline-block;
+  line-height: 1.2;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
+  max-width: ${({ $collapsed }) => ($collapsed ? '0' : '200px')};
+  visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
   margin-left: ${({ $collapsed }) => ($collapsed ? '0' : '0.6rem')};
-  transition: opacity 0.2s ease, width 0.28s ease, margin 0.28s ease;
+  transition: opacity 0.2s ease, max-width 0.28s ease, margin 0.28s ease, visibility 0.2s ease;
   pointer-events: none;
+  will-change: opacity, max-width, margin;
 `
 
 const CloseBtn = styled.button`
@@ -227,8 +231,13 @@ const SectionLabel = styled.p`
   color: #94a3b8;
   margin: ${({ $collapsed }) => ($collapsed ? '0.75rem 0 0.25rem' : '1.25rem 1rem 0.5rem 1rem')};
   padding: 0;
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: ${({ $collapsed }) => ($collapsed ? '0' : '100%')};
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  transition: opacity 0.18s ease, margin 0.28s ease;
+  visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
+  transition: opacity 0.18s ease, margin 0.28s ease, max-width 0.28s ease, visibility 0.18s ease;
   pointer-events: none;
 `
 
@@ -290,10 +299,14 @@ const TriggerLabel = styled.span`
   color: ${({ $open }) => ($open ? '#1e40af' : '#334155')};
   white-space: nowrap;
   overflow: hidden;
+  display: block;
+  line-height: 1.2;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  transition: opacity 0.18s ease, width 0.28s ease;
+  max-width: ${({ $collapsed }) => ($collapsed ? '0' : '200px')};
+  visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
+  transition: opacity 0.18s ease, max-width 0.28s ease, visibility 0.18s ease;
   pointer-events: none;
+  will-change: opacity, max-width;
 
   ${Trigger}:hover & { color: #1e40af; }
 `
@@ -395,11 +408,16 @@ const StandaloneLink = styled(NavLink)`
   }
 
   span {
+    display: block;
+    line-height: 1.2;
+    white-space: nowrap;
     overflow: hidden;
     opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-    width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-    transition: opacity 0.18s ease, width 0.28s ease;
+    max-width: ${({ $collapsed }) => ($collapsed ? '0' : '200px')};
+    visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
+    transition: opacity 0.18s ease, max-width 0.28s ease, visibility 0.18s ease;
     pointer-events: none;
+    will-change: opacity, max-width;
   }
 
   &:hover { background: #eff6ff; color: #1e40af; }
@@ -448,8 +466,9 @@ const UserInfo = styled.div`
   flex: 1;
   overflow: hidden;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  transition: opacity 0.18s ease, width 0.28s ease;
+  max-width: ${({ $collapsed }) => ($collapsed ? '0' : '200px')};
+  visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
+  transition: opacity 0.18s ease, max-width 0.28s ease, visibility 0.18s ease;
   pointer-events: none;
 `
 
@@ -475,9 +494,10 @@ const UserRole = styled.span`
 const ThemeWrap = styled.div`
   flex-shrink: 0;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
+  max-width: ${({ $collapsed }) => ($collapsed ? '0' : '100px')};
   overflow: hidden;
-  transition: opacity 0.18s ease, width 0.28s ease;
+  visibility: ${({ $collapsed }) => ($collapsed ? 'hidden' : 'visible')};
+  transition: opacity 0.18s ease, max-width 0.28s ease, visibility 0.18s ease;
   pointer-events: ${({ $collapsed }) => ($collapsed ? 'none' : 'auto')};
 `
 
