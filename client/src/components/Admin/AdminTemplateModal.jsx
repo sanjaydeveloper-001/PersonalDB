@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import styled, { keyframes } from 'styled-components'
+import styled, { keyframes, css } from 'styled-components'
 import { X, Loader, Camera, Upload, AlertCircle, FileText, Image, Code2, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { portfolioService } from '../../services/portfolioService' // adjust path
@@ -430,7 +430,12 @@ const SaveBtn = styled.button`
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.25s ease;
-  svg { width: 15px; height: 15px; animation: ${({ $loading }) => $loading ? `${spin} 1s linear infinite` : 'none'}; }
+
+  svg {
+    width: 15px;
+    height: 15px;
+    ${({ $loading }) => $loading && css`animation: ${spin} 1s linear infinite;`}
+  }
 
   &:hover:not(:disabled) {
     transform: translateY(-2px);
