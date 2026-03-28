@@ -2,12 +2,12 @@ import bcrypt from 'bcryptjs';
 import User from '../../models/common/User.js';
 import { generateToken } from '../../utils/generateToken.js';
 
-const cookieOptions = {
+const cookieOptions = (res) => ({
   httpOnly: true,
-  secure: true,          // MUST be true for HTTPS (Vercel)
-  sameSite: "None",      // 🔥 REQUIRED for cross-origin
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
   maxAge: 30 * 24 * 60 * 60 * 1000,
-};
+});
 
 export const registerUser = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ export const registerUser = async (req, res) => {
       friendAnswerHash: friendAnswer ? await bcrypt.hash(friendAnswer, 10) : '',
     });
 
-    res.cookie('token', generateToken(user._id), cookieOptions);
+    res.cookie('token', generateToken(user._id), cookieOptions());
     res.status(201).json({ _id: user._id, username: user.username, birthYear: user.birthYear });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -34,7 +34,7 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
     if (user && (await user.matchPassword(password))) {
-      res.cookie('token', generateToken(user._id), cookieOptions);
+      res.cookie('token', generateToken(user._id), cookieOptions());
       return res.json({ _id: user._id, username: user.username, birthYear: user.birthYear });
     }
     res.status(401).json({ message: 'Invalid username or password' });
@@ -44,12 +44,7 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
-  res.cookie('token', '', {
-    httpOnly: true,
-    secure: true,
-    sameSite: "None",
-    expires: new Date(0),
-  });
+  res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
   res.json({ message: 'Logged out successfully' });
 };
 
@@ -139,12 +134,7 @@ export const deleteAccount = async (req, res) => {
     await User.findByIdAndDelete(req.user._id);
 
     // Clear auth cookie
-    res.cookie('token', '', {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      expires: new Date(0),
-    });
+    res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
 
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
