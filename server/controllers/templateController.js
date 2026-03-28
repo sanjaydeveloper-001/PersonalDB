@@ -2,23 +2,26 @@ import Template from '../models/Template.js';
 import User from '../models/common/User.js';
 import { generateSignedUrl } from './vault/uploadController.js';
 
-// Helper to generate signed URL for a single template's image
-async function processTemplateImage(template) {
-  const processed = { ...template };
+// Helper to generate signed URL for a single template's image (works with plain objects)
+async function processTemplateImage(templatePlain) {
+  // templatePlain is already a plain object (e.g., from toObject())
+  const processed = { ...templatePlain };
   if (processed.image && !processed.image.startsWith('http')) {
     try {
       processed.image = await generateSignedUrl(processed.image, 3600);
     } catch (err) {
       console.error('Failed to generate signed URL for template image:', err);
-      processed.image = template.image; // fallback to original key
+      // Keep original key as fallback
     }
   }
   return processed;
 }
 
-// Helper to process an array of templates
+// Helper to process an array of templates (accepts Mongoose documents or plain objects)
 async function processTemplates(templates) {
-  return Promise.all(templates.map(processTemplateImage));
+  // Convert each document to plain object first, then process
+  const plainTemplates = templates.map(doc => doc.toObject ? doc.toObject() : doc);
+  return Promise.all(plainTemplates.map(processTemplateImage));
 }
 
 // Get all public templates - Return only template details (for modal display)
@@ -64,6 +67,7 @@ export const getTemplateCode = async (req, res) => {
       });
     }
     
+    // For code, we don't need signed URL, just return plain object
     res.json({
       success: true,
       template: {
@@ -107,7 +111,9 @@ export const getUserTemplate = async (req, res) => {
       });
     }
     
-    const processedTemplate = await processTemplateImage(template.toObject());
+    // Convert to plain object before processing
+    const plainTemplate = template.toObject();
+    const processedTemplate = await processTemplateImage(plainTemplate);
     
     res.json({
       success: true,
@@ -227,7 +233,8 @@ export const likeTemplate = async (req, res) => {
       });
     }
     
-    const processed = await processTemplateImage(template.toObject());
+    const plainTemplate = template.toObject();
+    const processed = await processTemplateImage(plainTemplate);
     
     res.json({
       success: true,
@@ -282,7 +289,9 @@ export const createTemplate = async (req, res) => {
 
     await template.save();
 
-    const processed = await processTemplateImage(template.toObject());
+    // Convert to plain object and generate signed URL for response
+    const plainTemplate = template.toObject();
+    const processed = await processTemplateImage(plainTemplate);
 
     res.status(201).json({
       success: true,
@@ -327,7 +336,8 @@ export const getTemplate = async (req, res) => {
       });
     }
 
-    const processed = await processTemplateImage(template.toObject());
+    const plainTemplate = template.toObject();
+    const processed = await processTemplateImage(plainTemplate);
 
     res.json({
       success: true,
@@ -374,7 +384,8 @@ export const updateTemplate = async (req, res) => {
       });
     }
 
-    const processed = await processTemplateImage(template.toObject());
+    const plainTemplate = template.toObject();
+    const processed = await processTemplateImage(plainTemplate);
 
     res.json({
       success: true,
