@@ -126,17 +126,21 @@ const LogoMark = styled.div`
 `
 
 const LogoText = styled.span`
+  display: block;
   font-family: 'Courier New', monospace;
   font-size: 1rem;
   font-weight: 700;
   color: #1e40af;
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
   width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
   margin-left: ${({ $collapsed }) => ($collapsed ? '0' : '0.6rem')};
   transition: opacity 0.2s ease, width 0.28s ease, margin 0.28s ease;
   pointer-events: none;
+  will-change: opacity, width, margin;
+  line-height: 1.2;
 `
 
 const CloseBtn = styled.button`
@@ -220,6 +224,7 @@ const SectionWrap = styled.div`
 `
 
 const SectionLabel = styled.p`
+  display: block;
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -230,6 +235,7 @@ const SectionLabel = styled.p`
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
   transition: opacity 0.18s ease, margin 0.28s ease;
   pointer-events: none;
+  line-height: 1.2;
 `
 
 const Trigger = styled.button`
@@ -284,16 +290,20 @@ const TriggerIcon = styled.span`
 `
 
 const TriggerLabel = styled.span`
+  display: block;
   flex: 1;
   font-size: 0.875rem;
   font-weight: 400;
   color: ${({ $open }) => ($open ? '#1e40af' : '#334155')};
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
   opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
   width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
   transition: opacity 0.18s ease, width 0.28s ease;
   pointer-events: none;
+  will-change: opacity, width;
+  line-height: 1.2;
 
   ${Trigger}:hover & { color: #1e40af; }
 `
@@ -336,6 +346,7 @@ const SubLink = styled(NavLink)`
   color: #64748b;
   transition: background 0.13s, color 0.13s;
   white-space: nowrap;
+  line-height: 1.2;
 
   &::before {
     content: '';
@@ -385,6 +396,7 @@ const StandaloneLink = styled(NavLink)`
   white-space: nowrap;
   justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'flex-start')};
   position: relative;
+  line-height: 1.2;
 
   svg {
     width: 17px;
@@ -395,11 +407,16 @@ const StandaloneLink = styled(NavLink)`
   }
 
   span {
+    display: block;
     overflow: hidden;
+    text-overflow: ellipsis;
     opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
     width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
     transition: opacity 0.18s ease, width 0.28s ease;
     pointer-events: none;
+    will-change: opacity, width;
+    line-height: 1.2;
+    white-space: nowrap;
   }
 
   &:hover { background: #eff6ff; color: #1e40af; }
@@ -451,6 +468,9 @@ const UserInfo = styled.div`
   width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
   transition: opacity 0.18s ease, width 0.28s ease;
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 `
 
 const UserName = styled.span`
@@ -461,6 +481,7 @@ const UserName = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 `
 
 const UserRole = styled.span`
@@ -470,6 +491,7 @@ const UserRole = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.2;
 `
 
 const ThemeWrap = styled.div`
