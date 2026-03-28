@@ -121,9 +121,7 @@ const MainLayout = () => {
 
       <MobileOverlay $isOpen={sidebarOpen} onClick={closeSidebar} />
 
-      <Sidebar 
-        collapsed={false} 
-        onToggle={() => {}} 
+      <Sidebar  
         isMobileOpen={sidebarOpen}
         onCloseMobile={closeSidebar}
       />
