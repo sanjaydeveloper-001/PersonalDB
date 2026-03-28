@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   Lock, Briefcase, Globe, Settings, User,
   Database, ChevronLeft, ChevronDown, Terminal, BarChart3, X,
-  LayoutGrid, Users
+  LayoutGrid, Users, Menu
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
 import { MdOutlineDashboard } from "react-icons/md"
@@ -69,9 +69,26 @@ styleTag.textContent = `
 
   .close-btn:hover { background: #eff6ff !important; }
 
+  /* ── Mobile header menu button ── */
+  .mobile-menu-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #3b82f6;
+    transition: background 0.15s;
+  }
+  .mobile-menu-btn:hover { background: #eff6ff; }
+
   @media (max-width: 768px) {
     .sidebar-toggle-btn { display: none !important; }
     .close-btn { display: flex !important; }
+    .mobile-menu-btn { display: flex !important; }
     .sidebar-container {
       position: fixed !important;
       left: 0 !important;
@@ -82,6 +99,7 @@ styleTag.textContent = `
   }
   @media (min-width: 769px) {
     .close-btn { display: none !important; }
+    .mobile-menu-btn { display: none !important; }
   }
 `
 if (!document.head.querySelector('#sidebar-styles')) {
@@ -176,7 +194,7 @@ const standaloneItems = [
 ]
 
 /* ─── Component ───────────────────────────────────────────── */
-const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
+const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
   const { user } = useAuth()
   const location = useLocation()
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
@@ -202,6 +220,8 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
   const handleLinkClick = () => onCloseMobile?.()
 
+  const isMobile = window.innerWidth <= 768
+
   /* ── inline styles ── */
   const containerStyle = {
     display: 'flex',
@@ -215,8 +235,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     width: collapsed ? `${RAIL_W}px` : `${EXPANDED_W}px`,
     transition: 'width 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
     overflow: 'visible',
-    // mobile handled via class + media query
-    ...(window.innerWidth <= 768 ? {
+    ...(isMobile ? {
       position: 'fixed',
       left: 0,
       top: 0,
@@ -254,6 +273,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     display: 'flex',
     alignItems: 'center',
     height: '64px',
+    // KEY FIX: when collapsed, center everything; when expanded, space-between
     padding: collapsed ? '0' : '0 1rem',
     justifyContent: collapsed ? 'center' : 'space-between',
     borderBottom: '1.5px solid rgba(59, 130, 246, 0.08)',
@@ -263,16 +283,17 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
   }
 
   const logoMarkStyle = {
-    width: '32px',
-    height: '32px',
-    minWidth: '32px',
-    borderRadius: '9px',
+    width: '36px',
+    height: '36px',
+    minWidth: '36px',
+    borderRadius: '10px',
     background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(59,130,246,0.25)',
   }
 
   const logoTextStyle = {
@@ -324,6 +345,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     transition: 'margin 0.28s',
   }
 
+  // KEY FIX: center icon wrapper when collapsed
   const sectionWrapStyle = {
     position: 'relative',
     padding: `0 ${collapsed ? '6px' : '8px'}`,
@@ -395,6 +417,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     pointerEvents: collapsed ? 'none' : 'auto',
   }
 
+  // KEY FIX: when collapsed, center the icon via justify-content center
   const getTriggerStyle = (isOpen) => ({
     display: 'flex',
     alignItems: 'center',
@@ -414,11 +437,14 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
   const getTriggerIconStyle = (isOpen) => ({
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'center',   // ← ensures icon itself is centered within its box
     flexShrink: 0,
     color: isOpen ? '#3b82f6' : '#64748b',
     transition: 'color 0.15s',
     position: 'relative',
     zIndex: 1,
+    width: '17px',
+    height: '17px',
   })
 
   const getTriggerLabelStyle = (isOpen) => ({
@@ -461,6 +487,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     gap: '1px',
   }
 
+  // KEY FIX: icon wrapper also centered when collapsed
   const getStandaloneLinkStyle = (isCollapsed) => ({
     display: 'flex',
     alignItems: 'center',
@@ -484,6 +511,9 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
     color: '#64748b',
     flexShrink: 0,
     transition: 'color 0.15s',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 
   const standaloneLabelStyle = {
@@ -543,7 +573,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
       <div
         onClick={onCloseMobile}
         style={{
-          display: isMobileOpen && window.innerWidth <= 768 ? 'block' : 'none',
+          display: isMobileOpen && isMobile ? 'block' : 'none',
           position: 'fixed',
           inset: 0,
           background: 'rgba(15, 45, 107, 0.35)',
@@ -553,12 +583,9 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
       />
 
       <aside style={containerStyle} className="sidebar-container">
-        {/* Desktop toggle */}
+        {/* Desktop collapse toggle — pill button replacing raw chevron */}
         <button
-          style={{
-            ...toggleBtnStyle,
-            transform: collapsed ? 'rotate(0deg)' : 'rotate(0deg)',
-          }}
+          style={toggleBtnStyle}
           className="sidebar-toggle-btn"
           onClick={() => setCollapsed(c => !c)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -567,7 +594,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
             style={{
               width: 13,
               height: 13,
-              transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+              transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)',
               transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
@@ -575,19 +602,37 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
         {/* Header */}
         <div style={headerStyle}>
-          <Link to="/">
-            <div style={logoMarkStyle} onClick={() => collapsed && setCollapsed(false)}>
-              <Database style={{ width: 16, height: 16, color: 'white' }} />
+          {/* ── Collapsed: just the logo mark centered ── */}
+          {collapsed ? (
+            <div
+              style={logoMarkStyle}
+              onClick={() => setCollapsed(false)}
+              title="Expand"
+            >
+              <Database style={{ width: 17, height: 17, color: 'white' }} />
             </div>
-          </Link>
-          <span style={logoTextStyle}>PersonalDB</span>
-          <button
-            className="close-btn"
-            style={closeBtnStyle}
-            onClick={onCloseMobile}
-          >
-            <X style={{ width: 18, height: 18 }} />
-          </button>
+          ) : (
+            <>
+              {/* Logo + wordmark */}
+              <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.6rem', minWidth: 0 }}>
+                <div style={logoMarkStyle}>
+                  <Database style={{ width: 17, height: 17, color: 'white' }} />
+                </div>
+                <span style={{ ...logoTextStyle, opacity: 1, width: 'auto', marginLeft: 0 }}>
+                  PersonalDB
+                </span>
+              </Link>
+
+              {/* Mobile close / Desktop hamburger-style toggle via the floating btn */}
+              <button
+                className="close-btn"
+                style={closeBtnStyle}
+                onClick={onCloseMobile}
+              >
+                <X style={{ width: 18, height: 18 }} />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Nav */}
@@ -600,10 +645,11 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
           >
             <NavLink
               to="/dashboard"
+              end
               className="sidebar-standalone-link"
               style={getStandaloneLinkStyle(collapsed)}
             >
-              <MdOutlineDashboard style={standaloneIconStyle} />
+              <MdOutlineDashboard style={{ ...standaloneIconStyle, width: 18, height: 18 }} />
               <span style={standaloneLabelStyle}>Dashboard</span>
               {collapsed && <Tooltip>Dashboard</Tooltip>}
             </NavLink>
