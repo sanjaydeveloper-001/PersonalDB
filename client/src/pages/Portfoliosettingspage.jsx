@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import styled, { keyframes } from 'styled-components'
 import { Layout, Settings2 } from 'lucide-react'
-import TemplateCard from '../components/TemplateCard'
+import TemplateCard from '../components/Templatecard'
 import toast from 'react-hot-toast'
 
 /* ─── Animations ─── */
