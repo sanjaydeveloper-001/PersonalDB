@@ -13,7 +13,7 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({ 
-  origin: 'personaldb.josan.tech',
+  origin: [process.env.CLIENT_URL1, process.env.CLIENT_URL2,'https://personaldb.josan.tech'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],

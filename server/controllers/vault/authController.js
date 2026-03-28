@@ -5,8 +5,8 @@ import { generateToken } from '../../utils/generateToken.js';
 const cookieOptions = (res) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: 'none',
-  // domain: ".josan.tech",
+  sameSite: 'strict',
+  domain: ".josan.tech",
   maxAge: 30 * 24 * 60 * 60 * 1000,
 });
 
