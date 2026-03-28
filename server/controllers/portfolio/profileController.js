@@ -7,7 +7,11 @@ export const getProfile = async (req, res) => {
     if (!profile) profile = await new Profile({ user: req.user._id }).save();
     profile = profile.toObject();
     if (profile.profilePhoto?.startsWith('portfolio/')) {
-      profile.profilePhotoUrl = await generateSignedUrl(profile.profilePhoto, 3600);
+      try {
+        profile.profilePhotoUrl = await generateSignedUrl(profile.profilePhoto, 3600);
+      } catch (err) {
+        console.warn('Could not generate signed URL for profile photo:', err.message);
+      }
     }
     res.json(profile);
   } catch (err) {

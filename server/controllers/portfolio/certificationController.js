@@ -7,7 +7,11 @@ export const getCertifications = async (req, res) => {
     certifications = await Promise.all(certifications.map(async (cert) => {
       cert = cert.toObject();
       if (cert.image?.startsWith('portfolio/')) {
-        cert.imageUrl = await generateSignedUrl(cert.image, 3600);
+        try {
+          cert.imageUrl = await generateSignedUrl(cert.image, 3600);
+        } catch (err) {
+          console.warn('Could not generate signed URL for certification image:', err.message);
+        }
       }
       return cert;
     }));

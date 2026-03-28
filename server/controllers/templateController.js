@@ -1,5 +1,25 @@
 import Template from '../models/Template.js';
 import User from '../models/common/User.js';
+import { generateSignedUrl } from './vault/uploadController.js';
+
+// Helper to generate signed URL for a single template's image
+async function processTemplateImage(template) {
+  const processed = { ...template };
+  if (processed.image && !processed.image.startsWith('http')) {
+    try {
+      processed.image = await generateSignedUrl(processed.image, 3600);
+    } catch (err) {
+      console.error('Failed to generate signed URL for template image:', err);
+      processed.image = template.image; // fallback to original key
+    }
+  }
+  return processed;
+}
+
+// Helper to process an array of templates
+async function processTemplates(templates) {
+  return Promise.all(templates.map(processTemplateImage));
+}
 
 // Get all public templates - Return only template details (for modal display)
 export const getAllTemplates = async (req, res) => {
@@ -8,9 +28,11 @@ export const getAllTemplates = async (req, res) => {
       .select('_id name image usercount likescount description')
       .sort({ createdAt: -1 });
     
+    const processedTemplates = await processTemplates(templates);
+    
     res.json({
       success: true,
-      templates,
+      templates: processedTemplates,
     });
   } catch (error) {
     console.error('getAllTemplates error:', error);
@@ -26,7 +48,6 @@ export const getTemplateCode = async (req, res) => {
   try {
     const { templateId } = req.params;
     
-    // Validate templateId format
     if (!templateId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ 
         success: false, 
@@ -74,7 +95,6 @@ export const getUserTemplate = async (req, res) => {
       });
     }
     
-    // If user hasn't selected a template, return default
     let template = user.selectedTemplateId;
     if (!template) {
       template = await Template.findOne({ name: 'Default' });
@@ -87,12 +107,15 @@ export const getUserTemplate = async (req, res) => {
       });
     }
     
+    const processedTemplate = await processTemplateImage(template.toObject());
+    
     res.json({
       success: true,
       template: {
-        id: template._id,
-        name: template.name,
-        code: template.code,
+        id: processedTemplate._id,
+        name: processedTemplate.name,
+        code: processedTemplate.code,
+        image: processedTemplate.image, // signed URL
       },
     });
   } catch (error) {
@@ -127,7 +150,6 @@ export const setUserTemplate = async (req, res) => {
   try {
     const { templateId } = req.body;
     
-    // Validate templateId format
     if (!templateId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ 
         success: false, 
@@ -135,7 +157,6 @@ export const setUserTemplate = async (req, res) => {
       });
     }
 
-    // Verify template exists
     const template = await Template.findById(templateId);
     if (!template) {
       return res.status(404).json({ 
@@ -144,18 +165,15 @@ export const setUserTemplate = async (req, res) => {
       });
     }
     
-    // Get old template ID if exists
     const user = await User.findById(req.user._id);
     const oldTemplateId = user.selectedTemplateId;
 
-    // Update user's selected template
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { selectedTemplateId: templateId },
       { new: true }
     ).populate('selectedTemplateId');
     
-    // Decrement old template usercount if it existed and is different
     if (oldTemplateId && oldTemplateId.toString() !== templateId) {
       await Template.findByIdAndUpdate(
         oldTemplateId,
@@ -163,7 +181,6 @@ export const setUserTemplate = async (req, res) => {
       );
     }
 
-    // Increment new template usercount (only if it's a new selection)
     if (!oldTemplateId || oldTemplateId.toString() !== templateId) {
       await Template.findByIdAndUpdate(
         templateId,
@@ -190,7 +207,6 @@ export const likeTemplate = async (req, res) => {
   try {
     const { templateId } = req.body;
 
-    // Validate templateId format
     if (!templateId.match(/^[0-9a-fA-F]{24}$/)) {
       return res.status(400).json({ 
         success: false, 
@@ -211,9 +227,11 @@ export const likeTemplate = async (req, res) => {
       });
     }
     
+    const processed = await processTemplateImage(template.toObject());
+    
     res.json({
       success: true,
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('likeTemplate error:', error);
@@ -229,7 +247,6 @@ export const createTemplate = async (req, res) => {
   try {
     const { name, image, code, description } = req.body;
 
-    // Validate required fields
     if (!name || !image || !code) {
       return res.status(400).json({ 
         success: false, 
@@ -237,7 +254,6 @@ export const createTemplate = async (req, res) => {
       });
     }
 
-    // Trim and validate name
     const trimmedName = name.trim();
     if (trimmedName.length === 0) {
       return res.status(400).json({ 
@@ -246,9 +262,7 @@ export const createTemplate = async (req, res) => {
       });
     }
 
-    // Check if template with same name already exists
     const existingTemplate = await Template.findOne({ name: trimmedName });
-
     if (existingTemplate) {
       return res.status(400).json({ 
         success: false, 
@@ -256,7 +270,6 @@ export const createTemplate = async (req, res) => {
       });
     }
 
-    // Create new template
     const template = new Template({
       name: trimmedName,
       image: image.trim(),
@@ -267,20 +280,21 @@ export const createTemplate = async (req, res) => {
       likescount: 0,
     });
 
-    // Save template
     await template.save();
+
+    const processed = await processTemplateImage(template.toObject());
 
     res.status(201).json({
       success: true,
       message: 'Template created successfully',
       template: {
-        _id: template._id,
-        name: template.name,
-        image: template.image,
-        description: template.description,
-        usercount: template.usercount,
-        likescount: template.likescount,
-        isPublic: template.isPublic,
+        _id: processed._id,
+        name: processed.name,
+        image: processed.image, // signed URL
+        description: processed.description,
+        usercount: processed.usercount,
+        likescount: processed.likescount,
+        isPublic: processed.isPublic,
       },
     });
   } catch (error) {
@@ -313,9 +327,11 @@ export const getTemplate = async (req, res) => {
       });
     }
 
+    const processed = await processTemplateImage(template.toObject());
+
     res.json({
       success: true,
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('getTemplate error:', error);
@@ -358,10 +374,12 @@ export const updateTemplate = async (req, res) => {
       });
     }
 
+    const processed = await processTemplateImage(template.toObject());
+
     res.json({
       success: true,
       message: 'Template updated successfully',
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('updateTemplate error:', error);
@@ -393,7 +411,6 @@ export const deleteTemplate = async (req, res) => {
       });
     }
 
-    // Remove template reference from users who selected it
     await User.updateMany(
       { selectedTemplateId: templateId },
       { $unset: { selectedTemplateId: 1 } }

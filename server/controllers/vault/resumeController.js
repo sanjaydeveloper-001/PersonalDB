@@ -6,7 +6,23 @@ import { generateSignedUrl } from './uploadController.js';
 
 export const getResumes = async (req, res) => {
   try {
-    res.json(await Resume.find({ user: req.user._id }).sort('position'));
+    let resumes = await Resume.find({ user: req.user._id }).sort('position');
+    
+    // Generate signed URLs for each resume's file
+    resumes = await Promise.all(resumes.map(async (resume) => {
+      const obj = resume.toObject();
+      if (obj.file?.key) {
+        try {
+          obj.file.url = await generateSignedUrl(obj.file.key, 3600);
+        } catch (err) {
+          console.error('Failed to generate signed URL for resume:', err);
+          obj.file.url = null;
+        }
+      }
+      return obj;
+    }));
+    
+    res.json(resumes);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -113,6 +129,8 @@ export const uploadResume = async (req, res) => {
       });
     }
 
+    const signedUrl = await generateSignedUrl(resume.file.key, 3600);
+    
     res.status(201).json({
       _id: resume._id,
       position: resume.position,
@@ -120,7 +138,7 @@ export const uploadResume = async (req, res) => {
       originalName: resume.file.originalName,
       publicToken: resume.publicToken,
       createdAt: resume.createdAt,
-      url: await generateSignedUrl(resume.file.key, 3600),
+      url: signedUrl,
     });
   } catch (error) {
     if (error.code === 11000) {

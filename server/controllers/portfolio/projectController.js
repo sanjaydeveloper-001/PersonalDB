@@ -7,7 +7,11 @@ export const getProjects = async (req, res) => {
     projects = await Promise.all(projects.map(async (proj) => {
       proj = proj.toObject();
       if (proj.image?.startsWith('portfolio/')) {
-        proj.imageUrl = await generateSignedUrl(proj.image, 3600);
+        try {
+          proj.imageUrl = await generateSignedUrl(proj.image, 3600);
+        } catch (err) {
+          console.warn('Could not generate signed URL for project image:', err.message);
+        }
       }
       return proj;
     }));

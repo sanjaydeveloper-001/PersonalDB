@@ -8,7 +8,11 @@ export const getItems = async (req, res) => {
     items = await Promise.all(items.map(async (item) => {
       item = item.toObject();
       if (item.type === 'file' && item.metadata?.s3Key) {
-        item.metadata.signedUrl = await generateSignedUrl(item.metadata.s3Key, 3600);
+        try {
+          item.metadata.signedUrl = await generateSignedUrl(item.metadata.s3Key, 3600);
+        } catch (err) {
+          console.warn('Could not generate signed URL for file:', err.message);
+        }
       }
       return item;
     }));
