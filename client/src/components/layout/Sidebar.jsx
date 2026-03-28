@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
-import styled, { keyframes, css } from 'styled-components'
 import {
-  Lock, Trash2, Globe, Settings, User, GraduationCap, Briefcase,
-  FolderKanban, Code, Award, Heart, ChevronDown,
-  Database, ChevronLeft, ChevronRight, Terminal, Key, BarChart3, FileCode2, X,
+  Lock, Briefcase, Globe, Settings, User,
+  Database, ChevronLeft, ChevronDown, Terminal, BarChart3, X,
   LayoutGrid, Users
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
-import { MdOutlineDashboard } from "react-icons/md";
+import { MdOutlineDashboard } from "react-icons/md"
 import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -16,506 +14,119 @@ import { useAuth } from '../../contexts/AuthContext'
 const RAIL_W = 62
 const EXPANDED_W = 264
 
-/* ─── Animations ──────────────────────────────────────────── */
-const fadeIn = keyframes`
-  from { opacity: 0; transform: translateX(-4px); }
-  to   { opacity: 1; transform: translateX(0); }
-`
+/* ─── Injected keyframe styles ────────────────────────────── */
+const styleTag = document.createElement('style')
+styleTag.textContent = `
+  @keyframes tooltipIn {
+    from { opacity: 0; transform: translateX(-4px) translateY(-50%); }
+    to   { opacity: 1; transform: translateX(0) translateY(-50%); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-4px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .sidebar-nav::-webkit-scrollbar { width: 3px; }
+  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-nav::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 99px; }
 
-const tooltipIn = keyframes`
-  from { opacity: 0; transform: translateX(-4px) translateY(-50%); }
-  to   { opacity: 1; transform: translateX(0) translateY(-50%); }
-`
-
-/* ─── Sidebar Shell ───────────────────────────────────────── */
-const SidebarContainer = styled.aside`
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #fff;
-  border-right: 1.5px solid rgba(59, 130, 246, 0.1);
-  flex-shrink: 0;
-  position: relative;
-  z-index: 100;
-
-  width: ${({ $collapsed }) => ($collapsed ? `${RAIL_W}px` : `${EXPANDED_W}px`)};
-  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: visible;
-
-  @media (max-width: 768px) {
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 1001;
-    height: 100vh;
-    width: ${EXPANDED_W}px;
-    transform: translateX(${({ $isMobileOpen }) => ($isMobileOpen ? '0' : '-100%')});
+  .sidebar-toggle-btn svg {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: ${({ $isMobileOpen }) =>
-      $isMobileOpen ? '8px 0 40px rgba(15,45,107,0.14)' : 'none'};
-    overflow: hidden;
   }
-`
-
-/* ─── Toggle Button ─────────────────────────────────────── */
-const ToggleBtn = styled.button`
-  position: absolute;
-  top: 20px;
-  right: -12px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1.5px solid rgba(59, 130, 246, 0.25);
-  color: #3b82f6;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.12);
-  transition: background 0.15s, box-shadow 0.15s, transform 0.2s;
-
-  &:hover {
-    background: #eff6ff;
-    box-shadow: 0 4px 14px rgba(59,130,246,0.2);
-    transform: scale(1.1);
+  .sidebar-toggle-btn:hover {
+    background: #eff6ff !important;
+    box-shadow: 0 4px 14px rgba(59,130,246,0.2) !important;
+    transform: scale(1.1) !important;
   }
 
-  svg {
-    width: 13px;
-    height: 13px;
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    transform: ${({ $collapsed }) => ($collapsed ? 'rotate(0deg)' : 'rotate(180deg)')};
+  .sidebar-trigger:hover { background: #eff6ff !important; }
+  .sidebar-trigger:hover .trigger-icon { color: #3b82f6 !important; }
+  .sidebar-trigger:hover .trigger-label { color: #1e40af !important; }
+
+  .sidebar-standalone-link:hover { background: #eff6ff !important; color: #1e40af !important; }
+  .sidebar-standalone-link:hover svg { color: #3b82f6 !important; }
+  .sidebar-standalone-link.active { background: #dbeafe !important; color: #1e40af !important; font-weight: 500 !important; }
+  .sidebar-standalone-link.active svg { color: #3b82f6 !important; }
+
+  .sidebar-sub-link { display: flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 400; color: #64748b; transition: background 0.13s, color 0.13s; white-space: nowrap; line-height: 1.2; }
+  .sidebar-sub-link::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: transparent; flex-shrink: 0; transition: background 0.15s; }
+  .sidebar-sub-link:hover { background: #eff6ff; color: #1e40af; }
+  .sidebar-sub-link:hover::before { background: #bfdbfe; }
+  .sidebar-sub-link.active { background: #dbeafe; color: #1e40af; font-weight: 500; }
+  .sidebar-sub-link.active::before { background: #3b82f6; }
+
+  .sidebar-tooltip-wrap:hover .sidebar-tooltip {
+    opacity: 1;
+    animation: tooltipIn 0.15s ease forwards;
   }
+  .sidebar-trigger:hover .sidebar-tooltip {
+    opacity: 1;
+    animation: tooltipIn 0.15s ease forwards;
+  }
+  .sidebar-user-area:hover .sidebar-tooltip {
+    opacity: 1;
+    animation: tooltipIn 0.15s ease forwards;
+  }
+
+  .close-btn:hover { background: #eff6ff !important; }
 
   @media (max-width: 768px) {
-    display: none;
+    .sidebar-toggle-btn { display: none !important; }
+    .close-btn { display: flex !important; }
+    .sidebar-container {
+      position: fixed !important;
+      left: 0 !important;
+      top: 0 !important;
+      z-index: 1001 !important;
+      width: ${EXPANDED_W}px !important;
+    }
+  }
+  @media (min-width: 769px) {
+    .close-btn { display: none !important; }
   }
 `
+if (!document.head.querySelector('#sidebar-styles')) {
+  styleTag.id = 'sidebar-styles'
+  document.head.appendChild(styleTag)
+}
 
-/* ─── Header ──────────────────────────────────────────────── */
-const Header = styled.div`
-  display: flex;
-  align-items: center;
-  height: 64px;
-  padding: 0 ${({ $collapsed }) => ($collapsed ? '0' : '1rem')};
-  justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'space-between')};
-  border-bottom: 1.5px solid rgba(59, 130, 246, 0.08);
-  flex-shrink: 0;
-  overflow: hidden;
-`
-
-const LogoMark = styled.div`
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-
-  svg {
-    width: 16px;
-    height: 16px;
-    color: white;
-  }
-`
-
-const LogoText = styled.span`
-  display: block;
-  font-family: 'Courier New', monospace;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1e40af;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  margin-left: ${({ $collapsed }) => ($collapsed ? '0' : '0.6rem')};
-  transition: opacity 0.2s ease, width 0.28s ease, margin 0.28s ease;
-  pointer-events: none;
-  will-change: opacity, width, margin;
-  line-height: 1.2;
-`
-
-const CloseBtn = styled.button`
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #3b82f6;
-  flex-shrink: 0;
-  transition: background 0.15s;
-
-  &:hover { background: #eff6ff; }
-
-  svg { width: 18px; height: 18px; }
-
-  @media (min-width: 769px) { display: none; }
-`
-
-/* ─── Nav ─────────────────────────────────────────────────── */
-const Nav = styled.nav`
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0.75rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 99px; }
-`
-
-const Divider = styled.div`
-  height: 1px;
-  background: rgba(59, 130, 246, 0.07);
-  margin: 0.4rem ${({ $collapsed }) => ($collapsed ? '10px' : '0.75rem')};
-  transition: margin 0.28s;
-`
-
-/* ─── Tooltip ───────────────────────────────────────────── */
-const Tooltip = styled.span`
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: #1e293b;
-  color: #fff;
-  font-size: 0.76rem;
-  font-family: 'Outfit', system-ui, sans-serif;
-  font-weight: 500;
-  padding: 5px 10px;
-  border-radius: 7px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  z-index: 9999;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-
-  &::before {
-    content: '';
-    position: absolute;
-    right: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 5px solid transparent;
-    border-right-color: #1e293b;
-  }
-`
-
-/* ─── Section Styles ─────────────────────────────────────── */
-const SectionWrap = styled.div`
-  position: relative;
-  padding: 0 ${({ $collapsed }) => ($collapsed ? '6px' : '8px')};
-  transition: padding 0.28s;
-`
-
-const SectionLabel = styled.p`
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #94a3b8;
-  margin: ${({ $collapsed }) => ($collapsed ? '0.75rem 0 0.25rem' : '1.25rem 1rem 0.5rem 1rem')};
-  padding: 0;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  transition: opacity 0.18s ease, margin 0.28s ease;
-  pointer-events: none;
-  line-height: 1.2;
-`
-
-const Trigger = styled.button`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: ${({ $collapsed }) => ($collapsed ? '0.6rem 0' : '0.52rem 0.65rem')};
-  border: none;
-  background: ${({ $open, $collapsed }) => (!$collapsed && $open ? '#eff6ff' : 'transparent')};
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s, padding 0.28s;
-  text-align: left;
-  justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'flex-start')};
-  gap: ${({ $collapsed }) => ($collapsed ? '0' : '0.6rem')};
-  position: relative;
-
-  &:hover {
-    background: ${({ $collapsed }) => ($collapsed ? 'transparent' : '#eff6ff')};
-  }
-
-  ${({ $collapsed, $open }) =>
-    $collapsed && $open &&
-    css`
-      &::after {
-        content: '';
-        position: absolute;
-        inset: 2px;
-        border-radius: 8px;
-        background: #dbeafe;
-      }
-    `}
-
-  &:hover > ${Tooltip} {
-    opacity: 1;
-    animation: ${tooltipIn} 0.15s ease forwards;
-  }
-`
-
-const TriggerIcon = styled.span`
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  color: ${({ $open }) => ($open ? '#3b82f6' : '#64748b')};
-  transition: color 0.15s;
-  position: relative;
-  z-index: 1;
-
-  ${Trigger}:hover & { color: #3b82f6; }
-
-  svg { width: 17px; height: 17px; }
-`
-
-const TriggerLabel = styled.span`
-  display: block;
-  flex: 1;
-  font-size: 0.875rem;
-  font-weight: 400;
-  color: ${({ $open }) => ($open ? '#1e40af' : '#334155')};
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  transition: opacity 0.18s ease, width 0.28s ease;
-  pointer-events: none;
-  will-change: opacity, width;
-  line-height: 1.2;
-
-  ${Trigger}:hover & { color: #1e40af; }
-`
-
-const Chevron = styled(ChevronDown)`
-  width: 13px !important;
-  height: 13px !important;
-  flex-shrink: 0;
-  color: ${({ $open }) => ($open ? '#3b82f6' : '#94a3b8')};
-  transform: ${({ $open }) => ($open ? 'rotate(180deg)' : 'rotate(0deg)')};
-  transition: transform 0.22s cubic-bezier(0.4,0,0.2,1), color 0.15s, opacity 0.18s;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  pointer-events: none;
-`
-
-/* ─── SubMenu ─────────────────────────────────────────────── */
-const SubMenu = styled.div`
-  overflow: hidden;
-  max-height: ${({ $open, $height, $collapsed }) =>
-    $collapsed ? '0' : ($open ? `${$height}px` : '0')};
-  transition: max-height 0.26s cubic-bezier(0.4,0,0.2,1);
-`
-
-const SubInner = styled.div`
-  padding: 0.15rem 0 0.3rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-`
-
-const SubLink = styled(NavLink)`
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 8px;
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 400;
-  color: #64748b;
-  transition: background 0.13s, color 0.13s;
-  white-space: nowrap;
-  line-height: 1.2;
-
-  &::before {
-    content: '';
-    display: inline-block;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: transparent;
-    flex-shrink: 0;
-    transition: background 0.15s;
-  }
-
-  &:hover { background: #eff6ff; color: #1e40af; }
-  &:hover::before { background: #bfdbfe; }
-
-  &.active {
-    background: #dbeafe;
-    color: #1e40af;
-    font-weight: 500;
-  }
-  &.active::before { background: #3b82f6; }
-`
-
-/* ─── Standalone Link ─────────────────────────────────────── */
-const StandaloneWrap = styled.div`
-  position: relative;
-  padding: 0 ${({ $collapsed }) => ($collapsed ? '6px' : '8px')};
-  transition: padding 0.28s;
-
-  &:hover > a > ${Tooltip} {
-    opacity: 1;
-    animation: ${tooltipIn} 0.15s ease forwards;
-  }
-`
-
-const StandaloneLink = styled(NavLink)`
-  display: flex;
-  align-items: center;
-  gap: ${({ $collapsed }) => ($collapsed ? '0' : '0.6rem')};
-  padding: ${({ $collapsed }) => ($collapsed ? '0.6rem 0' : '0.52rem 0.65rem')};
-  border-radius: 10px;
-  text-decoration: none;
-  color: #334155;
-  font-size: 0.875rem;
-  font-weight: 400;
-  transition: background 0.15s, color 0.15s, padding 0.28s;
-  white-space: nowrap;
-  justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'flex-start')};
-  position: relative;
-  line-height: 1.2;
-
-  svg {
-    width: 17px;
-    height: 17px;
-    color: #64748b;
-    flex-shrink: 0;
-    transition: color 0.15s;
-  }
-
-  span {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-    width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-    transition: opacity 0.18s ease, width 0.28s ease;
-    pointer-events: none;
-    will-change: opacity, width;
-    line-height: 1.2;
-    white-space: nowrap;
-  }
-
-  &:hover { background: #eff6ff; color: #1e40af; }
-  &:hover svg { color: #3b82f6; }
-
-  &.active { background: #dbeafe; color: #1e40af; font-weight: 500; }
-  &.active svg { color: #3b82f6; }
-`
-
-/* ─── User Area ───────────────────────────────────────────── */
-const UserArea = styled.div`
-  border-top: 1.5px solid rgba(59, 130, 246, 0.08);
-  padding: ${({ $collapsed }) => ($collapsed ? '0.75rem 6px' : '0.75rem 0.75rem')};
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  overflow: hidden;
-  transition: padding 0.28s;
-  justify-content: ${({ $collapsed }) => ($collapsed ? 'center' : 'flex-start')};
-  position: relative;
-
-  &:hover > ${Tooltip} {
-    opacity: ${({ $collapsed }) => ($collapsed ? 1 : 0)};
-    animation: ${({ $collapsed }) => ($collapsed ? css`${tooltipIn} 0.15s ease forwards` : 'none')};
-  }
-`
-
-const Avatar = styled.div`
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #1e40af);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 0.78rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  font-family: 'Courier New', monospace;
-`
-
-const UserInfo = styled.div`
-  flex: 1;
-  overflow: hidden;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  transition: opacity 0.18s ease, width 0.28s ease;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-`
-
-const UserName = styled.span`
-  display: block;
-  font-size: 0.84rem;
-  font-weight: 500;
-  color: #0f172a;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.2;
-`
-
-const UserRole = styled.span`
-  display: block;
-  font-size: 0.7rem;
-  color: #94a3b8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.2;
-`
-
-const ThemeWrap = styled.div`
-  flex-shrink: 0;
-  opacity: ${({ $collapsed }) => ($collapsed ? 0 : 1)};
-  width: ${({ $collapsed }) => ($collapsed ? '0' : 'auto')};
-  overflow: hidden;
-  transition: opacity 0.18s ease, width 0.28s ease;
-  pointer-events: ${({ $collapsed }) => ($collapsed ? 'none' : 'auto')};
-`
-
-/* ─── Overlay ─────────────────────────────────────────────── */
-const Overlay = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: ${({ $show }) => ($show ? 'block' : 'none')};
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 45, 107, 0.35);
-    backdrop-filter: blur(2px);
-    z-index: 1000;
-  }
-`
+/* ─── Tooltip ─────────────────────────────────────────────── */
+const Tooltip = ({ children }) => (
+  <span
+    className="sidebar-tooltip"
+    style={{
+      position: 'absolute',
+      left: 'calc(100% + 10px)',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      background: '#1e293b',
+      color: '#fff',
+      fontSize: '0.76rem',
+      fontFamily: "'Outfit', system-ui, sans-serif",
+      fontWeight: 500,
+      padding: '5px 10px',
+      borderRadius: '7px',
+      whiteSpace: 'nowrap',
+      pointerEvents: 'none',
+      opacity: 0,
+      zIndex: 9999,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    }}
+  >
+    <span style={{
+      content: '',
+      position: 'absolute',
+      right: '100%',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      border: '5px solid transparent',
+      borderRightColor: '#1e293b',
+      display: 'block',
+      width: 0,
+      height: 0,
+    }} />
+    {children}
+  </span>
+)
 
 /* ─── Data ────────────────────────────────────────────────── */
 const sections = [
@@ -559,9 +170,9 @@ const sections = [
 ]
 
 const standaloneItems = [
-  { name: 'Account',       path: '/dashboard/account',        icon: User },
-  { name: 'Port Settings', path: '/dashboard/portsettings',   icon: RiUserSettingsLine },
-  { name: 'Settings',      path: '/dashboard/settings',       icon: Settings },
+  { name: 'Account',       path: '/dashboard/account',      icon: User },
+  { name: 'Port Settings', path: '/dashboard/portsettings', icon: RiUserSettingsLine },
+  { name: 'Settings',      path: '/dashboard/settings',     icon: Settings },
 ]
 
 /* ─── Component ───────────────────────────────────────────── */
@@ -591,166 +202,517 @@ const Sidebar = ({ isMobileOpen, onCloseMobile }) => {
 
   const handleLinkClick = () => onCloseMobile?.()
 
-  const renderSection = (section) => (
-    <SectionWrap key={section.key} $collapsed={collapsed}>
-      <Trigger
-        $open={openKey === section.key}
-        $collapsed={collapsed}
-        onClick={() => toggle(section.key)}
-        title={collapsed ? section.label : undefined}
-      >
-        <TriggerIcon $open={openKey === section.key}>
-          <section.icon />
-        </TriggerIcon>
-        <TriggerLabel $open={openKey === section.key} $collapsed={collapsed}>
-          {section.label}
-        </TriggerLabel>
-        <Chevron $open={openKey === section.key} $collapsed={collapsed} />
-        {collapsed && <Tooltip>{section.label}</Tooltip>}
-      </Trigger>
+  /* ── inline styles ── */
+  const containerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    background: '#fff',
+    borderRight: '1.5px solid rgba(59, 130, 246, 0.1)',
+    flexShrink: 0,
+    position: 'relative',
+    zIndex: 100,
+    width: collapsed ? `${RAIL_W}px` : `${EXPANDED_W}px`,
+    transition: 'width 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+    overflow: 'visible',
+    // mobile handled via class + media query
+    ...(window.innerWidth <= 768 ? {
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      zIndex: 1001,
+      height: '100vh',
+      width: `${EXPANDED_W}px`,
+      transform: isMobileOpen ? 'translateX(0)' : 'translateX(-100%)',
+      transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+      boxShadow: isMobileOpen ? '8px 0 40px rgba(15,45,107,0.14)' : 'none',
+      overflow: 'hidden',
+    } : {}),
+  }
 
-      <SubMenu $open={openKey === section.key} $height={section.height} $collapsed={collapsed}>
-        <SubInner>
-          {section.links.map(({ name, path }) => (
-            <SubLink key={path} to={path} onClick={handleLinkClick}>
-              {name}
-            </SubLink>
-          ))}
-        </SubInner>
-      </SubMenu>
-    </SectionWrap>
-  )
+  const toggleBtnStyle = {
+    position: 'absolute',
+    top: '20px',
+    right: '-12px',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    background: '#fff',
+    border: '1.5px solid rgba(59, 130, 246, 0.25)',
+    color: '#3b82f6',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 200,
+    boxShadow: '0 2px 8px rgba(59,130,246,0.12)',
+    transition: 'background 0.15s, box-shadow 0.15s, transform 0.2s',
+    padding: 0,
+  }
+
+  const headerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    height: '64px',
+    padding: collapsed ? '0' : '0 1rem',
+    justifyContent: collapsed ? 'center' : 'space-between',
+    borderBottom: '1.5px solid rgba(59, 130, 246, 0.08)',
+    flexShrink: 0,
+    overflow: 'hidden',
+    transition: 'padding 0.28s',
+  }
+
+  const logoMarkStyle = {
+    width: '32px',
+    height: '32px',
+    minWidth: '32px',
+    borderRadius: '9px',
+    background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    cursor: 'pointer',
+  }
+
+  const logoTextStyle = {
+    display: 'block',
+    fontFamily: "'Courier New', monospace",
+    fontSize: '1rem',
+    fontWeight: 700,
+    color: '#1e40af',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    opacity: collapsed ? 0 : 1,
+    width: collapsed ? '0' : 'auto',
+    marginLeft: collapsed ? '0' : '0.6rem',
+    transition: 'opacity 0.2s ease, width 0.28s ease, margin 0.28s ease',
+    pointerEvents: 'none',
+    lineHeight: 1.2,
+  }
+
+  const closeBtnStyle = {
+    width: '28px',
+    height: '28px',
+    border: 'none',
+    background: 'transparent',
+    cursor: 'pointer',
+    borderRadius: '6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: '#3b82f6',
+    flexShrink: 0,
+    transition: 'background 0.15s',
+  }
+
+  const navStyle = {
+    flex: 1,
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    padding: '0.75rem 0',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1px',
+  }
+
+  const dividerStyle = {
+    height: '1px',
+    background: 'rgba(59, 130, 246, 0.07)',
+    margin: `0.4rem ${collapsed ? '10px' : '0.75rem'}`,
+    transition: 'margin 0.28s',
+  }
+
+  const sectionWrapStyle = {
+    position: 'relative',
+    padding: `0 ${collapsed ? '6px' : '8px'}`,
+    transition: 'padding 0.28s',
+  }
+
+  const sectionLabelStyle = {
+    display: 'block',
+    fontSize: '0.65rem',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: '#94a3b8',
+    margin: collapsed ? '0.75rem 0 0.25rem' : '1.25rem 1rem 0.5rem 1rem',
+    padding: 0,
+    opacity: collapsed ? 0 : 1,
+    transition: 'opacity 0.18s ease, margin 0.28s ease',
+    pointerEvents: 'none',
+    lineHeight: 1.2,
+  }
+
+  const userAreaStyle = {
+    borderTop: '1.5px solid rgba(59, 130, 246, 0.08)',
+    padding: collapsed ? '0.75rem 6px' : '0.75rem 0.75rem',
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.6rem',
+    overflow: 'hidden',
+    transition: 'padding 0.28s',
+    justifyContent: collapsed ? 'center' : 'flex-start',
+    position: 'relative',
+  }
+
+  const avatarStyle = {
+    width: '32px',
+    height: '32px',
+    minWidth: '32px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: 'white',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    flexShrink: 0,
+    fontFamily: "'Courier New', monospace",
+  }
+
+  const userInfoStyle = {
+    flex: 1,
+    overflow: 'hidden',
+    opacity: collapsed ? 0 : 1,
+    width: collapsed ? '0' : 'auto',
+    transition: 'opacity 0.18s ease, width 0.28s ease',
+    pointerEvents: 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.2rem',
+  }
+
+  const themeWrapStyle = {
+    flexShrink: 0,
+    opacity: collapsed ? 0 : 1,
+    width: collapsed ? '0' : 'auto',
+    overflow: 'hidden',
+    transition: 'opacity 0.18s ease, width 0.28s ease',
+    pointerEvents: collapsed ? 'none' : 'auto',
+  }
+
+  const getTriggerStyle = (isOpen) => ({
+    display: 'flex',
+    alignItems: 'center',
+    width: '100%',
+    padding: collapsed ? '0.6rem 0' : '0.52rem 0.65rem',
+    border: 'none',
+    background: !collapsed && isOpen ? '#eff6ff' : 'transparent',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'background 0.15s, padding 0.28s',
+    textAlign: 'left',
+    justifyContent: collapsed ? 'center' : 'flex-start',
+    gap: collapsed ? '0' : '0.6rem',
+    position: 'relative',
+  })
+
+  const getTriggerIconStyle = (isOpen) => ({
+    display: 'flex',
+    alignItems: 'center',
+    flexShrink: 0,
+    color: isOpen ? '#3b82f6' : '#64748b',
+    transition: 'color 0.15s',
+    position: 'relative',
+    zIndex: 1,
+  })
+
+  const getTriggerLabelStyle = (isOpen) => ({
+    display: 'block',
+    flex: 1,
+    fontSize: '0.875rem',
+    fontWeight: 400,
+    color: isOpen ? '#1e40af' : '#334155',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    opacity: collapsed ? 0 : 1,
+    width: collapsed ? '0' : 'auto',
+    transition: 'opacity 0.18s ease, width 0.28s ease',
+    pointerEvents: 'none',
+    lineHeight: 1.2,
+  })
+
+  const getChevronStyle = (isOpen) => ({
+    width: '13px',
+    height: '13px',
+    flexShrink: 0,
+    color: isOpen ? '#3b82f6' : '#94a3b8',
+    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+    transition: 'transform 0.22s cubic-bezier(0.4,0,0.2,1), color 0.15s, opacity 0.18s',
+    opacity: collapsed ? 0 : 1,
+    pointerEvents: 'none',
+  })
+
+  const getSubMenuStyle = (isOpen, height) => ({
+    overflow: 'hidden',
+    maxHeight: collapsed ? '0' : (isOpen ? `${height}px` : '0'),
+    transition: 'max-height 0.26s cubic-bezier(0.4,0,0.2,1)',
+  })
+
+  const subInnerStyle = {
+    padding: '0.15rem 0 0.3rem 2rem',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1px',
+  }
+
+  const getStandaloneLinkStyle = (isCollapsed) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: isCollapsed ? '0' : '0.6rem',
+    padding: isCollapsed ? '0.6rem 0' : '0.52rem 0.65rem',
+    borderRadius: '10px',
+    textDecoration: 'none',
+    color: '#334155',
+    fontSize: '0.875rem',
+    fontWeight: 400,
+    transition: 'background 0.15s, color 0.15s, padding 0.28s',
+    whiteSpace: 'nowrap',
+    justifyContent: isCollapsed ? 'center' : 'flex-start',
+    position: 'relative',
+    lineHeight: 1.2,
+  })
+
+  const standaloneIconStyle = {
+    width: '17px',
+    height: '17px',
+    color: '#64748b',
+    flexShrink: 0,
+    transition: 'color 0.15s',
+  }
+
+  const standaloneLabelStyle = {
+    display: 'block',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    opacity: collapsed ? 0 : 1,
+    width: collapsed ? '0' : 'auto',
+    transition: 'opacity 0.18s ease, width 0.28s ease',
+    pointerEvents: 'none',
+    lineHeight: 1.2,
+    whiteSpace: 'nowrap',
+  }
+
+  /* ── render helpers ── */
+  const renderSection = (section) => {
+    const isOpen = openKey === section.key
+    return (
+      <div key={section.key} style={sectionWrapStyle} className="sidebar-tooltip-wrap">
+        <button
+          style={getTriggerStyle(isOpen)}
+          className="sidebar-trigger"
+          onClick={() => toggle(section.key)}
+          title={collapsed ? section.label : undefined}
+        >
+          <span style={getTriggerIconStyle(isOpen)} className="trigger-icon">
+            <section.icon style={{ width: 17, height: 17 }} />
+          </span>
+          <span style={getTriggerLabelStyle(isOpen)} className="trigger-label">
+            {section.label}
+          </span>
+          <ChevronDown style={getChevronStyle(isOpen)} />
+          {collapsed && <Tooltip>{section.label}</Tooltip>}
+        </button>
+
+        <div style={getSubMenuStyle(isOpen, section.height)}>
+          <div style={subInnerStyle}>
+            {section.links.map(({ name, path }) => (
+              <NavLink
+                key={path}
+                to={path}
+                className="sidebar-sub-link"
+                onClick={handleLinkClick}
+              >
+                {name}
+              </NavLink>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>
-      <Overlay $show={isMobileOpen} onClick={onCloseMobile} />
+      {/* Overlay */}
+      <div
+        onClick={onCloseMobile}
+        style={{
+          display: isMobileOpen && window.innerWidth <= 768 ? 'block' : 'none',
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 45, 107, 0.35)',
+          backdropFilter: 'blur(2px)',
+          zIndex: 1000,
+        }}
+      />
 
-      <SidebarContainer $collapsed={collapsed} $isMobileOpen={isMobileOpen}>
-        {/* Desktop toggle button */}
-        <ToggleBtn
-          $collapsed={collapsed}
+      <aside style={containerStyle} className="sidebar-container">
+        {/* Desktop toggle */}
+        <button
+          style={{
+            ...toggleBtnStyle,
+            transform: collapsed ? 'rotate(0deg)' : 'rotate(0deg)',
+          }}
+          className="sidebar-toggle-btn"
           onClick={() => setCollapsed(c => !c)}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <ChevronLeft />
-        </ToggleBtn>
+          <ChevronLeft
+            style={{
+              width: 13,
+              height: 13,
+              transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+              transition: 'transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          />
+        </button>
 
         {/* Header */}
-        <Header $collapsed={collapsed}>
-          <Link
-            to="/"
-          >
-            <LogoMark onClick={() => collapsed && setCollapsed(false)}>
-              <Database />
-            </LogoMark>
+        <div style={headerStyle}>
+          <Link to="/">
+            <div style={logoMarkStyle} onClick={() => collapsed && setCollapsed(false)}>
+              <Database style={{ width: 16, height: 16, color: 'white' }} />
+            </div>
           </Link>
-          <LogoText $collapsed={collapsed}>PersonalDB</LogoText>
-          <CloseBtn onClick={onCloseMobile}><X /></CloseBtn>
-        </Header>
+          <span style={logoTextStyle}>PersonalDB</span>
+          <button
+            className="close-btn"
+            style={closeBtnStyle}
+            onClick={onCloseMobile}
+          >
+            <X style={{ width: 18, height: 18 }} />
+          </button>
+        </div>
 
         {/* Nav */}
-        <Nav>
-          
-          <StandaloneWrap $collapsed={collapsed}>
-            <StandaloneLink
-              to={`/dashboard`}
-              $collapsed={collapsed}
-            >
-              <MdOutlineDashboard />
-              <span>Dashboard</span>
-              {collapsed && <Tooltip>DashBoard</Tooltip>}
-            </StandaloneLink>
-          </StandaloneWrap>
+        <nav style={navStyle} className="sidebar-nav">
 
-          <Divider $collapsed={collapsed} />
+          {/* Dashboard */}
+          <div
+            style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
+            className="sidebar-tooltip-wrap"
+          >
+            <NavLink
+              to="/dashboard"
+              className="sidebar-standalone-link"
+              style={getStandaloneLinkStyle(collapsed)}
+            >
+              <MdOutlineDashboard style={standaloneIconStyle} />
+              <span style={standaloneLabelStyle}>Dashboard</span>
+              {collapsed && <Tooltip>Dashboard</Tooltip>}
+            </NavLink>
+          </div>
+
+          <div style={dividerStyle} />
 
           {/* Main sections */}
           {sections.map(renderSection)}
 
-          <Divider $collapsed={collapsed} />
+          <div style={dividerStyle} />
 
           {/* Standalone items */}
           {standaloneItems.map(({ name, path, icon: Icon }) => (
-            <StandaloneWrap key={path} $collapsed={collapsed}>
-              <StandaloneLink
+            <div
+              key={path}
+              style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
+              className="sidebar-tooltip-wrap"
+            >
+              <NavLink
                 to={path}
-                $collapsed={collapsed}
+                className="sidebar-standalone-link"
+                style={getStandaloneLinkStyle(collapsed)}
                 onClick={handleLinkClick}
               >
-                <Icon />
-                <span>{name}</span>
+                <Icon style={standaloneIconStyle} />
+                <span style={standaloneLabelStyle}>{name}</span>
                 {collapsed && <Tooltip>{name}</Tooltip>}
-              </StandaloneLink>
-            </StandaloneWrap>
+              </NavLink>
+            </div>
           ))}
 
-          {/* Public Profile Link */}
-          <StandaloneWrap $collapsed={collapsed}>
-            <StandaloneLink
+          {/* Public Profile */}
+          <div
+            style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
+            className="sidebar-tooltip-wrap"
+          >
+            <NavLink
               to={`/u/${user?.username}`}
-              $collapsed={collapsed}
+              className="sidebar-standalone-link"
+              style={getStandaloneLinkStyle(collapsed)}
               onClick={handleLinkClick}
               target="_blank"
             >
-              <Globe />
-              <span>Public Profile</span>
+              <Globe style={standaloneIconStyle} />
+              <span style={standaloneLabelStyle}>Public Profile</span>
               {collapsed && <Tooltip>Public Profile</Tooltip>}
-            </StandaloneLink>
-          </StandaloneWrap>
+            </NavLink>
+          </div>
 
-          {/* Admin Section - Only show if user is admin */}
+          {/* Admin section */}
           {isAdmin && (
             <>
-              <Divider $collapsed={collapsed} />
-              <SectionLabel $collapsed={collapsed}>Admin</SectionLabel>
-              
-              <SectionWrap $collapsed={collapsed}>
-                <Trigger
-                  $open={openKey === 'admin'}
-                  $collapsed={collapsed}
+              <div style={dividerStyle} />
+              <p style={sectionLabelStyle}>Admin</p>
+
+              <div style={sectionWrapStyle} className="sidebar-tooltip-wrap">
+                <button
+                  style={getTriggerStyle(openKey === 'admin')}
+                  className="sidebar-trigger"
                   onClick={() => toggle('admin')}
                   title={collapsed ? 'Admin' : undefined}
                 >
-                  <TriggerIcon $open={openKey === 'admin'}>
-                    <BarChart3 />
-                  </TriggerIcon>
-                  <TriggerLabel $open={openKey === 'admin'} $collapsed={collapsed}>
+                  <span style={getTriggerIconStyle(openKey === 'admin')} className="trigger-icon">
+                    <BarChart3 style={{ width: 17, height: 17 }} />
+                  </span>
+                  <span style={getTriggerLabelStyle(openKey === 'admin')} className="trigger-label">
                     Admin Panel
-                  </TriggerLabel>
-                  <Chevron $open={openKey === 'admin'} $collapsed={collapsed} />
+                  </span>
+                  <ChevronDown style={getChevronStyle(openKey === 'admin')} />
                   {collapsed && <Tooltip>Admin Panel</Tooltip>}
-                </Trigger>
+                </button>
 
-                <SubMenu $open={openKey === 'admin'} $height={108} $collapsed={collapsed}>
-                  <SubInner>
-                    <SubLink to="/dashboard/admin/templates" onClick={handleLinkClick}>
+                <div style={getSubMenuStyle(openKey === 'admin', 108)}>
+                  <div style={subInnerStyle}>
+                    <NavLink to="/dashboard/admin/templates" className="sidebar-sub-link" onClick={handleLinkClick}>
                       <LayoutGrid size={14} style={{ marginRight: '4px' }} />
                       Templates
-                    </SubLink>
-                    <SubLink to="/dashboard/admin/users" onClick={handleLinkClick}>
+                    </NavLink>
+                    <NavLink to="/dashboard/admin/users" className="sidebar-sub-link" onClick={handleLinkClick}>
                       <Users size={14} style={{ marginRight: '4px' }} />
                       Users
-                    </SubLink>
-                  </SubInner>
-                </SubMenu>
-              </SectionWrap>
+                    </NavLink>
+                  </div>
+                </div>
+              </div>
             </>
           )}
-        </Nav>
+        </nav>
 
         {/* User area */}
-        <UserArea $collapsed={collapsed}>
-          <Avatar>{user?.username?.[0]?.toUpperCase()}</Avatar>
-          <UserInfo $collapsed={collapsed}>
-            <UserName>{user?.username}</UserName>
-            {isAdmin && <UserRole>👑 {user?.role === 'superadmin' ? 'Super Admin' : 'Admin'}</UserRole>}
-          </UserInfo>
-          <ThemeWrap $collapsed={collapsed}>
+        <div style={userAreaStyle} className="sidebar-user-area">
+          <div style={avatarStyle}>{user?.username?.[0]?.toUpperCase()}</div>
+          <div style={userInfoStyle}>
+            <span style={{ display: 'block', fontSize: '0.84rem', fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+              {user?.username}
+            </span>
+            {isAdmin && (
+              <span style={{ display: 'block', fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+                👑 {user?.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+              </span>
+            )}
+          </div>
+          <div style={themeWrapStyle}>
             <ThemeToggle />
-          </ThemeWrap>
+          </div>
           {collapsed && <Tooltip>{user?.username}</Tooltip>}
-        </UserArea>
-      </SidebarContainer>
+        </div>
+      </aside>
     </>
   )
 }

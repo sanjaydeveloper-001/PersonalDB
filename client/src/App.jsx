@@ -66,7 +66,7 @@ function App() {
             <Route path="/u/:username" element={<PublicProfilePage />} />
 
             {/* Protected — all inside MainLayout */}
-            <Route path="/dashboard/*" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+            <Route path="/dashboard/*" element={<MainLayout />}>
               <Route index element={<Dashboard />} />
 
               {/* Vault */}
