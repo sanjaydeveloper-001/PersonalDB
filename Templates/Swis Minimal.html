@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>User Name · Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --white: #ffffff; --off: #f9f9f9; --light: #f2f2f2; --border: #e0e0e0;
+      --red: #e61b1b; --ink: #0a0a0a; --soft: #3a3a3a; --muted: #6a6a6a; --faint: #aaaaaa;
+      --font-display: 'Bebas Neue', Impact, sans-serif;
+      --font-body: 'IBM Plex Sans', system-ui, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--white); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+    .top-nav { padding: 1.25rem 3rem 0; display: flex; align-items: center; gap: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+    .nav-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; color: var(--red); background: transparent; border: none; cursor: pointer; transition: color 0.2s; }
+    .nav-btn:hover { color: var(--ink); }
+    .nav-btn svg { width: 0.8rem; height: 0.8rem; }
+    .nav-divider { width: 1px; height: 1rem; background: var(--border); }
+
+    /* HERO */
+    .hero { display: grid; grid-template-columns: 1fr 320px; min-height: 90vh; }
+    @media(max-width:900px) { .hero { grid-template-columns: 1fr; min-height: auto; } }
+
+    .hero-left { padding: 5rem 4rem 4rem 3rem; border-right: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; }
+    @media(max-width:900px) { .hero-left { border-right: none; border-bottom: 1px solid var(--border); padding: 3rem 1.5rem; } }
+
+    .hero-num { font-family: var(--font-body); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase; color: var(--red); margin-bottom: 3rem; }
+    .hero-name { font-family: var(--font-display); font-size: clamp(6rem, 14vw, 13rem); line-height: 0.9; letter-spacing: -0.01em; color: var(--ink); margin-bottom: 2rem; }
+    .hero-domain { font-size: 1.1rem; font-weight: 300; color: var(--muted); border-top: 2px solid var(--red); padding-top: 1rem; max-width: 420px; line-height: 1.6; }
+
+    .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2.5rem; }
+    .social-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border: 1px solid var(--border);
+      color: var(--muted); text-decoration: none; transition: all 0.2s;
+    }
+    .social-icon:hover { border-color: var(--red); color: var(--red); }
+    .social-icon svg { width: 0.85rem; height: 0.85rem; }
+    .resume-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.6rem 1.4rem; background: var(--red); color: white; font-family: var(--font-body); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; transition: all 0.2s; }
+    .resume-btn:hover { background: var(--ink); }
+
+    .hero-right { padding: 3rem 2rem; display: flex; flex-direction: column; gap: 0; }
+    @media(max-width:900px) { .hero-right { padding: 2rem 1.5rem; } }
+
+    .info-block { padding: 1.5rem 0; border-bottom: 1px solid var(--border); }
+    .info-block:last-child { border-bottom: none; }
+    .info-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--faint); margin-bottom: 0.4rem; }
+    .info-val { font-size: 0.875rem; color: var(--soft); line-height: 1.6; display: flex; align-items: center; gap: 0.5rem; }
+    .info-val svg { width: 0.8rem; height: 0.8rem; color: var(--red); flex-shrink: 0; }
+    .stat-row-right { display: flex; gap: 0; }
+    .stat-item { flex: 1; padding: 1.5rem 0; border-right: 1px solid var(--border); text-align: center; }
+    .stat-item:last-child { border-right: none; }
+    .stat-n { display: block; font-family: var(--font-display); font-size: 2.5rem; color: var(--red); line-height: 1; }
+    .stat-l { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--faint); }
+
+    /* INNER */
+    .inner { max-width: 100%; padding: 0; }
+
+    /* SUMMARY */
+    .summary-swiss { background: var(--red); padding: 3rem; display: grid; grid-template-columns: auto 1fr; gap: 3rem; align-items: center; }
+    @media(max-width:640px) { .summary-swiss { grid-template-columns: 1fr; gap: 1.5rem; padding: 2rem 1.5rem; } }
+    .summary-label { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.5); white-space: nowrap; }
+    @media(max-width:640px) { .summary-label { writing-mode: horizontal-tb; transform: none; } }
+    .summary-text { font-family: var(--font-body); font-size: clamp(1rem, 2vw, 1.2rem); font-weight: 300; font-style: italic; color: white; line-height: 1.8; }
+
+    /* SECTIONS */
+    .section { padding: 4rem 3rem; border-bottom: 1px solid var(--border); }
+    @media(max-width:640px) { .section { padding: 2.5rem 1.5rem; } }
+    .sec-hd { display: flex; align-items: baseline; gap: 2rem; margin-bottom: 3rem; }
+    .sec-num { font-family: var(--font-display); font-size: 1rem; color: var(--red); letter-spacing: 0.1em; }
+    .sec-title { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.5rem); color: var(--ink); letter-spacing: 0.02em; line-height: 1; }
+
+    /* TL SWISS */
+    .tl-swiss { display: flex; flex-direction: column; }
+    .tl-row { display: grid; grid-template-columns: 180px 1fr; gap: 3rem; padding: 2rem 0; border-top: 1px solid var(--border); }
+    @media(max-width:640px) { .tl-row { grid-template-columns: 1fr; gap: 0.75rem; } }
+    /* .tl-left { } */
+    .tl-dur { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--red); }
+    .tl-type { font-size: 0.7rem; color: var(--faint); margin-top: 0.25rem; }
+    /* .tl-right { } */
+    .tl-title { font-size: 1.1rem; font-weight: 600; color: var(--ink); margin-bottom: 0.2rem; }
+    .tl-sub { font-size: 0.875rem; color: var(--red); font-weight: 500; margin-bottom: 0.5rem; }
+    .tl-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.75; }
+    .tl-score { font-size: 0.75rem; color: var(--faint); margin-top: 0.35rem; }
+
+    /* PROJECTS SWISS */
+    .proj-swiss { display: flex; flex-direction: column; }
+    .proj-row {
+      display: grid; grid-template-columns: 60px 1fr auto;
+      gap: 2.5rem; padding: 2.5rem 0; border-top: 1px solid var(--border);
+      align-items: start; transition: background 0.2s; cursor: default;
+    }
+    .proj-row:hover { background: var(--off); margin: 0 -3rem; padding-left: 3rem; padding-right: 3rem; }
+    @media(max-width:640px) { .proj-row { grid-template-columns: 1fr; padding: 1.75rem 0; } .proj-row:hover { margin: 0; padding-left: 0; padding-right: 0; } }
+    .proj-idx { font-family: var(--font-display); font-size: 2.5rem; color: var(--border); line-height: 1; }
+    .proj-nm { font-size: 1.2rem; font-weight: 600; color: var(--ink); margin-bottom: 0.4rem; }
+    .proj-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.75; margin-bottom: 0.875rem; }
+    .proj-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .proj-tag { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); border: 1px solid var(--border); padding: 0.2rem 0.55rem; }
+    .proj-links { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; flex-shrink: 0; }
+    .proj-link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--soft); text-decoration: none; transition: color 0.2s; white-space: nowrap; }
+    .proj-link:hover { color: var(--red); }
+    .proj-link svg { width: 0.65rem; height: 0.65rem; }
+
+    /* SKILLS SWISS */
+    /* .skills-swiss { } */
+    .skill-group { border-top: 1px solid var(--border); padding: 2rem 0; display: grid; grid-template-columns: 180px 1fr; gap: 3rem; }
+    @media(max-width:640px) { .skill-group { grid-template-columns: 1fr; gap: 0.75rem; } }
+    .skill-cat { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--red); }
+    .skill-items { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .skill-item { font-size: 0.875rem; color: var(--soft); background: var(--light); padding: 0.4rem 0.875rem; }
+
+    /* CERTS SWISS */
+    .cert-list { display: flex; flex-direction: column; }
+    .cert-row { display: grid; grid-template-columns: 1fr auto; gap: 2rem; padding: 2rem 0; border-top: 1px solid var(--border); align-items: center; }
+    @media(max-width:640px) { .cert-row { grid-template-columns: 1fr; } }
+    .cert-nm { font-size: 1rem; font-weight: 600; color: var(--ink); }
+    .cert-iss { font-size: 0.8rem; font-weight: 500; color: var(--red); margin-top: 0.2rem; }
+    .cert-lnk { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; white-space: nowrap; transition: color 0.2s; }
+    .cert-lnk:hover { color: var(--red); }
+    .cert-lnk svg { width: 0.65rem; height: 0.65rem; }
+
+    /* INTERESTS SWISS */
+    .int-swiss { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--border); }
+    .int-item { font-size: 0.875rem; color: var(--soft); padding: 0.875rem 1.5rem; border-right: 1px solid var(--border); transition: all 0.2s; cursor: default; }
+    .int-item:last-child { border-right: none; }
+    .int-item:hover { background: var(--red); color: white; }
+
+    /* FOOTER */
+    .footer { padding: 2.5rem 3rem; border-top: 2px solid var(--ink); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.5rem; }
+    @media(max-width:640px) { .footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; } }
+    .footer-socials { display: flex; gap: 0.5rem; }
+    .footer-contacts { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .footer-contacts a { font-size: 0.8rem; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
+    .footer-contacts a:hover { color: var(--red); }
+    .footer-contacts a svg { width: 0.8rem; height: 0.8rem; }
+    .copyright { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  </style>
+</head>
+<body>
+<div class="top-nav">
+  <button class="nav-btn" id="backBtn"><i data-lucide="chevron-left"></i>Back</button>
+  <span class="nav-divider"></span>
+  <button class="nav-btn" id="homeBtn"><i data-lucide="home"></i>Home</button>
+</div>
+<div id="app-root"></div>
+<script>
+  function initializeLucideIcons() { if(typeof lucide!=='undefined'&&lucide.createIcons) lucide.createIcons(); else setTimeout(initializeLucideIcons,50); }
+  const portfolioData = { "profile": { "social": [ { "name": "GitHub", "link": "https://github.com/example-dev", "icon": "Github", "color": "#e61b1b" }, { "name": "LinkedIn", "link": "https://linkedin.com/in/example-profile", "icon": "Linkedin", "color": "#e61b1b" }, { "name": "Portfolio", "link": "https://example.dev", "icon": "Globe", "color": "#e61b1b" } ], "cvLink": "#", "domain": "Full Stack Developer", "email": "user@example.com", "location": "San Francisco, CA (Remote)", "name": "User Name", "phone": "+1 (555) 123-4567", "profilePhotoUrl": null, "summary": "Passionate full-stack developer with expertise in building modern web applications. I love creating clean, responsive interfaces and scalable backend systems. Always eager to learn new technologies and contribute to impactful projects." }, "education": [ { "_id": "edu_1", "institution": "State University of Technology", "course": "M.Sc. in Computer Science", "duration": "2022 – 2024", "cgpa": "3.9/4.0" }, { "_id": "edu_2", "institution": "Metro Public School", "course": "Higher Secondary Education", "duration": "2020 – 2022", "percentage": "92.5" } ], "experience": [ { "_id": "exp_1", "company": "Digital Innovations Inc.", "role": "Full Stack Developer Intern", "duration": "6 months", "description": "Collaborated on building enterprise web apps using React, Node.js, and MongoDB. Improved API performance by 30%.", "type": "Internship" }, { "_id": "exp_2", "company": "Creative Labs", "role": "Frontend Developer (Freelance)", "duration": "1 year", "description": "Developed responsive websites and interactive dashboards for clients.", "type": "Freelance" } ], "projects": [ { "_id": "proj_1", "title": "TaskFlow Manager", "tech": ["MERN", "Tailwind", "JWT", "Redux Toolkit"], "description": "A full-stack productivity app with task boards, real-time updates, and user authentication.", "demo": "https://demo-taskflow.example.com", "repo": "https://github.com/example/taskflow" }, { "_id": "proj_2", "title": "WeatherDash", "tech": ["React", "OpenWeather API", "Chart.js", "CSS Modules"], "description": "Real-time weather dashboard with 7-day forecasts, interactive maps, and location search.", "demo": "https://weatherdash.example.com", "repo": "https://github.com/example/weatherdash" } ], "skills": { "skills": [ { "category": "Frontend", "items": ["React", "Vue.js", "Tailwind CSS", "TypeScript"] }, { "category": "Backend", "items": ["Node.js", "Express", "Python", "PostgreSQL", "MongoDB"] }, { "category": "Tools & DevOps", "items": ["Git/GitHub", "Docker", "VS Code", "Postman", "Vercel"] } ] }, "certifications": [ { "_id": "cert_1", "name": "Meta Backend Developer Professional", "issuer": "Coursera", "link": "https://coursera.org/verify/example" }, { "_id": "cert_2", "name": "AWS Cloud Practitioner", "issuer": "Amazon Web Services", "link": "https://aws.amazon.com/verification/example" } ], "interests": { "interests": ["Open Source", "Cloud Architecture", "UI/UX Design", "Tech Writing", "Hiking", "Chess"] } };
+  const BRAND_SVGS = { 'Github': `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>`, 'Linkedin': `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>` };
+  function getIconHTML(n){if(BRAND_SVGS[n])return BRAND_SVGS[n];const m={'Globe':'globe','Mail':'mail','Phone':'phone','FileText':'file-text','MapPin':'map-pin'};return `<i data-lucide="${m[n]||n.toLowerCase().replace(/([a-z])([A-Z])/g,'$1-$2').toLowerCase()}"></i>`;}
+  function buildSocialHref(item){let l=item.link||"";if(!l)return null;if(item.icon==='Mail'&&!l.startsWith('mailto:'))return `mailto:${l}`;return l;}
+  function renderApp(data){
+    const p=data.profile,fullName=p.name||'User Name';
+    const [firstName,...lastParts]=fullName.split(' ');
+    const lastName=lastParts.join(' ')||'';
+    const socialLinks=(p.social||[]).filter(i=>buildSocialHref(i));
+    const cvLink=p.cvLink?.trim()||null;
+    const eduC=data.education.length,expC=data.experience.length,projC=data.projects.length,certC=data.certifications.length;
+    const html=`
+    <div class="hero">
+      <div class="hero-left">
+        <div>
+          <div class="hero-num">${p.domain||'Full Stack Developer'} · ${new Date().getFullYear()}</div>
+          <div class="hero-name">${firstName}<br>${lastName}</div>
+          <div class="hero-domain">${p.domain||'Full Stack Developer'} — building scalable, beautiful software</div>
+          <div class="hero-actions">
+            ${socialLinks.map(item=>{const href=buildSocialHref(item);return href?`<a href="${href}" target="_blank" class="social-icon" title="${item.name}">${getIconHTML(item.icon)}</a>`:''}).join('')}
+            ${cvLink?`<a href="${cvLink}" target="_blank" class="resume-btn"><i data-lucide="file-text"></i>Resume</a>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="hero-right">
+        ${p.email?`<div class="info-block"><div class="info-label">Email</div><div class="info-val"><i data-lucide="mail"></i>${p.email}</div></div>`:''}
+        ${p.phone?`<div class="info-block"><div class="info-label">Phone</div><div class="info-val"><i data-lucide="phone"></i>${p.phone}</div></div>`:''}
+        ${p.location?`<div class="info-block"><div class="info-label">Location</div><div class="info-val"><i data-lucide="map-pin"></i>${p.location}</div></div>`:''}
+        <div class="stat-row-right">
+          <div class="stat-item"><span class="stat-n">${eduC}</span><span class="stat-l">EDU</span></div>
+          <div class="stat-item"><span class="stat-n">${expC}</span><span class="stat-l">ROLES</span></div>
+          <div class="stat-item"><span class="stat-n">${projC}</span><span class="stat-l">PROJ</span></div>
+          <div class="stat-item"><span class="stat-n">${certC}</span><span class="stat-l">CERT</span></div>
+        </div>
+      </div>
+    </div>
+    ${p.summary?`<div class="summary-swiss"><div class="summary-label">About</div><div class="summary-text">${p.summary.trim()}</div></div>`:''}
+    <div class="inner">
+      <div class="section">
+        <div class="sec-hd"><span class="sec-num">01</span><h2 class="sec-title">Education</h2></div>
+        <div class="tl-swiss">${data.education.map(edu=>`<div class="tl-row"><div class="tl-left"><div class="tl-dur">${edu.duration||''}</div><div class="tl-type">Academic</div></div><div class="tl-right"><div class="tl-title">${edu.institution}</div><div class="tl-sub">${edu.course}</div>${edu.cgpa?`<div class="tl-score">CGPA ${edu.cgpa}</div>`:edu.percentage?`<div class="tl-score">${edu.percentage}%</div>`:''}</div></div>`).join('')}</div>
+      </div>
+      <div class="section">
+        <div class="sec-hd"><span class="sec-num">02</span><h2 class="sec-title">Experience</h2></div>
+        <div class="tl-swiss">${data.experience.map(exp=>`<div class="tl-row"><div class="tl-left"><div class="tl-dur">${exp.duration||''}</div><div class="tl-type">${exp.type||'Work'}</div></div><div class="tl-right"><div class="tl-title">${exp.role}</div><div class="tl-sub">${exp.company}</div>${exp.description?`<div class="tl-desc">${exp.description}</div>`:''}</div></div>`).join('')}</div>
+      </div>
+      <div class="section">
+        <div class="sec-hd"><span class="sec-num">03</span><h2 class="sec-title">Projects</h2></div>
+        <div class="proj-swiss">${data.projects.map((proj,idx)=>`<div class="proj-row"><div class="proj-idx">0${idx+1}</div><div><div class="proj-nm">${proj.title}</div>${proj.description?`<div class="proj-desc">${proj.description}</div>`:''}<div class="proj-tags">${(proj.tech||[]).map(t=>`<span class="proj-tag">${t}</span>`).join('')}</div></div><div class="proj-links">${proj.demo?`<a href="${proj.demo}" target="_blank" class="proj-link">Live <i data-lucide="arrow-up-right"></i></a>`:''}${proj.repo?`<a href="${proj.repo}" target="_blank" class="proj-link">Repo <i data-lucide="github"></i></a>`:''}</div></div>`).join('')}</div>
+      </div>
+      <div class="section">
+        <div class="sec-hd"><span class="sec-num">04</span><h2 class="sec-title">Skills</h2></div>
+        <div class="skills-swiss">${(data.skills?.skills||[]).map(cat=>`<div class="skill-group"><div class="skill-cat">${cat.category}</div><div class="skill-items">${cat.items.map(item=>`<span class="skill-item">${item}</span>`).join('')}</div></div>`).join('')}</div>
+      </div>
+      <div class="section">
+        <div class="sec-hd"><span class="sec-num">05</span><h2 class="sec-title">Certifications</h2></div>
+        <div class="cert-list">${data.certifications.map(cert=>`<div class="cert-row"><div><div class="cert-nm">${cert.name}</div><div class="cert-iss">${cert.issuer}</div></div>${cert.link?`<a href="${cert.link}" target="_blank" class="cert-lnk">Credential <i data-lucide="arrow-up-right"></i></a>`:''}</div>`).join('')}</div>
+      </div>
+      ${data.interests?.interests?.length?`<div class="section"><div class="sec-hd"><span class="sec-num">06</span><h2 class="sec-title">Interests</h2></div><div class="int-swiss">${data.interests.interests.map(i=>`<div class="int-item">${i}</div>`).join('')}</div></div>`:''}
+    </div>
+    <footer class="footer">
+      <div class="footer-socials">${socialLinks.map(item=>{const href=buildSocialHref(item);return href?`<a href="${href}" target="_blank" class="social-icon" title="${item.name}">${getIconHTML(item.icon)}</a>`:''}).join('')}</div>
+      <div class="footer-contacts">${p.email?`<a href="mailto:${p.email}"><i data-lucide="mail"></i>${p.email}</a>`:''} ${p.phone?`<a href="tel:${p.phone}"><i data-lucide="phone"></i>${p.phone}</a>`:''}</div>
+      <div class="copyright">© ${new Date().getFullYear()} ${fullName}</div>
+    </footer>`;
+    document.getElementById('app-root').innerHTML=html;
+    initializeLucideIcons();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>renderApp(portfolioData));
+  else renderApp(portfolioData);
+  document.getElementById('backBtn').addEventListener('click',()=>window.history.back());
+  document.getElementById('homeBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>

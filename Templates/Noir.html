@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>User Name · Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink: #0a0a0a;
+      --paper: #f5f0e8;
+      --gold: #c9a84c;
+      --gold-dim: #8b6914;
+      --cream: #ede8dc;
+      --charcoal: #1a1a1a;
+      --mid: #3a3a3a;
+      --muted: #6a6a6a;
+      --faint: #9a9a9a;
+      --line: rgba(201,168,76,0.25);
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'Barlow', system-ui, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--ink); color: var(--paper); font-family: var(--font-body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideRight { from { width: 0; } to { width: 100%; } }
+
+    .noise {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    .top-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.25rem 3rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      background: rgba(10,10,10,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: var(--font-body); font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--gold); background: transparent; border: none; cursor: pointer;
+      transition: all 0.2s; padding: 0;
+    }
+    .nav-btn:hover { color: var(--paper); }
+    .nav-btn svg { width: 0.8rem; height: 0.8rem; }
+    .nav-divider { width: 1px; height: 1rem; background: var(--line); }
+
+    .page { position: relative; z-index: 1; }
+
+    /* HERO */
+    .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: flex-end; padding: 8rem 3rem 4rem; position: relative; }
+    .hero-vol {
+      position: absolute; bottom: 0; right: 0;
+      font-family: var(--font-display); font-size: clamp(10rem, 20vw, 22rem);
+      font-weight: 700; color: rgba(201,168,76,0.04); line-height: 0.8;
+      pointer-events: none; letter-spacing: -0.05em; user-select: none;
+    }
+    .hero-issue {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.25em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .hero-issue::before { content: ''; display: block; width: 3rem; height: 1px; background: var(--gold); }
+    .hero-name {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 10vw, 9rem);
+      font-weight: 300; line-height: 0.9;
+      letter-spacing: -0.03em; color: var(--paper);
+      margin-bottom: 1.5rem;
+    }
+    .hero-name em { font-style: italic; color: var(--gold); }
+    .hero-bottom { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 2rem; }
+    .hero-domain-block { max-width: 520px; }
+    .hero-domain { font-size: 1rem; color: var(--faint); font-weight: 300; line-height: 1.8; margin-bottom: 1.5rem; }
+    .hero-socials { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .social-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; border: 1px solid var(--line);
+      color: var(--faint); text-decoration: none; transition: all 0.3s;
+    }
+    .social-icon:hover { border-color: var(--gold); color: var(--gold); }
+    .social-icon svg { width: 0.9rem; height: 0.9rem; }
+    .resume-btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.65rem 1.5rem; border: 1px solid var(--gold);
+      color: var(--gold); font-family: var(--font-body); font-size: 0.75rem;
+      font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      text-decoration: none; transition: all 0.3s;
+    }
+    .resume-btn:hover { background: var(--gold); color: var(--ink); }
+    .hero-stats { display: flex; gap: 3rem; }
+    .stat-item { text-align: right; }
+    .stat-number { display: block; font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; color: var(--gold); line-height: 1; }
+    .stat-label { font-size: 0.65rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+
+    /* SECTIONS */
+    .inner { max-width: 1100px; margin: 0 auto; padding: 0 3rem 6rem; }
+    @media(max-width:640px) { .inner { padding: 0 1.25rem 4rem; } .hero { padding: 8rem 1.25rem 3rem; } .top-nav { padding: 1rem 1.25rem; } }
+
+    .gold-rule { width: 100%; height: 1px; background: linear-gradient(90deg, var(--gold), rgba(201,168,76,0.1)); margin: 4rem 0; }
+
+    .section-head {
+      display: flex; align-items: baseline; gap: 2rem; margin-bottom: 3rem;
+    }
+    .section-num { font-family: var(--font-display); font-size: 0.85rem; color: var(--gold); font-weight: 600; letter-spacing: 0.15em; }
+    .section-title { font-family: var(--font-display); font-size: clamp(1.75rem, 4vw, 2.75rem); font-weight: 300; color: var(--paper); letter-spacing: -0.01em; }
+    .section-title em { font-style: italic; }
+
+    /* SUMMARY */
+    .summary-block { display: grid; grid-template-columns: 1fr 2px 1fr; gap: 3rem; align-items: start; }
+    @media(max-width:720px) { .summary-block { grid-template-columns: 1fr; } .summary-vline { display: none; } }
+    .summary-vline { background: var(--line); }
+    .summary-text { font-family: var(--font-display); font-size: clamp(1rem, 2vw, 1.35rem); font-weight: 300; color: var(--faint); line-height: 1.9; font-style: italic; }
+    .summary-meta { display: flex; flex-direction: column; gap: 1.25rem; }
+    .meta-row { display: flex; align-items: center; gap: 1rem; }
+    .meta-icon { color: var(--gold); flex-shrink: 0; }
+    .meta-icon svg { width: 0.85rem; height: 0.85rem; }
+    .meta-text { font-size: 0.875rem; color: var(--muted); }
+
+    /* EDUCATION / EXPERIENCE */
+    .timeline-list { display: flex; flex-direction: column; gap: 0; }
+    .tl-item { display: grid; grid-template-columns: 180px 1fr; gap: 3rem; padding: 2.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    @media(max-width:640px) { .tl-item { grid-template-columns: 1fr; gap: 0.5rem; padding: 1.75rem 0; } }
+    .tl-date { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); padding-top: 0.25rem; }
+    /* .tl-body {} */
+    .tl-title { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--paper); margin-bottom: 0.25rem; }
+    .tl-sub { font-size: 0.85rem; color: var(--gold); font-weight: 500; margin-bottom: 0.6rem; }
+    .tl-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.8; }
+    .tl-score { font-size: 0.75rem; color: var(--faint); margin-top: 0.4rem; }
+
+    /* PROJECTS */
+    .project-list { display: flex; flex-direction: column; gap: 0; }
+    .proj-item {
+      display: grid; grid-template-columns: 60px 1fr auto;
+      gap: 2.5rem; padding: 2.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      align-items: start; transition: all 0.3s;
+    }
+    .proj-item:hover { padding-left: 1rem; }
+    @media(max-width:720px) { .proj-item { grid-template-columns: 1fr; gap: 0.75rem; } .proj-num-big { display: none; } }
+    .proj-num-big { font-family: var(--font-display); font-size: 3rem; font-weight: 700; color: rgba(201,168,76,0.2); line-height: 1; }
+    /* .proj-content {} */
+    .proj-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; color: var(--paper); margin-bottom: 0.4rem; }
+    .proj-desc { font-size: 0.875rem; color: var(--muted); line-height: 1.8; margin-bottom: 0.875rem; }
+    .proj-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .proj-tag { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dim); border: 1px solid rgba(201,168,76,0.2); padding: 0.2rem 0.6rem; }
+    .proj-links { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end; flex-shrink: 0; }
+    .proj-link {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--gold); text-decoration: none; transition: all 0.2s;
+    }
+    .proj-link:hover { color: var(--paper); }
+    .proj-link svg { width: 0.7rem; height: 0.7rem; }
+
+    /* SKILLS */
+    .skills-editorial { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid var(--line); }
+    @media(max-width:720px) { .skills-editorial { grid-template-columns: 1fr; } }
+    .skill-col { padding: 2rem; border-right: 1px solid var(--line); }
+    .skill-col:last-child { border-right: none; }
+    .skill-col-title { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); }
+    .skill-list { display: flex; flex-direction: column; gap: 0.65rem; }
+    .skill-entry { display: flex; align-items: center; justify-content: space-between; font-size: 0.875rem; color: var(--muted); }
+    .skill-dash { width: 1.5rem; height: 1px; background: var(--gold); opacity: 0.4; }
+
+    /* CERTS */
+    .certs-list { display: flex; flex-direction: column; gap: 0; }
+    .cert-row { display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); flex-wrap: wrap; gap: 1rem; }
+    .cert-name { font-family: var(--font-display); font-size: 1.2rem; color: var(--paper); font-weight: 300; }
+    .cert-issuer { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-top: 0.2rem; }
+    .cert-link { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .cert-link:hover { color: var(--gold); }
+    .cert-link svg { width: 0.7rem; height: 0.7rem; }
+
+    /* INTERESTS */
+    .interests-strip { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--line); }
+    .interest-pill { font-family: var(--font-display); font-size: 1rem; font-style: italic; color: var(--muted); padding: 0.875rem 1.75rem; border-right: 1px solid var(--line); transition: all 0.2s; cursor: default; }
+    .interest-pill:last-child { border-right: none; }
+    .interest-pill:hover { color: var(--gold); background: rgba(201,168,76,0.05); }
+
+    /* FOOTER */
+    .footer { padding: 3rem 3rem 3rem; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; flex-wrap: gap 1rem; }
+    .footer-social { display: flex; gap: 0.75rem; }
+    .footer-contact { display: flex; gap: 2rem; flex-wrap: wrap; }
+    .footer-contact a { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .footer-contact a:hover { color: var(--gold); }
+    .footer-contact a svg { width: 0.8rem; height: 0.8rem; }
+    .copyright { font-size: 0.7rem; letter-spacing: 0.1em; color: rgba(255,255,255,0.2); margin-top: 2rem; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="noise"></div>
+<div class="top-nav">
+  <button class="nav-btn" id="backBtn"><i data-lucide="chevron-left"></i>Back</button>
+  <span class="nav-divider"></span>
+  <button class="nav-btn" id="homeBtn"><i data-lucide="home"></i>Home</button>
+</div>
+<div class="page">
+  <div id="app-root"></div>
+</div>
+<script>
+  function initializeLucideIcons() {
+    if (typeof lucide !== 'undefined' && lucide.createIcons) lucide.createIcons();
+    else setTimeout(initializeLucideIcons, 50);
+  }
+  const portfolioData = {
+    "profile": { "_id": "generic_profile_001", "user": "generic_user_id", "contact": [], "social": [ { "id": 1001, "name": "GitHub", "link": "https://github.com/example-dev", "icon": "Github", "color": "#c9a84c", "_id": "social_github" }, { "id": 1002, "name": "LinkedIn", "link": "https://linkedin.com/in/example-profile", "icon": "Linkedin", "color": "#c9a84c", "_id": "social_linkedin" }, { "id": 1003, "name": "Portfolio", "link": "https://example.dev", "icon": "Globe", "color": "#c9a84c", "_id": "social_website" } ], "createdAt": "2026-01-01T00:00:00.000Z", "updatedAt": "2026-03-26T00:00:00.000Z", "__v": 0, "age": 24, "cvLink": "#", "domain": "Full Stack Developer", "email": "user@example.com", "location": "San Francisco, CA (Remote)", "name": "User Name", "phone": "+1 (555) 123-4567", "profilePhoto": null, "profilePhotoUrl": null, "summary": "Passionate full-stack developer with expertise in building modern web applications. I love creating clean, responsive interfaces and scalable backend systems. Always eager to learn new technologies and contribute to impactful projects." },
+    "education": [ { "_id": "edu_1", "user": "generic_user_id", "institution": "State University of Technology", "course": "M.Sc. in Computer Science", "duration": "2022 – 2024", "cgpa": "3.9/4.0", "percentage": "" }, { "_id": "edu_2", "user": "generic_user_id", "institution": "Metro Public School", "course": "Higher Secondary Education", "duration": "2020 – 2022", "cgpa": "", "percentage": "92.5" } ],
+    "experience": [ { "_id": "exp_1", "user": "generic_user_id", "company": "Digital Innovations Inc.", "role": "Full Stack Developer Intern", "duration": "6 months", "description": "Collaborated on building enterprise web apps using React, Node.js, and MongoDB. Improved API performance by 30% and contributed to code reviews and agile workflows.", "type": "Internship" }, { "_id": "exp_2", "user": "generic_user_id", "company": "Creative Labs", "role": "Frontend Developer (Freelance)", "duration": "1 year", "description": "Developed responsive websites and interactive dashboards for clients, ensuring cross-browser compatibility and modern UI/UX standards.", "type": "Freelance" } ],
+    "projects": [ { "_id": "proj_1", "user": "generic_user_id", "title": "TaskFlow Manager", "tech": ["MERN", "Tailwind", "JWT", "Redux Toolkit"], "description": "A full-stack productivity app with task boards, real-time updates, and user authentication. Features drag-and-drop and analytics dashboard.", "image": null, "demo": "https://demo-taskflow.example.com", "repo": "https://github.com/example/taskflow" }, { "_id": "proj_2", "user": "generic_user_id", "title": "WeatherDash", "tech": ["React", "OpenWeather API", "Chart.js", "CSS Modules"], "description": "Real-time weather dashboard with 7-day forecasts, interactive maps, and location search. Deployed on Vercel.", "image": null, "demo": "https://weatherdash.example.com", "repo": "https://github.com/example/weatherdash" } ],
+    "skills": { "_id": "skills_generic", "user": "generic_user_id", "skills": [ { "category": "Frontend", "items": ["React", "Vue.js", "Tailwind CSS", "TypeScript"], "_id": "skill_front" }, { "category": "Backend", "items": ["Node.js", "Express", "Python", "PostgreSQL", "MongoDB"], "_id": "skill_back" }, { "category": "Tools & DevOps", "items": ["Git/GitHub", "Docker", "VS Code", "Postman", "Vercel"], "_id": "skill_tools" } ] },
+    "certifications": [ { "_id": "cert_1", "user": "generic_user_id", "name": "Meta Backend Developer Professional", "issuer": "Coursera", "image": null, "link": "https://coursera.org/verify/example" }, { "_id": "cert_2", "user": "generic_user_id", "name": "AWS Cloud Practitioner", "issuer": "Amazon Web Services", "image": null, "link": "https://aws.amazon.com/verification/example" } ],
+    "interests": { "_id": "interests_generic", "user": "generic_user_id", "interests": ["Open Source", "Cloud Architecture", "UI/UX Design", "Tech Writing", "Hiking", "Chess"] }
+  };
+  const BRAND_SVGS = {
+    'Github': `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>`,
+    'Linkedin': `<svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`
+  };
+  function getIconHTML(iconName) {
+    if (BRAND_SVGS[iconName]) return BRAND_SVGS[iconName];
+    const map = { 'Globe': 'globe', 'Mail': 'mail', 'Phone': 'phone', 'FileText': 'file-text', 'MapPin': 'map-pin' };
+    const lucideName = map[iconName] || iconName.toLowerCase().replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+    return `<i data-lucide="${lucideName}"></i>`;
+  }
+  function buildSocialHref(item) {
+    let link = item.link || "";
+    if (!link) return null;
+    if (item.icon === 'Mail' && !link.startsWith('mailto:')) return `mailto:${link}`;
+    return link;
+  }
+  function renderAvatarContent(url, name) {
+    if (url && url.trim()) return `<img src="${url}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.style.display='none'">`;
+    return `<i data-lucide="user" style="width:3rem;height:3rem;opacity:0.4;"></i>`;
+  }
+  function renderApp(data) {
+    const p = data.profile;
+    const fullName = p.name || 'User Name';
+    const [firstName, ...lastParts] = fullName.split(' ');
+    const lastName = lastParts.join(' ') || '';
+    const socialLinks = (p.social || []).filter(i => buildSocialHref(i));
+    const cvLink = p.cvLink?.trim() || null;
+    const eduCount = data.education.length, expCount = data.experience.length, projCount = data.projects.length, certCount = data.certifications.length;
+
+    const html = `
+    <div class="hero">
+      <div class="hero-vol">${lastName || firstName}</div>
+      <div style="position:relative;z-index:1;">
+        <div class="hero-issue">Full Stack Developer Portfolio &nbsp;·&nbsp; ${new Date().getFullYear()}</div>
+        <div class="hero-name">${firstName}<br><em>${lastName}</em></div>
+        <div class="hero-bottom">
+          <div class="hero-domain-block">
+            <div class="hero-domain">${p.domain || 'Full Stack Developer'} &nbsp;·&nbsp; ${p.location || 'Remote'}</div>
+            <div class="hero-socials">
+              ${socialLinks.map(item => { const href = buildSocialHref(item); return href ? `<a href="${href}" target="_blank" rel="noopener" class="social-icon" title="${item.name}">${getIconHTML(item.icon)}</a>` : ''; }).join('')}
+              ${cvLink ? `<a href="${cvLink}" target="_blank" class="resume-btn"><i data-lucide="file-text"></i> Resume</a>` : ''}
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat-item"><span class="stat-number">${eduCount}</span><span class="stat-label">Education</span></div>
+            <div class="stat-item"><span class="stat-number">${expCount}</span><span class="stat-label">Roles</span></div>
+            <div class="stat-item"><span class="stat-number">${projCount}</span><span class="stat-label">Projects</span></div>
+            <div class="stat-item"><span class="stat-number">${certCount}</span><span class="stat-label">Certs</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="inner">
+      ${p.summary ? `<div class="gold-rule"></div>
+      <div class="summary-block">
+        <div class="summary-text">${p.summary.trim()}</div>
+        <div class="summary-vline"></div>
+        <div class="summary-meta">
+          ${p.email ? `<div class="meta-row"><div class="meta-icon"><i data-lucide="mail"></i></div><div class="meta-text">${p.email}</div></div>` : ''}
+          ${p.phone ? `<div class="meta-row"><div class="meta-icon"><i data-lucide="phone"></i></div><div class="meta-text">${p.phone}</div></div>` : ''}
+          ${p.location ? `<div class="meta-row"><div class="meta-icon"><i data-lucide="map-pin"></i></div><div class="meta-text">${p.location}</div></div>` : ''}
+        </div>
+      </div>` : ''}
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">01</span><h2 class="section-title">Education</h2></div>
+      <div class="timeline-list">${data.education.map(edu => `
+        <div class="tl-item">
+          <div class="tl-date">${edu.duration || ''}</div>
+          <div class="tl-body">
+            <div class="tl-title">${edu.institution}</div>
+            <div class="tl-sub">${edu.course}</div>
+            ${edu.cgpa ? `<div class="tl-score">CGPA: ${edu.cgpa}</div>` : edu.percentage ? `<div class="tl-score">${edu.percentage}%</div>` : ''}
+          </div>
+        </div>`).join('')}</div>
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">02</span><h2 class="section-title">Experience</h2></div>
+      <div class="timeline-list">${data.experience.map(exp => `
+        <div class="tl-item">
+          <div class="tl-date">${exp.duration || ''}${exp.type ? ` · ${exp.type}` : ''}</div>
+          <div class="tl-body">
+            <div class="tl-title">${exp.role}</div>
+            <div class="tl-sub">${exp.company}</div>
+            ${exp.description ? `<div class="tl-desc">${exp.description}</div>` : ''}
+          </div>
+        </div>`).join('')}</div>
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">03</span><h2 class="section-title"><em>Selected</em> Projects</h2></div>
+      <div class="project-list">${data.projects.map((proj, idx) => `
+        <div class="proj-item">
+          <div class="proj-num-big">0${idx+1}</div>
+          <div class="proj-content">
+            <div class="proj-title">${proj.title}</div>
+            ${proj.description ? `<div class="proj-desc">${proj.description}</div>` : ''}
+            ${proj.tech?.length ? `<div class="proj-tags">${proj.tech.map(t => `<span class="proj-tag">${t}</span>`).join('')}</div>` : ''}
+          </div>
+          <div class="proj-links">
+            ${proj.demo ? `<a href="${proj.demo}" target="_blank" class="proj-link">Live <i data-lucide="arrow-up-right"></i></a>` : ''}
+            ${proj.repo ? `<a href="${proj.repo}" target="_blank" class="proj-link">Repo <i data-lucide="github"></i></a>` : ''}
+          </div>
+        </div>`).join('')}</div>
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">04</span><h2 class="section-title">Skills</h2></div>
+      <div class="skills-editorial">${(data.skills?.skills || []).map(cat => `
+        <div class="skill-col">
+          <div class="skill-col-title">${cat.category}</div>
+          <div class="skill-list">${cat.items.map(item => `<div class="skill-entry"><span>${item}</span><div class="skill-dash"></div></div>`).join('')}</div>
+        </div>`).join('')}</div>
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">05</span><h2 class="section-title">Certifications</h2></div>
+      <div class="certs-list">${data.certifications.map(cert => `
+        <div class="cert-row">
+          <div><div class="cert-name">${cert.name}</div><div class="cert-issuer">${cert.issuer}</div></div>
+          ${cert.link ? `<a href="${cert.link}" target="_blank" class="cert-link">Credential <i data-lucide="arrow-up-right"></i></a>` : ''}
+        </div>`).join('')}</div>
+      ${data.interests?.interests?.length ? `
+      <div class="gold-rule"></div>
+      <div class="section-head"><span class="section-num">06</span><h2 class="section-title">Interests</h2></div>
+      <div class="interests-strip">${data.interests.interests.map(i => `<div class="interest-pill">${i}</div>`).join('')}</div>` : ''}
+    </div>
+    <footer style="padding: 2rem 3rem; border-top: 1px solid rgba(201,168,76,0.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div class="footer-social">${socialLinks.map(item => { const href = buildSocialHref(item); return href ? `<a href="${href}" target="_blank" rel="noopener" class="social-icon" title="${item.name}">${getIconHTML(item.icon)}</a>` : ''; }).join('')}</div>
+        <div class="footer-contact">
+          ${p.email ? `<a href="mailto:${p.email}"><i data-lucide="mail"></i>${p.email}</a>` : ''}
+          ${p.phone ? `<a href="tel:${p.phone}"><i data-lucide="phone"></i>${p.phone}</a>` : ''}
+        </div>
+      </div>
+      <div class="copyright">© ${new Date().getFullYear()} ${fullName}</div>
+    </footer>`;
+    document.getElementById('app-root').innerHTML = html;
+    initializeLucideIcons();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => renderApp(portfolioData));
+  else renderApp(portfolioData);
+  document.getElementById('backBtn').addEventListener('click', () => window.history.back());
+  document.getElementById('homeBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+</script>
+</body>
+</html>

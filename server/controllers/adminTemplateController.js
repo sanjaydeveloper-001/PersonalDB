@@ -1,23 +1,45 @@
 import Template from '../models/Template.js';
+import { generateSignedUrl } from './vault/uploadController.js'; // Adjust path as needed
 
-// Get all templates (with stats)
+// Helper: Process a single template – replaces image with signed URL if needed
+async function processTemplateImage(template) {
+  // Create a copy to avoid mutating the original object if it's from the database
+  const processed = { ...template };
+  if (processed.image && !processed.image.startsWith('http')) {
+    try {
+      processed.image = await generateSignedUrl(processed.image, 3600);
+    } catch (err) {
+      console.error('Failed to generate signed URL for template image:', err);
+      // Fallback to original value (e.g., if not a valid S3 key)
+      processed.image = template.image;
+    }
+  }
+  return processed;
+}
+
+// Helper: Process multiple templates in parallel
+async function processTemplates(templates) {
+  return Promise.all(templates.map(processTemplateImage));
+}
+
+// Get all templates (with stats) – returns signed URLs for images
 export const getAllTemplatesAdmin = async (req, res) => {
   try {
-    const templates = await Template.find()
-      .sort({ createdAt: -1 });
-    
+    const templates = await Template.find().sort({ createdAt: -1 }).lean();
+    const processedTemplates = await processTemplates(templates);
+
     const stats = {
-      total: templates.length,
-      public: templates.filter(t => t.isPublic).length,
-      private: templates.filter(t => !t.isPublic).length,
-      totalUsers: templates.reduce((sum, t) => sum + t.usercount, 0),
-      totalLikes: templates.reduce((sum, t) => sum + t.likescount, 0),
+      total: processedTemplates.length,
+      public: processedTemplates.filter(t => t.isPublic).length,
+      private: processedTemplates.filter(t => !t.isPublic).length,
+      totalUsers: processedTemplates.reduce((sum, t) => sum + (t.usercount || 0), 0),
+      totalLikes: processedTemplates.reduce((sum, t) => sum + (t.likescount || 0), 0),
     };
 
     res.json({
       success: true,
       stats,
-      templates,
+      templates: processedTemplates,
     });
   } catch (error) {
     console.error('getAllTemplatesAdmin error:', error);
@@ -28,7 +50,7 @@ export const getAllTemplatesAdmin = async (req, res) => {
   }
 };
 
-// Create template
+// Create template – store raw key/URL, return processed (signed URL in image field)
 export const createTemplateAdmin = async (req, res) => {
   try {
     const { name, image, code, description, isPublic } = req.body;
@@ -58,7 +80,7 @@ export const createTemplateAdmin = async (req, res) => {
 
     const template = new Template({
       name: trimmedName,
-      image: image.trim(),
+      image: image.trim(), // Store raw key (e.g., "templates/abc.jpg") or full URL
       code,
       description: (description || '').trim(),
       isPublic: isPublic !== undefined ? isPublic : true,
@@ -66,10 +88,13 @@ export const createTemplateAdmin = async (req, res) => {
 
     await template.save();
 
+    // Return the template with the image field replaced by signed URL (if needed)
+    const processed = await processTemplateImage(template.toObject());
+
     res.status(201).json({
       success: true,
       message: 'Template created successfully',
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('createTemplateAdmin error:', error);
@@ -80,7 +105,7 @@ export const createTemplateAdmin = async (req, res) => {
   }
 };
 
-// Get single template
+// Get single template – returns with signed URL in image field
 export const getTemplateAdmin = async (req, res) => {
   try {
     const { templateId } = req.params;
@@ -92,8 +117,7 @@ export const getTemplateAdmin = async (req, res) => {
       });
     }
 
-    const template = await Template.findById(templateId);
-
+    const template = await Template.findById(templateId).lean();
     if (!template) {
       return res.status(404).json({ 
         success: false, 
@@ -101,9 +125,11 @@ export const getTemplateAdmin = async (req, res) => {
       });
     }
 
+    const processed = await processTemplateImage(template);
+
     res.json({
       success: true,
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('getTemplateAdmin error:', error);
@@ -114,7 +140,7 @@ export const getTemplateAdmin = async (req, res) => {
   }
 };
 
-// Update template
+// Update template – store raw key/URL, return processed (signed URL in image field)
 export const updateTemplateAdmin = async (req, res) => {
   try {
     const { templateId } = req.params;
@@ -140,17 +166,18 @@ export const updateTemplateAdmin = async (req, res) => {
       }
     }
 
+    const updateData = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (image !== undefined) updateData.image = image.trim(); // store raw key or URL
+    if (code !== undefined) updateData.code = code;
+    if (description !== undefined) updateData.description = description.trim();
+    if (isPublic !== undefined) updateData.isPublic = isPublic;
+
     const template = await Template.findByIdAndUpdate(
       templateId,
-      {
-        ...(name && { name: name.trim() }),
-        ...(image && { image: image.trim() }),
-        ...(code && { code }),
-        ...(description !== undefined && { description: description.trim() }),
-        ...(isPublic !== undefined && { isPublic }),
-      },
+      updateData,
       { new: true, runValidators: true }
-    );
+    ).lean();
 
     if (!template) {
       return res.status(404).json({ 
@@ -159,10 +186,12 @@ export const updateTemplateAdmin = async (req, res) => {
       });
     }
 
+    const processed = await processTemplateImage(template);
+
     res.json({
       success: true,
       message: 'Template updated successfully',
-      template,
+      template: processed,
     });
   } catch (error) {
     console.error('updateTemplateAdmin error:', error);
@@ -173,7 +202,7 @@ export const updateTemplateAdmin = async (req, res) => {
   }
 };
 
-// Delete template
+// Delete template – no image processing needed
 export const deleteTemplateAdmin = async (req, res) => {
   try {
     const { templateId } = req.params;
