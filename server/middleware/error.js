@@ -1,8 +1,13 @@
 export const errorHandler = (err, req, res, next) => {
-  console.error(err.stack);
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+  const origin = req.headers.origin;
+
+  if (origin === process.env.CLIENT_URL1 || origin === process.env.CLIENT_URL2) {
+    res.header("Access-Control-Allow-Origin", origin);
+  }
+
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  res.status(err.statusCode || 500).json({
+    message: err.message || "Server Error"
   });
 };

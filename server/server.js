@@ -13,14 +13,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-/* ================== CORS FIX (CRITICAL) ================== */
+/* ================== CORS ================== */
 
 const allowedOrigins = [
   process.env.CLIENT_URL1,
   process.env.CLIENT_URL2,
 ];
 
-// 🔥 Manual headers (fixes 401 + preflight issues)
+// 🔥 GLOBAL HEADERS (IMPORTANT)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
@@ -29,28 +29,21 @@ app.use((req, res, next) => {
   }
 
   res.header("Access-Control-Allow-Credentials", "true");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  );
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
-  );
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS");
 
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
+
   next();
 });
 
 // 🔥 CORS middleware
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
 /* ================== START SERVER ================== */
 
@@ -119,7 +112,6 @@ async function startServer() {
     /* ===== Error Handler ===== */
     app.use(errorHandler);
 
-    /* ===== Start Server ===== */
     const PORT = process.env.PORT || 5000;
 
     app.listen(PORT, () => {
