@@ -2,12 +2,12 @@ import bcrypt from 'bcryptjs';
 import User from '../../models/common/User.js';
 import { generateToken } from '../../utils/generateToken.js';
 
-const cookieOptions = (res) => ({
+const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
+  secure: true,          // MUST be true for HTTPS (Vercel)
+  sameSite: "None",      // 🔥 REQUIRED for cross-origin
   maxAge: 30 * 24 * 60 * 60 * 1000,
-});
+};
 
 export const registerUser = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ export const registerUser = async (req, res) => {
       friendAnswerHash: friendAnswer ? await bcrypt.hash(friendAnswer, 10) : '',
     });
 
-    res.cookie('token', generateToken(user._id), cookieOptions());
+    res.cookie('token', generateToken(user._id), cookieOptions);
     res.status(201).json({ _id: user._id, username: user.username, birthYear: user.birthYear });
   } catch (error) {
     res.status(500).json({ message: error.message });
