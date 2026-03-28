@@ -34,7 +34,7 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
     if (user && (await user.matchPassword(password))) {
-      res.cookie('token', generateToken(user._id), cookieOptions());
+      res.cookie('token', generateToken(user._id), cookieOptions);
       return res.json({ _id: user._id, username: user.username, birthYear: user.birthYear });
     }
     res.status(401).json({ message: 'Invalid username or password' });
@@ -44,7 +44,12 @@ export const loginUser = async (req, res) => {
 };
 
 export const logoutUser = (req, res) => {
-  res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
+  res.cookie('token', '', {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+    expires: new Date(0),
+  });
   res.json({ message: 'Logged out successfully' });
 };
 
@@ -134,7 +139,12 @@ export const deleteAccount = async (req, res) => {
     await User.findByIdAndDelete(req.user._id);
 
     // Clear auth cookie
-    res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      expires: new Date(0),
+    });
 
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
