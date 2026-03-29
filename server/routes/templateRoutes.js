@@ -11,6 +11,7 @@ import {
   getTemplate,
   updateTemplate,
   deleteTemplate,
+  getTemplateByDomain,
 } from '../controllers/templateController.js';
 import { adminOnly } from '../middleware/adminOnly.js';
 
@@ -20,6 +21,7 @@ const router = express.Router();
 router.get('/all', getAllTemplates);
 router.get('/code/:templateId', getTemplateCode);
 router.get('/user/:username', getUserTemplate);
+router.get('/user/domain/:portdomain', getTemplateByDomain);
 router.post('/like', likeTemplate);
 
 // Protected routes

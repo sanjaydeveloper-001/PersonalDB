@@ -88,9 +88,9 @@ export const getTemplateCode = async (req, res) => {
 // Get user's selected template (for public profile page)
 export const getUserTemplate = async (req, res) => {
   try {
-    const { username } = req.params;
+    const { portdomain } = req.params;
     
-    const user = await User.findOne({ username }).populate('selectedTemplateId');
+    const user = await User.findOne({ portdomain }).populate('selectedTemplateId');
     
     if (!user) {
       return res.status(404).json({ 
@@ -130,6 +130,40 @@ export const getUserTemplate = async (req, res) => {
       success: false, 
       message: error.message 
     });
+  }
+};
+
+// Get user's selected template by PORTDOMAIN (for subdomain mode *.josan.tech)
+export const getTemplateByDomain = async (req, res) => {
+  try {
+    const { portdomain } = req.params;
+
+    const user = await User.findOne({ portdomain }).populate('selectedTemplateId');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    let template = user.selectedTemplateId;
+    if (!template) template = await Template.findOne({ name: 'Default' });
+    if (!template) {
+      return res.status(404).json({ success: false, message: 'No template found' });
+    }
+
+    const plainTemplate = template.toObject();
+    const processedTemplate = await processTemplateImage(plainTemplate);
+
+    res.json({
+      success: true,
+      template: {
+        id: processedTemplate._id,
+        name: processedTemplate.name,
+        code: processedTemplate.code,
+        image: processedTemplate.image,
+      },
+    });
+  } catch (error) {
+    console.error('getTemplateByDomain error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

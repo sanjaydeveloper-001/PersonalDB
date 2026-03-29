@@ -12,11 +12,27 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
 // CORS configuration
-app.use(cors({ 
-  origin: [process.env.CLIENT_URL1, process.env.CLIENT_URL2,'https://personaldb.josan.tech'],
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (origin.includes('.localhost:5173')) {
+      return callback(null, true);
+    }
+    if (origin.endsWith('.josan.tech') || origin === 'https://josan.tech') {
+      return callback(null, true);
+    }
+    const allowed = [
+      process.env.CLIENT_URL1,
+      process.env.CLIENT_URL2,
+      'https://personaldb.josan.tech'
+    ];
+    if (allowed.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 async function startServer() {
 
@@ -47,6 +63,7 @@ async function startServer() {
   const searchRoutes = (await import('./routes/searchRoutes.js')).default; 
   const templateRoutes = (await import('./routes/templateRoutes.js')).default;
   const adminRoutes = (await import('./routes/adminRoutes.js')).default;  
+  const userRoutes = (await import('./routes/userRoutes.js')).default;
 
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
@@ -62,6 +79,7 @@ async function startServer() {
   app.use('/public', publicFileRoutes);
   app.use('/api/templates', templateRoutes);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/users', userRoutes);
   
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);

@@ -1,12 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Layout, Settings2 } from 'lucide-react'
+import { Layout, Settings2, Globe, CheckCircle2, XCircle, Loader2, AlertTriangle, ExternalLink } from 'lucide-react'
 import TemplateCard from '../components/Templatecard'
 import toast from 'react-hot-toast'
+import { userService } from '../services/userService'
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
   from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+`
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`
+
+const slideIn = keyframes`
+  from { opacity: 0; transform: translateY(-6px); }
   to   { opacity: 1; transform: translateY(0); }
 `
 
@@ -45,6 +60,218 @@ const PageDesc = styled.p`
   font-size: 0.825rem;
   color: #94a3b8;
   margin: 0;
+`
+
+/* ──── SHARED CARD ──── */
+const Card = styled.div`
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  padding: 1.5rem;
+`
+
+/* ──── CUSTOM DOMAIN SECTION ──── */
+const DomainHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+`
+
+const DomainTitleGroup = styled.div``
+
+const DomainTitle = styled.h2`
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg { width: 18px; height: 18px; color: #3b82f6; }
+`
+
+const DomainSubtitle = styled.p`
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0.2rem 0 0;
+`
+
+const CurrentDomainBadge = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: background 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #dbeafe;
+  }
+
+  svg { width: 12px; height: 12px; }
+`
+
+/* ──── DOMAIN INPUT ROW ──── */
+const DomainInputRow = styled.div`
+  display: flex;
+  align-items: stretch;
+  border: 2px solid ${({ $status }) =>
+    $status === 'available' ? '#22c55e' :
+    $status === 'taken' ? '#ef4444' :
+    $status === 'invalid' ? '#f59e0b' :
+    '#e2e8f0'};
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  background: white;
+
+  &:focus-within {
+    box-shadow: 0 0 0 3px ${({ $status }) =>
+      $status === 'available' ? 'rgba(34,197,94,0.15)' :
+      $status === 'taken' ? 'rgba(239,68,68,0.15)' :
+      $status === 'invalid' ? 'rgba(245,158,11,0.15)' :
+      'rgba(59,130,246,0.12)'};
+    border-color: ${({ $status }) =>
+      $status === 'available' ? '#22c55e' :
+      $status === 'taken' ? '#ef4444' :
+      $status === 'invalid' ? '#f59e0b' :
+      '#3b82f6'};
+  }
+`
+
+const DomainInput = styled.input`
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  letter-spacing: 0.02em;
+  background: transparent;
+  min-width: 0;
+
+  &::placeholder {
+    color: #94a3b8;
+    font-family: inherit;
+  }
+`
+
+const DomainSuffix = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-left: 1px solid #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  user-select: none;
+`
+
+const DomainStatusIcon = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  color: ${({ $status }) =>
+    $status === 'available' ? '#22c55e' :
+    $status === 'taken' ? '#ef4444' :
+    $status === 'invalid' ? '#f59e0b' :
+    '#cbd5e1'};
+
+  svg {
+    width: 18px;
+    height: 18px;
+    animation: ${({ $checking }) => $checking ? spin : 'none'} 0.7s linear infinite;
+  }
+`
+
+/* ──── VALIDATION FEEDBACK ──── */
+const FeedbackRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+  font-size: 0.78rem;
+  color: ${({ $type }) =>
+    $type === 'success' ? '#16a34a' :
+    $type === 'error' ? '#dc2626' :
+    $type === 'warning' ? '#b45309' :
+    '#64748b'};
+  animation: ${slideIn} 0.2s ease;
+
+  svg { width: 14px; height: 14px; flex-shrink: 0; margin-top: 1px; }
+`
+
+/* ──── RULES LIST ──── */
+const RulesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+`
+
+const RuleItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: ${({ $ok }) => $ok ? '#16a34a' : '#94a3b8'};
+  transition: color 0.2s;
+
+  svg { width: 13px; height: 13px; flex-shrink: 0; }
+`
+
+/* ──── SAVE BUTTON ──── */
+const SaveDomainBtn = styled.button`
+  margin-top: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    animation: ${({ $loading }) => $loading ? spin : 'none'} 0.7s linear infinite;
+  }
 `
 
 /* ──── TEMPLATES GRID SECTION ──── */
@@ -120,14 +347,6 @@ const LoadingText = styled.p`
   font-size: 1rem;
   color: #64748b;
   margin: 0;
-
-  svg {
-    animation: spin 1s linear infinite;
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  }
 `
 
 const EmptyState = styled.div`
@@ -135,10 +354,7 @@ const EmptyState = styled.div`
   padding: 3rem 2rem;
   color: #94a3b8;
 
-  p {
-    font-size: 1rem;
-    margin: 0;
-  }
+  p { font-size: 1rem; margin: 0; }
 `
 
 const Spinner = styled.div`
@@ -147,22 +363,61 @@ const Spinner = styled.div`
   border: 2px solid rgba(59, 130, 246, 0.2);
   border-top-color: #3b82f6;
   border-radius: 50%;
-  animation: spin 0.6s linear infinite;
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  animation: ${spin} 0.6s linear infinite;
 `
 
 /* ════════════════════════════════════════
-   PORTFOLIO SETTINGS PAGE
-═══════════════════════��════════════════ */
+   DOMAIN VALIDATION LOGIC
+═══════════════════════════════════════ */
+const FIXED_SUFFIX = '.josan.tech'
+
+/**
+ * Returns an array of validation errors for a given subdomain prefix.
+ * An empty array means it's valid format-wise.
+ */
+function validateSubdomain(value) {
+  const errors = []
+
+  if (!value) return errors // empty = no errors shown yet
+
+  if (value.length < 3) errors.push('too_short')
+  if (value.length > 32) errors.push('too_long')
+  if (/[^a-z0-9-]/.test(value)) errors.push('invalid_chars')
+  if (/--/.test(value)) errors.push('double_hyphen')
+  if (/\./.test(value)) errors.push('has_dot')
+  if (/^-/.test(value)) errors.push('leading_hyphen')
+  if (/-$/.test(value)) errors.push('trailing_hyphen')
+
+  return errors
+}
+
+const RULE_DEFINITIONS = [
+  { key: 'min_length',       label: 'At least 3 characters',         check: v => v.length >= 3 },
+  { key: 'max_length',       label: 'Max 32 characters',             check: v => v.length <= 32 },
+  { key: 'valid_chars',      label: 'Letters, numbers & hyphens only', check: v => /^[a-z0-9-]+$/.test(v) },
+  { key: 'no_double_hyphen', label: 'No consecutive hyphens (--)',   check: v => !/--/.test(v) },
+  { key: 'no_dot',           label: 'No dots allowed',               check: v => !/\./.test(v) },
+  { key: 'no_edge_hyphen',   label: 'No leading or trailing hyphen', check: v => !/^-/.test(v) && !/-$/.test(v) },
+]
+
+/* ════════════════════════════════════════
+   COMPONENT
+═══════════════════════════════════════ */
 const PortfolioSettingsPage = () => {
+  /* ── Templates state ── */
   const [templates, setTemplates] = useState([])
   const [loading, setLoading] = useState(true)
   const [defaultTemplate, setDefaultTemplate] = useState(null)
   const [likedTemplates, setLikedTemplates] = useState({})
   const [saving, setSaving] = useState(false)
+
+  /* ── Domain state ── */
+  const [currentDomain, setCurrentDomain] = useState('') // existing portdomain from DB
+  const [domainInput, setDomainInput] = useState('')      // what user types
+  const [domainStatus, setDomainStatus] = useState('idle') // idle | checking | available | taken | invalid
+  const [checkTimer, setCheckTimer] = useState(null)
+  const [savingDomain, setSavingDomain] = useState(false)
+  const [takenDomains, setTakenDomains] = useState([])   // pre-fetched list
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -173,20 +428,14 @@ const PortfolioSettingsPage = () => {
         setLoading(true)
         const response = await fetch(`${API_URL}/templates/all`)
         const data = await response.json()
-
-        if (data.success) {
-          setTemplates(data.templates || [])
-        } else {
-          toast.error(data.message || 'Failed to load templates')
-        }
-      } catch (error) {
-        console.error('Error fetching templates:', error)
+        if (data.success) setTemplates(data.templates || [])
+        else toast.error(data.message || 'Failed to load templates')
+      } catch {
         toast.error('Failed to load templates')
       } finally {
         setLoading(false)
       }
     }
-
     fetchTemplates()
   }, [])
 
@@ -194,111 +443,187 @@ const PortfolioSettingsPage = () => {
   useEffect(() => {
     const fetchUserTemplate = async () => {
       try {
-        const response = await fetch(`${API_URL}/templates/preference`, {
-          credentials: 'include',
-        })
+        const response = await fetch(`${API_URL}/templates/preference`, { credentials: 'include' })
         const data = await response.json()
-
-        if (data.success && data.templateId) {
-          setDefaultTemplate(data.templateId)
-        }
-      } catch (error) {
-        console.error('Error fetching user template:', error)
-      }
+        if (data.success && data.templateId) setDefaultTemplate(data.templateId)
+      } catch {}
     }
-
     fetchUserTemplate()
   }, [])
 
-  /* ── Set default template ── */
+  /* ── Fetch user profile (current domain + all taken domains) ── */
+  useEffect(() => {
+    const fetchDomainData = async () => {
+      try {
+        // 1. Get current user's portdomain
+        const me = await userService.getProfile()
+        if (me.success && me.user?.portdomain) {
+          setCurrentDomain(me.user.portdomain)
+          setDomainInput(me.user.portdomain)
+        }
+
+        // 2. Get all taken subdomains to validate against client-side
+        const taken = await userService.getAllDomains()
+        if (taken.success && Array.isArray(taken.domains)) {
+          setTakenDomains(taken.domains)
+        }
+      } catch {}
+    }
+    fetchDomainData()
+  }, [])
+
+  /* ── Domain input change handler ── */
+  const handleDomainChange = useCallback((e) => {
+    // Force lowercase, strip spaces
+    const raw = e.target.value.toLowerCase().replace(/\s/g, '')
+    setDomainInput(raw)
+
+    // Clear previous debounce
+    if (checkTimer) clearTimeout(checkTimer)
+
+    if (!raw) {
+      setDomainStatus('idle')
+      return
+    }
+
+    const errors = validateSubdomain(raw)
+    if (errors.length > 0) {
+      setDomainStatus('invalid')
+      return
+    }
+
+    // Same as current — no need to check
+    if (raw === currentDomain) {
+      setDomainStatus('idle')
+      return
+    }
+
+    setDomainStatus('checking')
+
+    // Debounce 500ms, then check against pre-fetched list (+ optional server check)
+    const timer = setTimeout(() => {
+      const isTaken = takenDomains.includes(raw)
+      setDomainStatus(isTaken ? 'taken' : 'available')
+    }, 500)
+
+    setCheckTimer(timer)
+  }, [checkTimer, currentDomain, takenDomains])
+
+  /* ── Save custom domain ── */
+  const handleSaveDomain = async () => {
+    if (domainStatus !== 'available') return
+
+    try {
+      setSavingDomain(true)
+      const result = await userService.updateDomain(domainInput)
+
+      if (result.success) {
+        setCurrentDomain(domainInput)
+        setDomainStatus('idle')
+        toast.success(`✅ Domain set to ${domainInput}${FIXED_SUFFIX}`)
+      } else {
+        toast.error(result.message || 'Failed to update domain')
+        // Refresh taken list in case another user just took it
+        if (result.code === 'DOMAIN_TAKEN') {
+          setTakenDomains(prev => [...prev, domainInput])
+          setDomainStatus('taken')
+        }
+      }
+    } catch {
+      toast.error('Failed to update domain')
+    } finally {
+      setSavingDomain(false)
+    }
+  }
+
+  /* ── Template handlers ── */
   const handleSetDefault = async (templateId) => {
     try {
       setSaving(true)
       const response = await fetch(`${API_URL}/templates/set`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templateId }),
         credentials: 'include',
       })
-
       const data = await response.json()
-
       if (data.success) {
         setDefaultTemplate(templateId)
-        const templateName = templates.find(t => t._id === templateId)?.name
-        toast.success(`"${templateName}" set as default template`)
-      } else {
-        toast.error(data.message || 'Failed to set template')
-      }
-    } catch (error) {
-      console.error('Error setting template:', error)
+        const name = templates.find(t => t._id === templateId)?.name
+        toast.success(`"${name}" set as default template`)
+      } else toast.error(data.message || 'Failed to set template')
+    } catch {
       toast.error('Failed to set template')
     } finally {
       setSaving(false)
     }
   }
 
-  /* ── Like template ── */
   const handleLike = async (templateId) => {
     try {
       const response = await fetch(`${API_URL}/templates/like`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ templateId }),
         credentials: 'include',
       })
-
       const data = await response.json()
-
       if (data.success) {
-        setLikedTemplates(prev => ({
-          ...prev,
-          [templateId]: true,
-        }))
-
-        // Update template likescount
-        setTemplates(prev =>
-          prev.map(t =>
-            t._id === templateId ? { ...t, likescount: t.likescount + 1 } : t
-          )
-        )
-
+        setLikedTemplates(prev => ({ ...prev, [templateId]: true }))
+        setTemplates(prev => prev.map(t => t._id === templateId ? { ...t, likescount: t.likescount + 1 } : t))
         toast.success('❤️ You liked this template')
-      } else {
-        toast.error(data.message || 'Failed to like template')
-      }
-    } catch (error) {
-      console.error('Error liking template:', error)
+      } else toast.error(data.message || 'Failed to like template')
+    } catch {
       toast.error('Failed to like template')
     }
   }
 
-  /* ── Unlike template (toggle) ── */
   const handleUnlike = async (templateId) => {
     try {
-      // Decrease likescount locally
-      setLikedTemplates(prev => ({
-        ...prev,
-        [templateId]: false,
-      }))
-
-      setTemplates(prev =>
-        prev.map(t =>
-          t._id === templateId && t.likescount > 0
-            ? { ...t, likescount: t.likescount - 1 }
-            : t
-        )
-      )
-
+      setLikedTemplates(prev => ({ ...prev, [templateId]: false }))
+      setTemplates(prev => prev.map(t => t._id === templateId && t.likescount > 0 ? { ...t, likescount: t.likescount - 1 } : t))
       toast.success('Removed like')
-    } catch (error) {
-      console.error('Error unliking template:', error)
+    } catch {
       toast.error('Failed to unlike template')
     }
+  }
+
+  /* ── Derived state for domain UI ── */
+  const validationErrors = validateSubdomain(domainInput)
+  const hasChanges = domainInput && domainInput !== currentDomain
+
+  const getFeedback = () => {
+    if (!domainInput) return null
+    if (domainStatus === 'checking') return { type: 'info', msg: `Checking availability for ${domainInput}${FIXED_SUFFIX}…` }
+    if (domainStatus === 'available') return { type: 'success', msg: `${domainInput}${FIXED_SUFFIX} is available! 🎉` }
+    if (domainStatus === 'taken') return { type: 'error', msg: `${domainInput}${FIXED_SUFFIX} is already taken.` }
+    if (domainStatus === 'invalid') {
+      if (validationErrors.includes('double_hyphen')) return { type: 'warning', msg: 'Double hyphens (--) are not allowed.' }
+      if (validationErrors.includes('has_dot')) return { type: 'warning', msg: 'Dots are not allowed in your subdomain.' }
+      if (validationErrors.includes('leading_hyphen') || validationErrors.includes('trailing_hyphen'))
+        return { type: 'warning', msg: 'Your subdomain cannot start or end with a hyphen.' }
+      if (validationErrors.includes('invalid_chars')) return { type: 'warning', msg: 'Only lowercase letters, numbers, and hyphens allowed.' }
+      if (validationErrors.includes('too_short')) return { type: 'warning', msg: 'Subdomain must be at least 3 characters.' }
+      if (validationErrors.includes('too_long')) return { type: 'warning', msg: 'Subdomain must be 32 characters or fewer.' }
+    }
+    if (domainInput === currentDomain) return { type: 'info', msg: 'This is your current domain.' }
+    return null
+  }
+
+  const feedback = getFeedback()
+  const feedbackIcon = {
+    success: <CheckCircle2 />,
+    error: <XCircle />,
+    warning: <AlertTriangle />,
+    info: <Globe />,
+  }
+
+  const statusIcon = () => {
+    if (domainStatus === 'checking') return <Loader2 />
+    if (domainStatus === 'available') return <CheckCircle2 />
+    if (domainStatus === 'taken') return <XCircle />
+    if (domainStatus === 'invalid') return <AlertTriangle />
+    return <Globe />
   }
 
   return (
@@ -311,6 +636,81 @@ const PortfolioSettingsPage = () => {
         </PageTitle>
         <PageDesc>Choose and manage your portfolio template</PageDesc>
       </PageHeader>
+
+      {/* ════════════════
+          CUSTOM DOMAIN
+      ════════════════ */}
+      <Card>
+        <DomainHeader>
+          <DomainTitleGroup>
+            <DomainTitle>
+              <Globe />
+              Custom Domain
+            </DomainTitle>
+            <DomainSubtitle>Claim your personal subdomain on josan.tech</DomainSubtitle>
+          </DomainTitleGroup>
+          {currentDomain && (
+            <CurrentDomainBadge
+              href={`https://${currentDomain}.josan.tech`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {currentDomain}{FIXED_SUFFIX}
+              <ExternalLink />
+            </CurrentDomainBadge>
+          )}
+        </DomainHeader>
+
+        {/* ── Input row ── */}
+        <DomainInputRow $status={domainInput && domainStatus !== 'idle' ? domainStatus : undefined}>
+          <DomainInput
+            type="text"
+            placeholder="your-name"
+            value={domainInput}
+            onChange={handleDomainChange}
+            maxLength={32}
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="none"
+          />
+          <DomainStatusIcon $status={domainInput ? domainStatus : 'idle'} $checking={domainStatus === 'checking'}>
+            {statusIcon()}
+          </DomainStatusIcon>
+          <DomainSuffix>{FIXED_SUFFIX}</DomainSuffix>
+        </DomainInputRow>
+
+        {/* ── Inline feedback ── */}
+        {feedback && (
+          <FeedbackRow $type={feedback.type}>
+            {feedbackIcon[feedback.type]}
+            {feedback.msg}
+          </FeedbackRow>
+        )}
+
+        {/* ── Rules checklist (shown when user has typed something) ── */}
+        {domainInput && (
+          <RulesGrid>
+            {RULE_DEFINITIONS.map(rule => (
+              <RuleItem key={rule.key} $ok={rule.check(domainInput)}>
+                {rule.check(domainInput)
+                  ? <CheckCircle2 />
+                  : <XCircle />}
+                {rule.label}
+              </RuleItem>
+            ))}
+          </RulesGrid>
+        )}
+
+        {/* ── Save button ── */}
+        <SaveDomainBtn
+          onClick={handleSaveDomain}
+          disabled={domainStatus !== 'available' || savingDomain || !hasChanges}
+          $loading={savingDomain}
+        >
+          {savingDomain ? <Loader2 /> : <Globe />}
+          {savingDomain ? 'Saving…' : 'Save Domain'}
+        </SaveDomainBtn>
+      </Card>
 
       {/* ════════════════
           TEMPLATES GRID
@@ -335,9 +735,7 @@ const PortfolioSettingsPage = () => {
             </LoadingText>
           </LoadingContainer>
         ) : templates.length === 0 ? (
-          <EmptyState>
-            <p>No templates available at the moment</p>
-          </EmptyState>
+          <EmptyState><p>No templates available at the moment</p></EmptyState>
         ) : (
           <TemplatesGrid>
             {templates.map(template => (

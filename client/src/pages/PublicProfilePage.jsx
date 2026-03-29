@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { Loader, AlertCircle } from 'lucide-react';
 
 // ---------- Styled Components ----------
@@ -54,10 +54,7 @@ const ErrorTitle = styled.h2`
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  svg {
-    width: 24px;
-    height: 24px;
-  }
+  svg { width: 24px; height: 24px; }
 `;
 
 const ErrorMessage = styled.p`
@@ -74,9 +71,7 @@ const BackButton = styled.button`
   cursor: pointer;
   font-weight: 600;
   transition: background 0.2s;
-  &:hover {
-    background: #1d4ed8;
-  }
+  &:hover { background: #1d4ed8; }
 `;
 
 const IframeContainer = styled.iframe`
@@ -85,11 +80,11 @@ const IframeContainer = styled.iframe`
   border: none;
 `;
 
-// ---------- Helper to replace portfolioData in template ----------
+// ---------- Helper ----------
 function replacePortfolioData(html, userData) {
   const searchStr = 'const portfolioData = {';
   const startIdx = html.indexOf(searchStr);
-  if (startIdx === -1) return html; // not found – maybe template uses a different variable
+  if (startIdx === -1) return html;
 
   let braceCount = 0;
   let i = startIdx + searchStr.length;
@@ -98,14 +93,10 @@ function replacePortfolioData(html, userData) {
     if (ch === '{') braceCount++;
     else if (ch === '}') {
       if (braceCount === 0) {
-        // found the closing brace of the object
         let endIdx = i + 1;
-        // include the semicolon if present
         while (html[endIdx] === ';' || html[endIdx] === '\n' || html[endIdx] === ' ') endIdx++;
         const block = html.substring(startIdx, endIdx);
-        const jsonStr = JSON.stringify(userData);
-        const replacement = `const portfolioData = ${jsonStr};`;
-        return html.replace(block, replacement);
+        return html.replace(block, `const portfolioData = ${JSON.stringify(userData)};`);
       } else {
         braceCount--;
       }
@@ -116,80 +107,90 @@ function replacePortfolioData(html, userData) {
 }
 
 // ---------- Component ----------
-const PublicProfilePage = () => {
-  const { username } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [finalHtml, setFinalHtml] = useState(null);
+const PublicProfilePage = ({ portdomain }) => {
+  const { username } = useParams()
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  const BASE_URL = API_URL.replace('/api', ''); // e.g., http://localhost:5000
+  const identifier = portdomain || username
+
+  const [loading, setLoading]     = useState(true)
+  const [error, setError]         = useState(null)
+  const [finalHtml, setFinalHtml] = useState(null)
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  const BASE_URL = API_URL.replace('/api', '')
 
   useEffect(() => {
+    if (!identifier) return
+
     const fetchAndMerge = async () => {
       try {
-        setLoading(true);
-        setError(null);
+        setLoading(true)
+        setError(null)
 
-        // 1. Fetch user data from /api/port/:username
-        const userRes = await fetch(`${API_URL}/port/${username}`);
-        if (!userRes.ok) {
-          throw new Error('User not found');
-        }
-        const userData = await userRes.json();
+        // ── 1. Fetch portfolio data ───────────────────────────────────────────
+        // subdomain mode → /api/port/domain/:portdomain  (lookup by portdomain field)
+        // path mode      → /api/port/:username           (lookup by username field)
+        const userEndpoint = portdomain
+          ? `${API_URL}/port/domain/${portdomain}` 
+          : `${API_URL}/port/${username}`  
 
-        // Fix relative URLs for images and CV
+        const userRes = await fetch(userEndpoint)
+        if (!userRes.ok) throw new Error('User not found')
+        const userData = await userRes.json()
+
+        // Fix relative image URLs
         if (userData.profile?.profilePhoto) {
           userData.profile.profilePhoto = userData.profile.profilePhoto.startsWith('http')
             ? userData.profile.profilePhoto
-            : `${BASE_URL}/${userData.profile.profilePhoto}`;
+            : `${BASE_URL}/${userData.profile.profilePhoto}`
         }
         if (userData.profile?.cvLink) {
           userData.profile.cvLink = userData.profile.cvLink.startsWith('http')
             ? userData.profile.cvLink
-            : `${BASE_URL}/${userData.profile.cvLink}`;
+            : `${BASE_URL}/${userData.profile.cvLink}`
         }
         if (userData.projects) {
           userData.projects = userData.projects.map(proj => ({
             ...proj,
-            image: proj.image ? (proj.image.startsWith('http') ? proj.image : `${BASE_URL}/${proj.image}`) : null
-          }));
+            image: proj.image
+              ? (proj.image.startsWith('http') ? proj.image : `${BASE_URL}/${proj.image}`)
+              : null,
+          }))
         }
         if (userData.certifications) {
           userData.certifications = userData.certifications.map(cert => ({
             ...cert,
-            image: cert.image ? (cert.image.startsWith('http') ? cert.image : `${BASE_URL}/${cert.image}`) : null
-          }));
+            image: cert.image
+              ? (cert.image.startsWith('http') ? cert.image : `${BASE_URL}/${cert.image}`)
+              : null,
+          }))
         }
 
-        // 2. Fetch template HTML from /api/templates/user/:username
-        const templateRes = await fetch(`${API_URL}/templates/user/${username}`);
-        if (!templateRes.ok) {
-          throw new Error('Template not found');
-        }
-        const templateData = await templateRes.json();
-        if (!templateData.success) {
-          throw new Error('Invalid template response');
-        }
-        let templateHtml = templateData.template.code;
+        // ── 2. Fetch template HTML ────────────────────────────────────────────
+        // subdomain mode → /api/templates/domain/:portdomain
+        // path mode      → /api/templates/user/:username
+        const templateEndpoint = portdomain
+          ? `${API_URL}/templates/user/domain/${portdomain}`  // ✅ correct
+          : `${API_URL}/templates/user/${username}`       // ✅ correct
 
-        // 3. Replace sample data with real user data
-        templateHtml = replacePortfolioData(templateHtml, userData);
+        const templateRes = await fetch(templateEndpoint)
+        if (!templateRes.ok) throw new Error('Template not found')
+        const templateData = await templateRes.json()
+        if (!templateData.success) throw new Error('Invalid template response')
 
-        // 4. Set the final HTML
-        setFinalHtml(templateHtml);
+        // ── 3. Inject real data & render ──────────────────────────────────────
+        setFinalHtml(replacePortfolioData(templateData.template.code, userData))
+
       } catch (err) {
-        console.error('Error:', err);
-        setError(err.message || 'Failed to load profile');
+        console.error('[PublicProfilePage]', err)
+        setError(err.message || 'Failed to load profile')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    if (username) {
-      fetchAndMerge();
     }
-  }, [username, API_URL, BASE_URL]);
+
+    fetchAndMerge()
+  }, [identifier])
 
   if (loading) {
     return (
@@ -199,7 +200,7 @@ const PublicProfilePage = () => {
           <span>Loading profile...</span>
         </LoadingContainer>
       </Container>
-    );
+    )
   }
 
   if (error) {
@@ -207,10 +208,7 @@ const PublicProfilePage = () => {
       <Container>
         <ErrorContainer>
           <ErrorBox>
-            <ErrorTitle>
-              <AlertCircle />
-              {error}
-            </ErrorTitle>
+            <ErrorTitle><AlertCircle />{error}</ErrorTitle>
             <ErrorMessage>
               The profile you're looking for doesn't exist or is not available.
             </ErrorMessage>
@@ -218,16 +216,15 @@ const PublicProfilePage = () => {
           </ErrorBox>
         </ErrorContainer>
       </Container>
-    );
+    )
   }
 
-  // Render the merged HTML inside an iframe
   return (
     <IframeContainer
       srcDoc={finalHtml}
-      title={`${username} portfolio`}
+      title={`${identifier}'s portfolio`}
     />
-  );
-};
+  )
+}
 
-export default PublicProfilePage;
+export default PublicProfilePage

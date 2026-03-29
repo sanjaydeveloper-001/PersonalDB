@@ -11,7 +11,6 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
-
 import NotFoundPage from './pages/NotFoundPage'
 
 // Dashboard
@@ -47,7 +46,65 @@ import AdminTemplates from './pages/admin/AdminTemplates.jsx'
 import AdminUsers from './pages/admin/AdminUsers.jsx'
 import PublicProfilePage from './pages/PublicProfilePage.jsx'
 
+/* ══════════════════════════════════════════════════════
+   SUBDOMAIN DETECTION
+   
+   Extracts the subdomain prefix from the current hostname.
+   
+   Examples:
+     sanjay.josan.tech      → "sanjay"
+     sanjay.localhost       → "sanjay"    (dev)
+     sanjay.localhost:5173  → "sanjay"    (Vite dev)
+     josan.tech             → null        (root domain, no subdomain)
+     localhost:5173         → null        (plain localhost, no subdomain)
+     www.josan.tech         → null        (treat www as root)
+══════════════════════════════════════════════════════ */
+function getSubdomain() {
+  // hostname strips the port, e.g. "sanjay.localhost:5173" → "sanjay.localhost"
+  const hostname = window.location.hostname  // e.g. "sanjay.josan.tech"
+  const parts = hostname.split('.')
+
+  // Need at least 2 parts to have a subdomain
+  // e.g. ["sanjay", "josan", "tech"] = length 3  → subdomain exists
+  //      ["josan", "tech"]            = length 2  → root domain
+  //      ["localhost"]                = length 1  → plain localhost
+  //      ["sanjay", "localhost"]      = length 2  → dev subdomain
+  if (parts.length < 2) return null
+
+  const sub = parts[0]
+
+  // Ignore www as a subdomain
+  if (sub === 'personaldb') return null
+
+  // For production (josan.tech), only treat it as a subdomain if there are 3+ parts
+  // For localhost dev (sanjay.localhost), 2 parts is fine
+  const isLocalhost = parts[parts.length - 1] === 'localhost'
+  if (!isLocalhost && parts.length < 3) return null
+
+  return sub  // e.g. "sanjay"
+}
+
+/* ══════════════════════════════════════════════════════
+   APP
+══════════════════════════════════════════════════════ */
 function App() {
+  const subdomain = getSubdomain()
+
+  // ── If a subdomain is detected, render ONLY the public portfolio ──
+  // The entire router is bypassed. The page uses the subdomain value
+  // to fetch the right user's portfolio from the backend.
+  if (subdomain) {
+    return (
+      <ThemeProvider>
+        <GlobalStyles />
+        <Toaster position="top-right" toastOptions={{ duration: 4000 }} />
+        {/* Pass the subdomain so PublicProfilePage can fetch by portdomain */}
+        <PublicProfilePage portdomain={subdomain} />
+      </ThemeProvider>
+    )
+  }
+
+  // ── Normal app (no subdomain) ──
   return (
     <BrowserRouter>
       <ThemeProvider>
@@ -62,7 +119,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/security-questions" element={<SecurityQuestions />} />
 
-            {/* Public Profile - Anyone can view */}
+            {/* Public Profile fallback via path (for non-subdomain access) */}
             <Route path="/u/:username" element={<PublicProfilePage />} />
 
             {/* Protected — all inside MainLayout */}
@@ -89,21 +146,21 @@ function App() {
               <Route path="developer/analytics" element={<AnalyticsPage />} />
 
               {/* Standalone */}
-              <Route path="account"  element={<AccountPage />} />
-              <Route path="settings" element={<SettingsPage />} />
+              <Route path="account"      element={<AccountPage />} />
+              <Route path="settings"     element={<SettingsPage />} />
               <Route path="portsettings" element={<PortfolioSettingsPage />} />
 
               {/* Admin Routes */}
               <Route path="admin/*" element={<AdminLayout />}>
                 <Route path="templates" element={<AdminTemplates />} />
-                <Route path="users" element={<AdminUsers />} />
+                <Route path="users"     element={<AdminUsers />} />
                 <Route index element={<Navigate to="templates" replace />} />
               </Route>
             </Route>
 
             {/* Fallback */}
             <Route path="/404" element={<NotFoundPage />} />
-            <Route path="*" element={<Navigate to="/404" replace />} />
+            <Route path="*"    element={<Navigate to="/404" replace />} />
           </Routes>
         </AuthProvider>
       </ThemeProvider>
