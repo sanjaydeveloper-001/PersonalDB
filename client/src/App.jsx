@@ -74,7 +74,7 @@ function getSubdomain() {
   const sub = parts[0]
 
   // Ignore www as a subdomain
-  if (sub === 'personaldb') return null
+  if (sub === 'personaldb' || sub === 'www') return null
 
   // For production (josan.tech), only treat it as a subdomain if there are 3+ parts
   // For localhost dev (sanjay.localhost), 2 parts is fine
