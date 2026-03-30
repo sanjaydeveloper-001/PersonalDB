@@ -107,10 +107,10 @@ function replacePortfolioData(html, userData) {
 }
 
 // ---------- Component ----------
-const PublicProfilePage = ({ portdomain }) => {
-  const { username } = useParams()
-
-  const identifier = portdomain || username
+// Route: /u/:portdomain
+// Always looks up by portdomain field — no subdomain logic, no username fallback
+const PublicProfilePage = () => {
+  const { portdomain } = useParams()
 
   const [loading, setLoading]     = useState(true)
   const [error, setError]         = useState(null)
@@ -120,21 +120,15 @@ const PublicProfilePage = ({ portdomain }) => {
   const BASE_URL = API_URL.replace('/api', '')
 
   useEffect(() => {
-    if (!identifier) return
+    if (!portdomain) return
 
     const fetchAndMerge = async () => {
       try {
         setLoading(true)
         setError(null)
 
-        // ── 1. Fetch portfolio data ───────────────────────────────────────────
-        // subdomain mode → /api/port/domain/:portdomain  (lookup by portdomain field)
-        // path mode      → /api/port/:username           (lookup by username field)
-        const userEndpoint = portdomain
-          ? `${API_URL}/port/domain/${portdomain}` 
-          : `${API_URL}/port/${username}`  
-
-        const userRes = await fetch(userEndpoint)
+        // ── 1. Fetch portfolio data by portdomain ─────────────────────────────
+        const userRes = await fetch(`${API_URL}/port/${portdomain}`)
         if (!userRes.ok) throw new Error('User not found')
         const userData = await userRes.json()
 
@@ -166,14 +160,8 @@ const PublicProfilePage = ({ portdomain }) => {
           }))
         }
 
-        // ── 2. Fetch template HTML ────────────────────────────────────────────
-        // subdomain mode → /api/templates/domain/:portdomain
-        // path mode      → /api/templates/user/:username
-        const templateEndpoint = portdomain
-          ? `${API_URL}/templates/user/domain/${portdomain}`  // ✅ correct
-          : `${API_URL}/templates/user/${username}`       // ✅ correct
-
-        const templateRes = await fetch(templateEndpoint)
+        // ── 2. Fetch template HTML by portdomain ──────────────────────────────
+        const templateRes = await fetch(`${API_URL}/templates/user/${portdomain}`)
         if (!templateRes.ok) throw new Error('Template not found')
         const templateData = await templateRes.json()
         if (!templateData.success) throw new Error('Invalid template response')
@@ -190,7 +178,7 @@ const PublicProfilePage = ({ portdomain }) => {
     }
 
     fetchAndMerge()
-  }, [identifier])
+  }, [portdomain])
 
   if (loading) {
     return (
@@ -222,7 +210,7 @@ const PublicProfilePage = ({ portdomain }) => {
   return (
     <IframeContainer
       srcDoc={finalHtml}
-      title={`${identifier}'s portfolio`}
+      title={`${portdomain}'s portfolio`}
     />
   )
 }

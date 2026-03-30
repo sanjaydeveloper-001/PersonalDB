@@ -122,6 +122,31 @@ const CurrentDomainBadge = styled.a`
   svg { width: 12px; height: 12px; }
 `
 
+/* ──── URL PREVIEW BOX ──── */
+const UrlPreviewBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  font-size: 0.82rem;
+  color: #64748b;
+
+  span.base {
+    color: #94a3b8;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  span.username {
+    color: #3b82f6;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+`
+
 /* ──── DOMAIN INPUT ROW ──── */
 const DomainInputRow = styled.div`
   display: flex;
@@ -150,6 +175,20 @@ const DomainInputRow = styled.div`
   }
 `
 
+const DomainPrefix = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  user-select: none;
+`
+
 const DomainInput = styled.input`
   flex: 1;
   padding: 0.75rem 1rem;
@@ -166,20 +205,6 @@ const DomainInput = styled.input`
     color: #94a3b8;
     font-family: inherit;
   }
-`
-
-const DomainSuffix = styled.div`
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border-left: 1px solid #e2e8f0;
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #64748b;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  white-space: nowrap;
-  user-select: none;
 `
 
 const DomainStatusIcon = styled.div`
@@ -367,18 +392,18 @@ const Spinner = styled.div`
 `
 
 /* ════════════════════════════════════════
-   DOMAIN VALIDATION LOGIC
+   CONSTANTS
 ═══════════════════════════════════════ */
-const FIXED_SUFFIX = '.josan.tech'
+const BASE_URL = 'https://personaldb.josan.tech'
+const PATH_PREFIX = '/u/'
 
 /**
- * Returns an array of validation errors for a given subdomain prefix.
- * An empty array means it's valid format-wise.
+ * Returns an array of validation errors for a given username.
  */
-function validateSubdomain(value) {
+function validateUsername(value) {
   const errors = []
 
-  if (!value) return errors // empty = no errors shown yet
+  if (!value) return errors
 
   if (value.length < 3) errors.push('too_short')
   if (value.length > 32) errors.push('too_long')
@@ -392,12 +417,12 @@ function validateSubdomain(value) {
 }
 
 const RULE_DEFINITIONS = [
-  { key: 'min_length',       label: 'At least 3 characters',         check: v => v.length >= 3 },
-  { key: 'max_length',       label: 'Max 32 characters',             check: v => v.length <= 32 },
+  { key: 'min_length',       label: 'At least 3 characters',           check: v => v.length >= 3 },
+  { key: 'max_length',       label: 'Max 32 characters',               check: v => v.length <= 32 },
   { key: 'valid_chars',      label: 'Letters, numbers & hyphens only', check: v => /^[a-z0-9-]+$/.test(v) },
-  { key: 'no_double_hyphen', label: 'No consecutive hyphens (--)',   check: v => !/--/.test(v) },
-  { key: 'no_dot',           label: 'No dots allowed',               check: v => !/\./.test(v) },
-  { key: 'no_edge_hyphen',   label: 'No leading or trailing hyphen', check: v => !/^-/.test(v) && !/-$/.test(v) },
+  { key: 'no_double_hyphen', label: 'No consecutive hyphens (--)',     check: v => !/--/.test(v) },
+  { key: 'no_dot',           label: 'No dots allowed',                 check: v => !/\./.test(v) },
+  { key: 'no_edge_hyphen',   label: 'No leading or trailing hyphen',   check: v => !/^-/.test(v) && !/-$/.test(v) },
 ]
 
 /* ════════════════════════════════════════
@@ -411,13 +436,13 @@ const PortfolioSettingsPage = () => {
   const [likedTemplates, setLikedTemplates] = useState({})
   const [saving, setSaving] = useState(false)
 
-  /* ── Domain state ── */
-  const [currentDomain, setCurrentDomain] = useState('') // existing portdomain from DB
-  const [domainInput, setDomainInput] = useState('')      // what user types
-  const [domainStatus, setDomainStatus] = useState('idle') // idle | checking | available | taken | invalid
+  /* ── Username/path state ── */
+  const [currentUsername, setCurrentUsername] = useState('')  // existing portdomain from DB
+  const [usernameInput, setUsernameInput] = useState('')       // what user types
+  const [usernameStatus, setUsernameStatus] = useState('idle') // idle | checking | available | taken | invalid
   const [checkTimer, setCheckTimer] = useState(null)
-  const [savingDomain, setSavingDomain] = useState(false)
-  const [takenDomains, setTakenDomains] = useState([])   // pre-fetched list
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [takenUsernames, setTakenUsernames] = useState([])     // pre-fetched list
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -451,88 +476,81 @@ const PortfolioSettingsPage = () => {
     fetchUserTemplate()
   }, [])
 
-  /* ── Fetch user profile (current domain + all taken domains) ── */
+  /* ── Fetch user profile (current username + all taken usernames) ── */
   useEffect(() => {
-    const fetchDomainData = async () => {
+    const fetchUsernameData = async () => {
       try {
-        // 1. Get current user's portdomain
         const me = await userService.getProfile()
         if (me.success && me.user?.portdomain) {
-          setCurrentDomain(me.user.portdomain)
-          setDomainInput(me.user.portdomain)
+          setCurrentUsername(me.user.portdomain)
+          setUsernameInput(me.user.portdomain)
         }
 
-        // 2. Get all taken subdomains to validate against client-side
         const taken = await userService.getAllDomains()
         if (taken.success && Array.isArray(taken.domains)) {
-          setTakenDomains(taken.domains)
+          setTakenUsernames(taken.domains)
         }
       } catch {}
     }
-    fetchDomainData()
+    fetchUsernameData()
   }, [])
 
-  /* ── Domain input change handler ── */
-  const handleDomainChange = useCallback((e) => {
-    // Force lowercase, strip spaces
+  /* ── Input change handler ── */
+  const handleUsernameChange = useCallback((e) => {
     const raw = e.target.value.toLowerCase().replace(/\s/g, '')
-    setDomainInput(raw)
+    setUsernameInput(raw)
 
-    // Clear previous debounce
     if (checkTimer) clearTimeout(checkTimer)
 
     if (!raw) {
-      setDomainStatus('idle')
+      setUsernameStatus('idle')
       return
     }
 
-    const errors = validateSubdomain(raw)
+    const errors = validateUsername(raw)
     if (errors.length > 0) {
-      setDomainStatus('invalid')
+      setUsernameStatus('invalid')
       return
     }
 
-    // Same as current — no need to check
-    if (raw === currentDomain) {
-      setDomainStatus('idle')
+    if (raw === currentUsername) {
+      setUsernameStatus('idle')
       return
     }
 
-    setDomainStatus('checking')
+    setUsernameStatus('checking')
 
-    // Debounce 500ms, then check against pre-fetched list (+ optional server check)
     const timer = setTimeout(() => {
-      const isTaken = takenDomains.includes(raw)
-      setDomainStatus(isTaken ? 'taken' : 'available')
+      const isTaken = takenUsernames.includes(raw)
+      setUsernameStatus(isTaken ? 'taken' : 'available')
     }, 500)
 
     setCheckTimer(timer)
-  }, [checkTimer, currentDomain, takenDomains])
+  }, [checkTimer, currentUsername, takenUsernames])
 
-  /* ── Save custom domain ── */
-  const handleSaveDomain = async () => {
-    if (domainStatus !== 'available') return
+  /* ── Save username ── */
+  const handleSaveUsername = async () => {
+    if (usernameStatus !== 'available') return
 
     try {
-      setSavingDomain(true)
-      const result = await userService.updateDomain(domainInput)
+      setSavingUsername(true)
+      const result = await userService.updateDomain(usernameInput)
 
       if (result.success) {
-        setCurrentDomain(domainInput)
-        setDomainStatus('idle')
-        toast.success(`✅ Domain set to ${domainInput}${FIXED_SUFFIX}`)
+        setCurrentUsername(usernameInput)
+        setUsernameStatus('idle')
+        toast.success(`✅ Your portfolio is now at ${BASE_URL}${PATH_PREFIX}${usernameInput}`)
       } else {
-        toast.error(result.message || 'Failed to update domain')
-        // Refresh taken list in case another user just took it
+        toast.error(result.message || 'Failed to update username')
         if (result.code === 'DOMAIN_TAKEN') {
-          setTakenDomains(prev => [...prev, domainInput])
-          setDomainStatus('taken')
+          setTakenUsernames(prev => [...prev, usernameInput])
+          setUsernameStatus('taken')
         }
       }
     } catch {
-      toast.error('Failed to update domain')
+      toast.error('Failed to update username')
     } finally {
-      setSavingDomain(false)
+      setSavingUsername(false)
     }
   }
 
@@ -588,25 +606,25 @@ const PortfolioSettingsPage = () => {
     }
   }
 
-  /* ── Derived state for domain UI ── */
-  const validationErrors = validateSubdomain(domainInput)
-  const hasChanges = domainInput && domainInput !== currentDomain
+  /* ── Derived state for UI ── */
+  const validationErrors = validateUsername(usernameInput)
+  const hasChanges = usernameInput && usernameInput !== currentUsername
 
   const getFeedback = () => {
-    if (!domainInput) return null
-    if (domainStatus === 'checking') return { type: 'info', msg: `Checking availability for ${domainInput}${FIXED_SUFFIX}…` }
-    if (domainStatus === 'available') return { type: 'success', msg: `${domainInput}${FIXED_SUFFIX} is available! 🎉` }
-    if (domainStatus === 'taken') return { type: 'error', msg: `${domainInput}${FIXED_SUFFIX} is already taken.` }
-    if (domainStatus === 'invalid') {
+    if (!usernameInput) return null
+    if (usernameStatus === 'checking') return { type: 'info', msg: `Checking availability for "${usernameInput}"…` }
+    if (usernameStatus === 'available') return { type: 'success', msg: `"${usernameInput}" is available! 🎉` }
+    if (usernameStatus === 'taken') return { type: 'error', msg: `"${usernameInput}" is already taken.` }
+    if (usernameStatus === 'invalid') {
       if (validationErrors.includes('double_hyphen')) return { type: 'warning', msg: 'Double hyphens (--) are not allowed.' }
-      if (validationErrors.includes('has_dot')) return { type: 'warning', msg: 'Dots are not allowed in your subdomain.' }
+      if (validationErrors.includes('has_dot')) return { type: 'warning', msg: 'Dots are not allowed in your username.' }
       if (validationErrors.includes('leading_hyphen') || validationErrors.includes('trailing_hyphen'))
-        return { type: 'warning', msg: 'Your subdomain cannot start or end with a hyphen.' }
+        return { type: 'warning', msg: 'Username cannot start or end with a hyphen.' }
       if (validationErrors.includes('invalid_chars')) return { type: 'warning', msg: 'Only lowercase letters, numbers, and hyphens allowed.' }
-      if (validationErrors.includes('too_short')) return { type: 'warning', msg: 'Subdomain must be at least 3 characters.' }
-      if (validationErrors.includes('too_long')) return { type: 'warning', msg: 'Subdomain must be 32 characters or fewer.' }
+      if (validationErrors.includes('too_short')) return { type: 'warning', msg: 'Username must be at least 3 characters.' }
+      if (validationErrors.includes('too_long')) return { type: 'warning', msg: 'Username must be 32 characters or fewer.' }
     }
-    if (domainInput === currentDomain) return { type: 'info', msg: 'This is your current domain.' }
+    if (usernameInput === currentUsername) return { type: 'info', msg: 'This is your current username.' }
     return null
   }
 
@@ -619,10 +637,10 @@ const PortfolioSettingsPage = () => {
   }
 
   const statusIcon = () => {
-    if (domainStatus === 'checking') return <Loader2 />
-    if (domainStatus === 'available') return <CheckCircle2 />
-    if (domainStatus === 'taken') return <XCircle />
-    if (domainStatus === 'invalid') return <AlertTriangle />
+    if (usernameStatus === 'checking') return <Loader2 />
+    if (usernameStatus === 'available') return <CheckCircle2 />
+    if (usernameStatus === 'taken') return <XCircle />
+    if (usernameStatus === 'invalid') return <AlertTriangle />
     return <Globe />
   }
 
@@ -638,45 +656,52 @@ const PortfolioSettingsPage = () => {
       </PageHeader>
 
       {/* ════════════════
-          CUSTOM DOMAIN
+          USERNAME / URL
       ════════════════ */}
       <Card>
         <DomainHeader>
           <DomainTitleGroup>
             <DomainTitle>
               <Globe />
-              Custom Domain
+              Portfolio URL
             </DomainTitle>
-            <DomainSubtitle>Claim your personal subdomain on josan.tech</DomainSubtitle>
+            <DomainSubtitle>Claim your personal portfolio link on personaldb.josan.tech</DomainSubtitle>
           </DomainTitleGroup>
-          {currentDomain && (
+          {currentUsername && (
             <CurrentDomainBadge
-              href={`https://${currentDomain}.josan.tech`}
+              href={`${BASE_URL}${PATH_PREFIX}${currentUsername}`}
               target="_blank"
               rel="noopener noreferrer"
             >
-              {currentDomain}{FIXED_SUFFIX}
+              {PATH_PREFIX}{currentUsername}
               <ExternalLink />
             </CurrentDomainBadge>
           )}
         </DomainHeader>
 
+        {/* ── Live URL preview ── */}
+        <UrlPreviewBox>
+          <Globe size={14} />
+          <span className="base">{BASE_URL}{PATH_PREFIX}</span>
+          <span className="username">{usernameInput || 'your-username'}</span>
+        </UrlPreviewBox>
+
         {/* ── Input row ── */}
-        <DomainInputRow $status={domainInput && domainStatus !== 'idle' ? domainStatus : undefined}>
+        <DomainInputRow $status={usernameInput && usernameStatus !== 'idle' ? usernameStatus : undefined}>
+          <DomainPrefix>{PATH_PREFIX}</DomainPrefix>
           <DomainInput
             type="text"
-            placeholder="your-name"
-            value={domainInput}
-            onChange={handleDomainChange}
+            placeholder="your-username"
+            value={usernameInput}
+            onChange={handleUsernameChange}
             maxLength={32}
             spellCheck={false}
             autoCorrect="off"
             autoCapitalize="none"
           />
-          <DomainStatusIcon $status={domainInput ? domainStatus : 'idle'} $checking={domainStatus === 'checking'}>
+          <DomainStatusIcon $status={usernameInput ? usernameStatus : 'idle'} $checking={usernameStatus === 'checking'}>
             {statusIcon()}
           </DomainStatusIcon>
-          <DomainSuffix>{FIXED_SUFFIX}</DomainSuffix>
         </DomainInputRow>
 
         {/* ── Inline feedback ── */}
@@ -687,12 +712,12 @@ const PortfolioSettingsPage = () => {
           </FeedbackRow>
         )}
 
-        {/* ── Rules checklist (shown when user has typed something) ── */}
-        {domainInput && (
+        {/* ── Rules checklist ── */}
+        {usernameInput && (
           <RulesGrid>
             {RULE_DEFINITIONS.map(rule => (
-              <RuleItem key={rule.key} $ok={rule.check(domainInput)}>
-                {rule.check(domainInput)
+              <RuleItem key={rule.key} $ok={rule.check(usernameInput)}>
+                {rule.check(usernameInput)
                   ? <CheckCircle2 />
                   : <XCircle />}
                 {rule.label}
@@ -703,12 +728,12 @@ const PortfolioSettingsPage = () => {
 
         {/* ── Save button ── */}
         <SaveDomainBtn
-          onClick={handleSaveDomain}
-          disabled={domainStatus !== 'available' || savingDomain || !hasChanges}
-          $loading={savingDomain}
+          onClick={handleSaveUsername}
+          disabled={usernameStatus !== 'available' || savingUsername || !hasChanges}
+          $loading={savingUsername}
         >
-          {savingDomain ? <Loader2 /> : <Globe />}
-          {savingDomain ? 'Saving…' : 'Save Domain'}
+          {savingUsername ? <Loader2 /> : <Globe />}
+          {savingUsername ? 'Saving…' : 'Save Username'}
         </SaveDomainBtn>
       </Card>
 

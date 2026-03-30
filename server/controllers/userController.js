@@ -41,10 +41,6 @@ export const getMe = async (req, res) => {
   }
 }
 
-/* ═══════════════════════════════════════
-   PUT /users/me/username
-   Change username (uniqueness enforced)
-═══════════════════════════════════════ */
 export const updateUsername = async (req, res) => {
   try {
     const { username } = req.body

@@ -1,12 +1,11 @@
 import express from 'express';
-import { getPublicPortfolio, getPublicPortfolioByDomain, getSignedUrl } from '../controllers/publicController.js';
+import { getPublicPortfolioByDomain, getSignedUrl } from '../controllers/publicController.js';
 import { publicRateLimit } from '../middleware/publicRateLimit.js';
 
 const router = express.Router();
 
-// Public portfolio by username (rate limited)
-router.get('/port/:username', publicRateLimit, getPublicPortfolio);
-router.get('/port/domain/:portdomain', publicRateLimit, getPublicPortfolioByDomain);  // lookup by portdomain for subdomain mode
+// Single route — backend tries portdomain first, falls back to username
+router.get('/port/:portdomain', publicRateLimit, getPublicPortfolioByDomain);
 router.get('/util/signed-url', publicRateLimit, getSignedUrl);
 
 export default router;
