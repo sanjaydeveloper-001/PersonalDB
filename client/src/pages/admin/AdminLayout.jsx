@@ -6,7 +6,6 @@ const Root = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
-  background: #f8fafc;
   min-height: 100vh;
 `
 
@@ -76,10 +75,6 @@ const AdminLayout = () => {
 
   return (
     <Root>
-      <Header>
-        <Title>⚙️ Admin Panel</Title>
-        <Subtitle>Manage templates, users, and system settings</Subtitle>
-      </Header>
       <Content>
         <Outlet />
       </Content>

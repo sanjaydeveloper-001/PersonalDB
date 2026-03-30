@@ -710,7 +710,7 @@ const { data: projects } = await res.json()`}
               </tr>
               <tr>
                 <Td $alt>Authenticated endpoints</Td>
-                <Td $alt><Pill>1 000 req</Pill></Td>
+                <Td $alt><Pill>1000 req</Pill></Td>
                 <Td $alt>1 hour</Td>
                 <Td $alt>Per user</Td>
               </tr>
