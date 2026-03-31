@@ -5,8 +5,8 @@ import { userService } from '../services/userService'
 import {
   User, Calendar, Key, Clock, Activity,
   ExternalLink, Copy, Globe, Mail, AtSign,
-  Camera, Trash2, Check, X, Loader, Shield,
-  ChevronRight, Edit3, AlertCircle, Link2
+  Camera, X, Loader, Shield,
+  Edit3, AlertCircle, Link2, CheckCircle2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -18,10 +18,6 @@ const fadeUp = keyframes`
 const spin = keyframes`
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
-`
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
 `
 const slideIn = keyframes`
   from { opacity: 0; transform: translateY(-4px); }
@@ -240,6 +236,16 @@ const FieldMuted = styled(FieldValue)`
   font-style: italic; font-weight: 400;
 `
 
+/* ── Inline status message (replaces toast for field saves) ── */
+const StatusMsg = styled.div`
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.72rem; font-weight: 600;
+  margin-top: 0.3rem;
+  color: ${({ $type }) => $type === 'success' ? '#10b981' : '#f87171'};
+  animation: ${slideIn} 0.18s ease both;
+  svg { width: 12px; height: 12px; flex-shrink: 0; }
+`
+
 /* ── Inline Edit ── */
 const EditArea = styled.div`
   display: flex;
@@ -274,25 +280,6 @@ const EditInput = styled.input`
   }
 `
 
-const EditHint = styled.div`
-  font-size: 0.7rem;
-  color: ${({ $error }) => $error ? '#f87171' : 'var(--text-muted, #64748b)'};
-  display: flex; align-items: center; gap: 0.3rem;
-  svg { width: 11px; height: 11px; flex-shrink: 0; }
-  animation: ${slideIn} 0.15s ease both;
-`
-
-const DomainPreview = styled.div`
-  font-size: 0.72rem;
-  color: ${({ $valid }) => $valid ? '#10b981' : 'var(--text-muted, #64748b)'};
-  font-family: 'Courier New', monospace;
-  padding: 0.3rem 0.6rem;
-  background: ${({ $valid }) => $valid ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.03)'};
-  border: 1px solid ${({ $valid }) => $valid ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'};
-  border-radius: 6px;
-  transition: all 0.2s;
-`
-
 /* ── Buttons ── */
 const Btn = styled.button`
   display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
@@ -318,18 +305,6 @@ const Btn = styled.button`
       color: var(--text-muted, #64748b);
       border-color: rgba(255,255,255,0.08);
       &:hover { background: rgba(59,130,246,0.08); color: #3b82f6; border-color: rgba(59,130,246,0.2); }
-    `
-    if ($variant === 'danger') return css`
-      background: rgba(239,68,68,0.08);
-      color: #f87171;
-      border-color: rgba(239,68,68,0.2);
-      &:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); }
-    `
-    if ($variant === 'success') return css`
-      background: rgba(16,185,129,0.1);
-      color: #10b981;
-      border-color: rgba(16,185,129,0.2);
-      &:hover { background: rgba(16,185,129,0.18); border-color: rgba(16,185,129,0.35); }
     `
   }}
 
@@ -488,56 +463,62 @@ const timeAgo = (d) => {
   return `${y} year${y > 1 ? 's' : ''} ago`
 }
 
-const SUBDOMAIN_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
-const validateSubdomain = (v) => {
-  if (!v) return null
-  if (v.length < 3) return 'Too short (min 3 characters)'
-  if (v.length > 32) return 'Too long (max 32 characters)'
-  if (/[^a-z0-9-]/.test(v)) return 'Only lowercase letters, numbers, and hyphens'
-  if (/--/.test(v)) return 'Double hyphens not allowed'
-  if (/^-|-$/.test(v)) return 'Cannot start or end with a hyphen'
-  if (!SUBDOMAIN_RE.test(v)) return 'Invalid format'
-  return null
-}
-
 /* ═══════════════════════════════════════════════════
    INLINE EDIT FIELD
+   - No validate prop
+   - Shows inline success/error StatusMsg after save attempt
+   - Stays closed on success, stays open on error
 ═══════════════════════════════════════════════════ */
 const InlineField = ({
   icon, label, value, placeholder, onSave,
-  prefix, suffix, hint, validate, mono, isSaving
+  prefix, suffix, hint, mono
 }) => {
   const [editing, setEditing] = useState(false)
   const [val, setVal] = useState(value || '')
-  const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [status, setStatus] = useState(null) // { type: 'success'|'error', message }
   const inputRef = useRef(null)
 
   useEffect(() => { if (editing) inputRef.current?.focus() }, [editing])
   useEffect(() => { setVal(value || '') }, [value])
 
+  // Auto-clear success message after 4 seconds
+  useEffect(() => {
+    if (status?.type === 'success') {
+      const t = setTimeout(() => setStatus(null), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [status])
+
   const handleSave = async () => {
-    if (validate) {
-      const err = validate(val)
-      if (err) { setError(err); return }
+    // If value hasn't changed, just close without hitting the API
+    if (val.trim() === (value || '').trim()) {
+      setEditing(false)
+      return
     }
     setSaving(true)
+    setStatus(null)
     try {
       await onSave(val)
       setEditing(false)
-      setError(null)
+      setStatus({ type: 'success', message: `${label} updated successfully` })
     } catch (e) {
-      // ✅ FIX: handle both axios errors (e.response.data.message)
-      // and plain JS errors (e.message) thrown manually from savers
-      setError(e?.response?.data?.message || e?.message || 'Failed to save')
+      const msg = e?.response?.data?.message || e?.message || 'Failed to save'
+      setStatus({ type: 'error', message: msg })
     } finally {
       setSaving(false)
     }
   }
 
+  const handleCancel = () => {
+    setEditing(false)
+    setVal(value || '')
+    setStatus(null)
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSave()
-    if (e.key === 'Escape') { setEditing(false); setVal(value || ''); setError(null) }
+    if (e.key === 'Escape') handleCancel()
   }
 
   return (
@@ -545,44 +526,70 @@ const InlineField = ({
       <FieldIconWrap>{icon}</FieldIconWrap>
       <FieldContent>
         <FieldLabel>{label}</FieldLabel>
+
         {editing ? (
           <EditArea>
             <EditRow>
-              {prefix && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted, #64748b)', whiteSpace: 'nowrap' }}>{prefix}</span>}
+              {prefix && (
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted, #64748b)', whiteSpace: 'nowrap' }}>
+                  {prefix}
+                </span>
+              )}
               <EditInput
                 ref={inputRef}
                 value={val}
-                onChange={e => { setVal(e.target.value); setError(null) }}
+                onChange={e => { setVal(e.target.value); setStatus(null) }}
                 onKeyDown={handleKeyDown}
                 placeholder={placeholder}
               />
-              {suffix && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', whiteSpace: 'nowrap' }}>{suffix}</span>}
+              {suffix && (
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted, #64748b)', whiteSpace: 'nowrap' }}>
+                  {suffix}
+                </span>
+              )}
             </EditRow>
-            {suffix && val && !error && (
-              <DomainPreview $valid={!validateSubdomain(val)}>
-                → {val.toLowerCase()}{suffix}
-              </DomainPreview>
+
+            {hint && (
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted, #64748b)' }}>{hint}</div>
             )}
-            {hint && !error && <EditHint>{hint}</EditHint>}
-            {error && <EditHint $error><AlertCircle />{error}</EditHint>}
+
+            {/* Error shown inline while editing */}
+            {status?.type === 'error' && (
+              <StatusMsg $type="error">
+                <AlertCircle />
+                {status.message}
+              </StatusMsg>
+            )}
+
             <EditRow>
               <Btn $variant="primary" $sm onClick={handleSave} disabled={saving}>
-                {saving ? <SpinIcon size={11} /> : <Check />}
+                {saving ? <SpinIcon size={11} /> : null}
                 {saving ? 'Saving…' : 'Save'}
               </Btn>
-              <Btn $variant="ghost" $sm onClick={() => { setEditing(false); setVal(value || ''); setError(null) }}>
+              <Btn $variant="ghost" $sm onClick={handleCancel}>
                 <X />Cancel
               </Btn>
             </EditRow>
           </EditArea>
         ) : (
-          value
-            ? <FieldValue $mono={mono}>{prefix}{value}{suffix}</FieldValue>
-            : <FieldMuted>{placeholder || 'Not set'}</FieldMuted>
+          <>
+            {value
+              ? <FieldValue $mono={mono}>{prefix}{value}{suffix}</FieldValue>
+              : <FieldMuted>{placeholder || 'Not set'}</FieldMuted>
+            }
+            {/* Success shown below the value after closing */}
+            {status?.type === 'success' && (
+              <StatusMsg $type="success">
+                <CheckCircle2 />
+                {status.message}
+              </StatusMsg>
+            )}
+          </>
         )}
       </FieldContent>
+
       {!editing && (
-        <EditBtn onClick={() => setEditing(true)}>
+        <EditBtn onClick={() => { setEditing(true); setStatus(null) }}>
           <Edit3 />Edit
         </EditBtn>
       )}
@@ -613,15 +620,26 @@ const AccountPage = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const fd = new FormData()
-    fd.append('avatar', file)
     setAvatarLoading(true)
     try {
+      // Send the raw file as multipart — multer on the server picks it up,
+      // uploads to S3 under avatars/<userId>/, stores the key in User.profileImage,
+      // and returns { success, user } where user.profileImageUrl is a fresh signed URL.
+      const fd = new FormData()
+      fd.append('avatar', file)   // field name must match your multer config
       const data = await userService.uploadAvatar(fd)
-      if (data.success) { setUser(data.user); toast.success('Avatar updated!') }
-      else toast.error(data.message)
-    } catch { toast.error('Failed to upload avatar') }
-    finally { setAvatarLoading(false); e.target.value = '' }
+      if (data.success) {
+        setUser(data.user)
+        toast.success('Avatar updated!')
+      } else {
+        toast.error(data.message || 'Failed to upload avatar')
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to upload avatar')
+    } finally {
+      setAvatarLoading(false)
+      e.target.value = ''
+    }
   }
 
   const handleRemoveAvatar = async (e) => {
@@ -629,9 +647,17 @@ const AccountPage = () => {
     setAvatarLoading(true)
     try {
       const data = await userService.removeAvatar()
-      if (data.success) { setUser(data.user); toast.success('Avatar removed') }
-    } catch { toast.error('Failed to remove avatar') }
-    finally { setAvatarLoading(false) }
+      if (data.success) {
+        setUser(data.user)
+        toast.success('Avatar removed')
+      } else {
+        toast.error(data.message || 'Failed to remove avatar')
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to remove avatar')
+    } finally {
+      setAvatarLoading(false)
+    }
   }
 
   /* ── Field savers ── */
@@ -639,7 +665,6 @@ const AccountPage = () => {
     const data = await userService.updateUsername(username)
     if (data.user) {
       setUser(data.user)
-      toast.success('Username updated!')
     } else {
       throw new Error(data?.message || 'Failed to update username')
     }
@@ -649,7 +674,6 @@ const AccountPage = () => {
     const data = await userService.updateEmail(email)
     if (data.user) {
       setUser(data.user)
-      toast.success('Email updated!')
     } else {
       throw new Error(data?.message || 'Failed to update email')
     }
@@ -659,7 +683,6 @@ const AccountPage = () => {
     const data = await userService.updateDomain(subdomain.toLowerCase())
     if (data.user) {
       setUser(data.user)
-      toast.success(`Domain set to ${data.domain}!`)
     } else {
       throw new Error(data?.message || 'Failed to update domain')
     }
@@ -667,9 +690,8 @@ const AccountPage = () => {
 
   const totalRequests = user?.apiKeys?.reduce((s, k) => s + (k.requestCount || 0), 0) ?? 0
 
-  const avatarUrl = user?.profileImage
-    ? (user.profileImage.startsWith('http') ? user.profileImage : `${import.meta.env.VITE_API_URL?.replace('/api', '')}${user.profileImage}`)
-    : null
+  // Backend now returns a short-lived signed URL in profileImageUrl
+  const avatarUrl = user?.profileImageUrl || null
 
   return (
     <PageWrap>
@@ -760,11 +782,6 @@ const AccountPage = () => {
             placeholder="Enter a username"
             onSave={saveUsername}
             hint="3–30 characters. This changes your public profile URL."
-            validate={(v) => {
-              if (!v || v.trim().length < 3) return 'Min 3 characters'
-              if (v.trim().length > 30) return 'Max 30 characters'
-              return null
-            }}
           />
           <InlineField
             icon={<Mail />}
@@ -773,11 +790,6 @@ const AccountPage = () => {
             placeholder="Add your email"
             onSave={saveEmail}
             hint="Used for account recovery and notifications."
-            validate={(v) => {
-              if (!v) return 'Email is required'
-              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return 'Invalid email format'
-              return null
-            }}
           />
           <InlineField
             icon={<Globe />}
@@ -787,10 +799,6 @@ const AccountPage = () => {
             prefix="personaldb.josan.tech/u/"
             onSave={saveDomain}
             hint="Your personal subdomain. Must be 3–32 chars, lowercase, hyphens allowed."
-            validate={(v) => {
-              if (!v) return 'Subdomain is required'
-              return validateSubdomain(v.toLowerCase())
-            }}
           />
         </FieldList>
       </Section>

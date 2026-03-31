@@ -18,8 +18,6 @@ export const AuthProvider = ({ children }) => {
         const userData = await authService.getMe()
         setUser(userData)
       } catch (error) {
-        // User is not logged in (401) - this is expected on first page load
-        // Silently ignore this error
         setUser(null)
       } finally {
         setLoading(false)
@@ -64,7 +62,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
