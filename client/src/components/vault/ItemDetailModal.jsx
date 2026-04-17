@@ -266,7 +266,7 @@ const StyledAudio = styled.audio`width: 100%; max-width: 400px;`
 
 const TextBody = styled.pre`
   flex: 1; padding: 20px; margin: 0; overflow: auto;
-  font-size: 0.82rem; font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.82rem; font-family: 'JetBrains Mono', monospace;
   color: #334155; line-height: 1.7; background: #f8fafc;
   white-space: pre-wrap; word-break: break-word;
 `

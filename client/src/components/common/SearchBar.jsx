@@ -25,7 +25,7 @@ const SearchContainer = styled.div`
   position: relative;
   width: 100%;
   max-width: 500px;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
 `;
 
 const InputWrapper = styled.div`
@@ -60,7 +60,7 @@ const SearchInput = styled.input`
   border: none;
   border-radius: 12px;
   font-size: 0.92rem;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-weight: 450;
   color: #1e293b;
   background: transparent;
@@ -160,7 +160,7 @@ const DropdownItem = styled.button`
   text-align: left;
   cursor: pointer;
   transition: background 0.15s;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 0.9rem;
   color: ${({ $active }) => ($active ? '#1e40af' : '#334155')};
   border-bottom: 1px solid #f8fafc;
@@ -280,7 +280,7 @@ const Kbd = styled.kbd`
   gap: 0.25rem;
   font-size: 0.68rem;
   color: #94a3b8;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
 
   span {
     background: #e2e8f0;

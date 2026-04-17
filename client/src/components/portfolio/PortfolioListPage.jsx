@@ -57,7 +57,7 @@ const IconBox = styled.div`
 
 const TitleWrap = styled.div``
 const PageTitle = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem; font-weight: 800;
   color: var(--text-primary);
   line-height: 1; margin: 0 0 0.35rem;
@@ -107,7 +107,7 @@ const FormHead = styled.div`
 `
 
 const FormTitle = styled.h3`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.92rem; font-weight: 700;
   color: var(--text-primary); margin: 0;
   display: flex; align-items: center; gap: 0.65rem;
@@ -294,7 +294,7 @@ const CardRow = styled.div`
 
 const CardMain = styled.div``
 const CTitle = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.97rem; font-weight: 700;
   color: var(--text-primary); line-height: 1.3;
 `
@@ -371,7 +371,7 @@ const EIcon = styled.div`
   color: rgba(0,212,255,0.42); font-size: 1.5rem;
 `
 const ETitle = styled.h3`
-  font-family: 'Syne', sans-serif; font-size: 0.98rem;
+  font-family: 'DM Sans', sans-serif; font-size: 0.98rem;
   color: var(--text-secondary); margin: 0;
 `
 const EText = styled.p`

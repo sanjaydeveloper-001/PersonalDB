@@ -2,6 +2,23 @@ import passport from 'passport';
 import GoogleStrategy from 'passport-google-oauth20';
 import { uploadGoogleProfilePicture } from '../controllers/vault/uploadController.js';
 
+// ── Helper function to generate unique username ──────────────────────────────
+const generateUniqueUsername = async (baseUsername) => {
+  const { default: User } = await import('../models/common/User.js');
+  
+  let username = baseUsername;
+  let exists = await User.findOne({ username });
+  
+  // If username exists, append a random suffix
+  while (exists) {
+    const randomSuffix = Math.floor(Math.random() * 10000);
+    username = `${baseUsername}_${randomSuffix}`;
+    exists = await User.findOne({ username });
+  }
+  
+  return username;
+};
+
 passport.use(
   new GoogleStrategy.Strategy(
     {
@@ -48,8 +65,11 @@ passport.use(
         }
 
         // Create new user from Google profile
+        const baseUsername = profile.displayName.replace(/\s+/g, '_').toLowerCase() || profile.emails[0].value.split('@')[0];
+        const uniqueUsername = await generateUniqueUsername(baseUsername);
+
         const newUser = new User({
-          username: profile.displayName.replace(/\s+/g, '_').toLowerCase() || profile.emails[0].value.split('@')[0],
+          username: uniqueUsername,
           googleId: profile.id,
           googleEmail: profile.emails[0].value,
           email: profile.emails[0].value,
@@ -60,6 +80,9 @@ passport.use(
         });
 
         await newUser.save();
+
+        // Mark as new user for welcome email
+        newUser._isNewUser = true;
 
         // Download and upload Google profile picture to S3
         if (profile.photos && profile.photos[0]?.value) {

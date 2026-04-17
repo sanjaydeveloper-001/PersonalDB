@@ -423,7 +423,7 @@ const StepLabel = styled.span`
 `
 
 const ConfirmInput = styled(Input)`
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   text-align: center;
   letter-spacing: 0.1em;
   font-size: 1rem;
@@ -941,7 +941,7 @@ const SettingsPage = () => {
                 {deleteStep === 2 && (
                   <form onSubmit={handleDeleteStep2}>
                     <FormGroup>
-                      <Label>Type <strong style={{ color: '#dc2626', fontFamily: 'Courier New' }}>Delete</strong> to confirm</Label>
+                      <Label>Type <strong style={{ color: '#dc2626', fontFamily: 'JetBrains Mono' }}>Delete</strong> to confirm</Label>
                       <ConfirmInput
                         type="text" placeholder='Type "Delete" here'
                         value={deleteConfirmText}

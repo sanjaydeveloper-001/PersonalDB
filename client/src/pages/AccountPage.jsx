@@ -77,7 +77,7 @@ const AvatarCircle = styled.div`
 
   span {
     color: white; font-size: 3.5rem; font-weight: 800;
-    font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   }
 `
 
@@ -130,7 +130,7 @@ const HeroMeta = styled.div`
 `
 
 const HeroName = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.6rem; font-weight: 800;
   color: var(--text-primary, #e2e8f0);
   margin: 0 0 0.2rem;
@@ -182,7 +182,7 @@ const SectionHeader = styled.div`
 `
 
 const SectionTitle = styled.h2`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.88rem; font-weight: 700;
   color: var(--text-primary, #e2e8f0); margin: 0;
   flex: 1;
@@ -235,7 +235,7 @@ const FieldLabel = styled.div`
 const FieldValue = styled.div`
   font-size: 0.875rem; font-weight: 500;
   color: var(--text-primary, #e2e8f0);
-  font-family: ${({ $mono }) => $mono ? "'Courier New', monospace" : 'inherit'};
+  font-family: ${({ $mono }) => $mono ? "'JetBrains Mono', monospace" : 'inherit'};
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 `
 
@@ -352,7 +352,7 @@ const UrlCode = styled.div`
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(59,130,246,0.12);
   border-radius: 10px;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.82rem;
   color: #3b82f6;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -413,7 +413,7 @@ const SumLabel = styled.div`
   letter-spacing: 0.07em; color: var(--text-muted, #64748b); margin-bottom: 0.2rem;
 `
 const SumValue = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.2rem; font-weight: 800; color: #3b82f6;
 `
 
@@ -447,7 +447,7 @@ const InfoVal = styled.div`
   font-size: 0.875rem; font-weight: 500;
   color: ${({ $muted }) => $muted ? 'var(--text-muted, #64748b)' : 'var(--text-primary, #e2e8f0)'};
   font-style: ${({ $muted }) => $muted ? 'italic' : 'normal'};
-  font-family: ${({ $mono }) => $mono ? "'Courier New', monospace" : 'inherit'};
+  font-family: ${({ $mono }) => $mono ? "'JetBrains Mono', monospace" : 'inherit'};
   font-size: ${({ $mono }) => $mono ? '0.75rem' : '0.875rem'};
 `
 

@@ -188,7 +188,7 @@ const OverlayBtn = styled.button`
   font-weight: 600; font-size: 0.95rem; cursor: pointer; border: none;
   transition: all 0.3s ease; display: inline-flex;
   align-items: center; justify-content: center;
-  font-family: 'Outfit', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   ${props => props.$primary ? `
     background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
     color: white; box-shadow: 0 4px 12px rgba(59,130,246,0.3);

@@ -55,7 +55,7 @@ const IconBox = styled.div`
 const TitleGroup = styled.div``
 
 const PageTitle = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem; font-weight: 800;
   color: var(--text-primary, #e2e8f0);
   margin: 0 0 0.35rem; line-height: 1; letter-spacing: -0.02em;
@@ -164,7 +164,7 @@ const StatCard = styled.div`
 `
 
 const StatValue = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2.25rem; font-weight: 800;
   color: #3b82f6; margin-bottom: 0.35rem; line-height: 1;
 `
@@ -235,7 +235,7 @@ const SmallAvatar = styled.div`
   background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15))'};
   border: 1px solid rgba(59,130,246,0.2);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.9rem; font-weight: 800;
   color: #3b82f6;
   text-transform: uppercase;
@@ -318,7 +318,7 @@ const Avatar = styled.div`
   background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15))'};
   border: 1px solid rgba(59,130,246,0.2);
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.1rem; font-weight: 800;
   color: #3b82f6;
   text-transform: uppercase;
@@ -331,7 +331,7 @@ const UserInfo = styled.div`
 `
 
 const Username = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.9rem; font-weight: 700;
   color: var(--text-primary, #e2e8f0);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -440,12 +440,12 @@ const RoleDropdown = styled.div`
   position: absolute;
   top: calc(100% + 6px);
   left: 0; right: 0;
-  background: #1a2035;
-  border: 1px solid rgba(59,130,246,0.2);
+  background: white;
+  border: 1px solid #e5e7eb;
   border-radius: 13px;
   overflow: hidden;
   z-index: 100;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.45), 0 0 0 1px rgba(59,130,246,0.05);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
   animation: ${dropIn} 0.18s ease both;
 `
 
@@ -455,16 +455,17 @@ const RoleOption = styled.button`
   align-items: center;
   gap: 0.65rem;
   padding: 0.75rem 0.9rem;
-  background: ${({ $active }) => $active ? 'rgba(59,130,246,0.1)' : 'transparent'};
+  background: ${({ $active }) => $active ? '#f3f4f6' : 'transparent'};
   border: none;
   cursor: pointer;
   transition: background 0.15s;
   font-family: 'DM Sans', sans-serif;
   text-align: left;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
 
   &:last-child { border-bottom: none; }
-  &:hover { background: rgba(59,130,246,0.08); }
+  &:hover { background: #f9fafb; }
 `
 
 const OptionIconWrap = styled.div`
@@ -483,11 +484,11 @@ const OptionText = styled.div`
 
 const OptionName = styled.div`
   font-size: 0.82rem; font-weight: 700;
-  color: var(--text-primary, #e2e8f0);
+  color: #1f2937;
 `
 
 const OptionDesc = styled.div`
-  font-size: 0.7rem; color: var(--text-muted, #64748b); margin-top: 0.1rem;
+  font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem;
 `
 
 const ActiveDot = styled.div`

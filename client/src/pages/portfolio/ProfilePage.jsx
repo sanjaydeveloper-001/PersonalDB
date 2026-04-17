@@ -167,7 +167,7 @@ const IconBox = styled.div`
   box-shadow: 0 0 22px rgba(0, 212, 255, 0.14);
 `;
 const PageTitle = styled.h1`
-  font-family: "Syne", sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary);
@@ -247,7 +247,7 @@ const SCardHeadIcon = styled.div`
   color: ${({ $c }) => $c || "var(--accent)"};
 `;
 const SCardTitle = styled.h3`
-  font-family: "Syne", sans-serif;
+  font-family: "DM Sans", sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-primary);

@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   Lock, Briefcase, Globe, Settings, User,
   Database, ChevronLeft, ChevronDown, Terminal, BarChart3, X,
-  LayoutGrid, Users, Menu
+  LayoutGrid, Users, Mail
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
 import { MdOutlineDashboard } from "react-icons/md"
@@ -11,8 +11,8 @@ import ThemeToggle from '../common/ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
 /* ─── Constants ───────────────────────────────────────────── */
-const RAIL_W = 62
-const EXPANDED_W = 264
+const RAIL_W = 56
+const EXPANDED_W = 240
 
 /* ─── Injected keyframe styles ────────────────────────────── */
 const styleTag = document.createElement('style')
@@ -21,16 +21,12 @@ styleTag.textContent = `
     from { opacity: 0; transform: translateX(-4px) translateY(-50%); }
     to   { opacity: 1; transform: translateX(0) translateY(-50%); }
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateX(-4px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
   .sidebar-nav::-webkit-scrollbar { width: 3px; }
   .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
   .sidebar-nav::-webkit-scrollbar-thumb { background: #bfdbfe; border-radius: 99px; }
 
-  .sidebar-toggle-btn svg {
-    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  .sidebar-toggle-btn {
+    transition: background 0.15s, box-shadow 0.15s, transform 0.2s;
   }
   .sidebar-toggle-btn:hover {
     background: #eff6ff !important;
@@ -38,30 +34,37 @@ styleTag.textContent = `
     transform: scale(1.1) !important;
   }
 
+  .sidebar-trigger { transition: background 0.13s; }
   .sidebar-trigger:hover { background: #eff6ff !important; }
   .sidebar-trigger:hover .trigger-icon { color: #3b82f6 !important; }
   .sidebar-trigger:hover .trigger-label { color: #1e40af !important; }
 
+  .sidebar-standalone-link { transition: background 0.13s, color 0.13s; }
   .sidebar-standalone-link:hover { background: #eff6ff !important; color: #1e40af !important; }
   .sidebar-standalone-link:hover svg { color: #3b82f6 !important; }
   .sidebar-standalone-link.active { background: #dbeafe !important; color: #1e40af !important; font-weight: 500 !important; }
   .sidebar-standalone-link.active svg { color: #3b82f6 !important; }
 
-  .sidebar-sub-link { display: flex; align-items: center; gap: 0.45rem; padding: 0.4rem 0.6rem; border-radius: 8px; text-decoration: none; font-size: 0.82rem; font-weight: 400; color: #64748b; transition: background 0.13s, color 0.13s; white-space: nowrap; line-height: 1.2; }
-  .sidebar-sub-link::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: transparent; flex-shrink: 0; transition: background 0.15s; }
+  .sidebar-sub-link {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.38rem 0.6rem; border-radius: 8px;
+    text-decoration: none; font-size: 0.82rem; font-weight: 400;
+    color: #64748b; transition: background 0.13s, color 0.13s;
+    white-space: nowrap; line-height: 1.2;
+  }
+  .sidebar-sub-link::before {
+    content: ''; display: inline-block; width: 5px; height: 5px;
+    border-radius: 50%; background: transparent; flex-shrink: 0; transition: background 0.15s;
+  }
   .sidebar-sub-link:hover { background: #eff6ff; color: #1e40af; }
   .sidebar-sub-link:hover::before { background: #bfdbfe; }
   .sidebar-sub-link.active { background: #dbeafe; color: #1e40af; font-weight: 500; }
   .sidebar-sub-link.active::before { background: #3b82f6; }
 
-  .sidebar-tooltip-wrap:hover .sidebar-tooltip {
-    opacity: 1;
-    animation: tooltipIn 0.15s ease forwards;
-  }
-  .sidebar-trigger:hover .sidebar-tooltip {
-    opacity: 1;
-    animation: tooltipIn 0.15s ease forwards;
-  }
+  /* Tooltip shown on collapsed hover */
+  .sidebar-tooltip-wrap { position: relative; }
+  .sidebar-tooltip-wrap:hover .sidebar-tooltip,
+  .sidebar-trigger:hover .sidebar-tooltip,
   .sidebar-user-area:hover .sidebar-tooltip {
     opacity: 1;
     animation: tooltipIn 0.15s ease forwards;
@@ -69,19 +72,10 @@ styleTag.textContent = `
 
   .close-btn:hover { background: #eff6ff !important; }
 
-  /* ── Mobile header menu button ── */
   .mobile-menu-btn {
-    display: none;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: none;
-    background: transparent;
-    border-radius: 8px;
-    cursor: pointer;
-    color: #3b82f6;
-    transition: background 0.15s;
+    display: none; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border: none; background: transparent;
+    border-radius: 8px; cursor: pointer; color: #3b82f6; transition: background 0.15s;
   }
   .mobile-menu-btn:hover { background: #eff6ff; }
 
@@ -90,11 +84,8 @@ styleTag.textContent = `
     .close-btn { display: flex !important; }
     .mobile-menu-btn { display: flex !important; }
     .sidebar-container {
-      position: fixed !important;
-      left: 0 !important;
-      top: 0 !important;
-      z-index: 1001 !important;
-      width: ${EXPANDED_W}px !important;
+      position: fixed !important; left: 0 !important; top: 0 !important;
+      z-index: 1001 !important; width: ${EXPANDED_W}px !important;
     }
   }
   @media (min-width: 769px) {
@@ -131,7 +122,6 @@ const Tooltip = ({ children }) => (
     }}
   >
     <span style={{
-      content: '',
       position: 'absolute',
       right: '100%',
       top: '50%',
@@ -146,7 +136,7 @@ const Tooltip = ({ children }) => (
   </span>
 )
 
-/* ─── Data ────────────────────────────────────────────────── */
+/* ─── Nav Data ────────────────────────────────────────────── */
 const sections = [
   {
     key: 'vault',
@@ -180,17 +170,10 @@ const sections = [
     icon: Terminal,
     height: 108,
     links: [
-      { name: 'Docs',      path: '/dashboard/developer/docs' },
       { name: 'Keys',      path: '/dashboard/developer/keys' },
       { name: 'Analytics', path: '/dashboard/developer/analytics' },
     ],
   },
-]
-
-const standaloneItems = [
-  { name: 'Account',       path: '/dashboard/account',      icon: User },
-  { name: 'Port Settings', path: '/dashboard/portsettings', icon: RiUserSettingsLine },
-  { name: 'Settings',      path: '/dashboard/settings',     icon: Settings },
 ]
 
 /* ─── Component ───────────────────────────────────────────── */
@@ -219,10 +202,9 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
   }
 
   const handleLinkClick = () => onCloseMobile?.()
-
   const isMobile = window.innerWidth <= 768
 
-  /* ── inline styles ── */
+  /* ── Styles ── */
   const containerStyle = {
     display: 'flex',
     flexDirection: 'column',
@@ -237,8 +219,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     overflow: 'visible',
     ...(isMobile ? {
       position: 'fixed',
-      left: 0,
-      top: 0,
+      left: 0, top: 0,
       zIndex: 1001,
       height: '100vh',
       width: `${EXPANDED_W}px`,
@@ -265,16 +246,14 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     justifyContent: 'center',
     zIndex: 200,
     boxShadow: '0 2px 8px rgba(59,130,246,0.12)',
-    transition: 'background 0.15s, box-shadow 0.15s, transform 0.2s',
     padding: 0,
   }
 
   const headerStyle = {
     display: 'flex',
     alignItems: 'center',
-    height: '64px',
-    // KEY FIX: when collapsed, center everything; when expanded, space-between
-    padding: collapsed ? '0' : '0 1rem',
+    height: '60px',
+    padding: collapsed ? '0' : '0 0.85rem',
     justifyContent: collapsed ? 'center' : 'space-between',
     borderBottom: '1.5px solid rgba(59, 130, 246, 0.08)',
     flexShrink: 0,
@@ -283,9 +262,9 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
   }
 
   const logoMarkStyle = {
-    width: '36px',
-    height: '36px',
-    minWidth: '36px',
+    width: '34px',
+    height: '34px',
+    minWidth: '34px',
     borderRadius: '10px',
     background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
     display: 'flex',
@@ -296,84 +275,52 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     boxShadow: '0 2px 8px rgba(59,130,246,0.25)',
   }
 
-  const logoTextStyle = {
-    display: 'block',
-    fontFamily: "'Courier New', monospace",
-    fontSize: '1rem',
-    fontWeight: 700,
-    color: '#1e40af',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    opacity: collapsed ? 0 : 1,
-    width: collapsed ? '0' : 'auto',
-    marginLeft: collapsed ? '0' : '0.6rem',
-    transition: 'opacity 0.2s ease, width 0.28s ease, margin 0.28s ease',
-    pointerEvents: 'none',
-    lineHeight: 1.2,
-  }
-
-  const closeBtnStyle = {
-    width: '28px',
-    height: '28px',
-    border: 'none',
-    background: 'transparent',
-    cursor: 'pointer',
-    borderRadius: '6px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#3b82f6',
-    flexShrink: 0,
-    transition: 'background 0.15s',
-  }
-
   const navStyle = {
     flex: 1,
     overflowY: 'auto',
     overflowX: 'hidden',
-    padding: '0.75rem 0',
+    padding: '0.5rem 0 0.75rem',
     display: 'flex',
     flexDirection: 'column',
-    gap: '1px',
   }
 
   const dividerStyle = {
     height: '1px',
     background: 'rgba(59, 130, 246, 0.07)',
-    margin: `0.4rem ${collapsed ? '10px' : '0.75rem'}`,
+    margin: `0.35rem ${collapsed ? '10px' : '0.6rem'}`,
     transition: 'margin 0.28s',
+    flexShrink: 0,
   }
 
-  // KEY FIX: center icon wrapper when collapsed
-  const sectionWrapStyle = {
-    position: 'relative',
-    padding: `0 ${collapsed ? '6px' : '8px'}`,
-    transition: 'padding 0.28s',
+  const sectionGroupStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1px',
+    padding: `0 ${collapsed ? '6px' : '6px'}`,
   }
 
   const sectionLabelStyle = {
-    display: 'block',
-    fontSize: '0.65rem',
+    fontSize: '0.62rem',
     fontWeight: 700,
-    letterSpacing: '0.12em',
+    letterSpacing: '0.11em',
     textTransform: 'uppercase',
     color: '#94a3b8',
-    margin: collapsed ? '0.75rem 0 0.25rem' : '1.25rem 1rem 0.5rem 1rem',
-    padding: 0,
+    padding: collapsed ? '0' : '0.85rem 0.75rem 0.3rem',
     opacity: collapsed ? 0 : 1,
-    transition: 'opacity 0.18s ease, margin 0.28s ease',
+    maxHeight: collapsed ? '0' : '2rem',
+    overflow: 'hidden',
+    transition: 'opacity 0.18s ease, max-height 0.28s ease, padding 0.28s ease',
     pointerEvents: 'none',
     lineHeight: 1.2,
   }
 
   const userAreaStyle = {
     borderTop: '1.5px solid rgba(59, 130, 246, 0.08)',
-    padding: collapsed ? '0.75rem 6px' : '0.75rem 0.75rem',
+    padding: collapsed ? '0.65rem 6px' : '0.65rem 0.75rem',
     flexShrink: 0,
     display: 'flex',
     alignItems: 'center',
-    gap: '0.6rem',
+    gap: '0.55rem',
     overflow: 'hidden',
     transition: 'padding 0.28s',
     justifyContent: collapsed ? 'center' : 'flex-start',
@@ -381,70 +328,46 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
   }
 
   const avatarStyle = {
-    width: '32px',
-    height: '32px',
-    minWidth: '32px',
+    width: '30px',
+    height: '30px',
+    minWidth: '30px',
     borderRadius: '50%',
-    background: user?.profileImage 
+    background: user?.profileImage
       ? `url(${user.profileImage}) center/cover`
       : 'linear-gradient(135deg, #3b82f6, #1e40af)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: user?.profileImage ? 'transparent' : 'white',
-    fontSize: '0.78rem',
+    fontSize: '0.75rem',
     fontWeight: 700,
     flexShrink: 0,
     fontFamily: "'Courier New', monospace",
   }
 
-  const userInfoStyle = {
-    flex: 1,
-    overflow: 'hidden',
-    opacity: collapsed ? 0 : 1,
-    width: collapsed ? '0' : 'auto',
-    transition: 'opacity 0.18s ease, width 0.28s ease',
-    pointerEvents: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.2rem',
-  }
-
-  const themeWrapStyle = {
-    flexShrink: 0,
-    opacity: collapsed ? 0 : 1,
-    width: collapsed ? '0' : 'auto',
-    overflow: 'hidden',
-    transition: 'opacity 0.18s ease, width 0.28s ease',
-    pointerEvents: collapsed ? 'none' : 'auto',
-  }
-
-  // KEY FIX: when collapsed, center the icon via justify-content center
   const getTriggerStyle = (isOpen) => ({
     display: 'flex',
     alignItems: 'center',
     width: '100%',
-    padding: collapsed ? '0.6rem 0' : '0.52rem 0.65rem',
+    padding: collapsed ? '0.55rem 0' : '0.48rem 0.6rem',
     border: 'none',
     background: !collapsed && isOpen ? '#eff6ff' : 'transparent',
-    borderRadius: '10px',
+    borderRadius: '9px',
     cursor: 'pointer',
-    transition: 'background 0.15s, padding 0.28s',
     textAlign: 'left',
     justifyContent: collapsed ? 'center' : 'flex-start',
-    gap: collapsed ? '0' : '0.6rem',
+    gap: collapsed ? '0' : '0.55rem',
     position: 'relative',
+    transition: 'background 0.13s, padding 0.28s',
   })
 
   const getTriggerIconStyle = (isOpen) => ({
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',   // ← ensures icon itself is centered within its box
+    justifyContent: 'center',
     flexShrink: 0,
     color: isOpen ? '#3b82f6' : '#64748b',
     transition: 'color 0.15s',
-    position: 'relative',
-    zIndex: 1,
     width: '17px',
     height: '17px',
   })
@@ -483,28 +406,27 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
   })
 
   const subInnerStyle = {
-    padding: '0.15rem 0 0.3rem 2rem',
+    padding: '0.1rem 0 0.25rem 2rem',
     display: 'flex',
     flexDirection: 'column',
     gap: '1px',
   }
 
-  // KEY FIX: icon wrapper also centered when collapsed
-  const getStandaloneLinkStyle = (isCollapsed) => ({
+  const getStandaloneLinkStyle = () => ({
     display: 'flex',
     alignItems: 'center',
-    gap: isCollapsed ? '0' : '0.6rem',
-    padding: isCollapsed ? '0.6rem 0' : '0.52rem 0.65rem',
-    borderRadius: '10px',
+    gap: collapsed ? '0' : '0.55rem',
+    padding: collapsed ? '0.55rem 0' : '0.48rem 0.6rem',
+    borderRadius: '9px',
     textDecoration: 'none',
     color: '#334155',
     fontSize: '0.875rem',
     fontWeight: 400,
-    transition: 'background 0.15s, color 0.15s, padding 0.28s',
     whiteSpace: 'nowrap',
-    justifyContent: isCollapsed ? 'center' : 'flex-start',
+    justifyContent: collapsed ? 'center' : 'flex-start',
     position: 'relative',
     lineHeight: 1.2,
+    transition: 'background 0.13s, color 0.13s, padding 0.28s',
   })
 
   const standaloneIconStyle = {
@@ -530,16 +452,15 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     whiteSpace: 'nowrap',
   }
 
-  /* ── render helpers ── */
+  /* ── Render helpers ── */
   const renderSection = (section) => {
     const isOpen = openKey === section.key
     return (
-      <div key={section.key} style={sectionWrapStyle} className="sidebar-tooltip-wrap">
+      <div key={section.key} style={{ position: 'relative' }} className="sidebar-tooltip-wrap">
         <button
           style={getTriggerStyle(isOpen)}
           className="sidebar-trigger"
           onClick={() => toggle(section.key)}
-          title={collapsed ? section.label : undefined}
         >
           <span style={getTriggerIconStyle(isOpen)} className="trigger-icon">
             <section.icon style={{ width: 17, height: 17 }} />
@@ -569,23 +490,40 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     )
   }
 
+  const renderStandalone = (name, path, Icon) => (
+    <div key={path} style={{ position: 'relative' }} className="sidebar-tooltip-wrap">
+      <NavLink
+        to={path}
+        className="sidebar-standalone-link"
+        style={getStandaloneLinkStyle()}
+        onClick={handleLinkClick}
+      >
+        <Icon style={standaloneIconStyle} />
+        <span style={standaloneLabelStyle}>{name}</span>
+        {collapsed && <Tooltip>{name}</Tooltip>}
+      </NavLink>
+    </div>
+  )
+
   return (
     <>
-      {/* Overlay */}
-      <div
-        onClick={onCloseMobile}
-        style={{
-          display: isMobileOpen && isMobile ? 'block' : 'none',
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(15, 45, 107, 0.35)',
-          backdropFilter: 'blur(2px)',
-          zIndex: 1000,
-        }}
-      />
+      {/* Mobile Overlay */}
+      {isMobile && (
+        <div
+          onClick={onCloseMobile}
+          style={{
+            display: isMobileOpen ? 'block' : 'none',
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(15, 45, 107, 0.35)',
+            backdropFilter: 'blur(2px)',
+            zIndex: 1000,
+          }}
+        />
+      )}
 
       <aside style={containerStyle} className="sidebar-container">
-        {/* Desktop collapse toggle — pill button replacing raw chevron */}
+        {/* Desktop collapse toggle */}
         <button
           style={toggleBtnStyle}
           className="sidebar-toggle-btn"
@@ -604,34 +542,39 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
 
         {/* Header */}
         <div style={headerStyle}>
-          {/* ── Collapsed: just the logo mark centered ── */}
           {collapsed ? (
-            <div
-              style={logoMarkStyle}
-              onClick={() => setCollapsed(false)}
-              title="Expand"
-            >
-              <Database style={{ width: 17, height: 17, color: 'white' }} />
+            <div style={logoMarkStyle} onClick={() => setCollapsed(false)} title="Expand">
+              <Database style={{ width: 16, height: 16, color: 'white' }} />
             </div>
           ) : (
             <>
-              {/* Logo + wordmark */}
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.6rem', minWidth: 0 }}>
+              <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', gap: '0.55rem', minWidth: 0 }}>
                 <div style={logoMarkStyle}>
-                  <Database style={{ width: 17, height: 17, color: 'white' }} />
+                  <Database style={{ width: 16, height: 16, color: 'white' }} />
                 </div>
-                <span style={{ ...logoTextStyle, opacity: 1, width: 'auto', marginLeft: 0 }}>
+                <span style={{
+                  fontFamily: "'Courier New', monospace",
+                  fontSize: '0.95rem',
+                  fontWeight: 700,
+                  color: '#1e40af',
+                  whiteSpace: 'nowrap',
+                  lineHeight: 1.2,
+                }}>
                   PersonalDB
                 </span>
               </Link>
-
-              {/* Mobile close / Desktop hamburger-style toggle via the floating btn */}
               <button
                 className="close-btn"
-                style={closeBtnStyle}
+                style={{
+                  width: '28px', height: '28px', border: 'none',
+                  background: 'transparent', cursor: 'pointer',
+                  borderRadius: '6px', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  color: '#3b82f6', flexShrink: 0, transition: 'background 0.15s',
+                }}
                 onClick={onCloseMobile}
               >
-                <X style={{ width: 18, height: 18 }} />
+                <X style={{ width: 17, height: 17 }} />
               </button>
             </>
           )}
@@ -640,101 +583,80 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
         {/* Nav */}
         <nav style={navStyle} className="sidebar-nav">
 
-          {/* Dashboard */}
-          <div
-            style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
-            className="sidebar-tooltip-wrap"
-          >
-            <NavLink
-              to="/dashboard"
-              end
-              className="sidebar-standalone-link"
-              style={getStandaloneLinkStyle(collapsed)}
-            >
-              <MdOutlineDashboard style={{ ...standaloneIconStyle, width: 18, height: 18 }} />
-              <span style={standaloneLabelStyle}>Dashboard</span>
-              {collapsed && <Tooltip>Dashboard</Tooltip>}
-            </NavLink>
+          {/* ── Group 1: Dashboard ── */}
+          <div style={sectionGroupStyle}>
+            {renderStandalone('Dashboard', '/dashboard', MdOutlineDashboard)}
           </div>
 
           <div style={dividerStyle} />
 
-          {/* Main sections */}
-          {sections.map(renderSection)}
+          {/* ── Group 2: Vault, Portfolio, Developer ── */}
+          <div style={sectionGroupStyle}>
+            {sections.map(renderSection)}
+          </div>
 
           <div style={dividerStyle} />
 
-          {/* Standalone items */}
-          {standaloneItems.map(({ name, path, icon: Icon }) => (
-            <div
-              key={path}
-              style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
-              className="sidebar-tooltip-wrap"
-            >
+          {/* ── Group 3: Profile / Settings ── */}
+          <div style={sectionGroupStyle}>
+            {renderStandalone('Account', '/dashboard/account', User)}
+            {renderStandalone('Port Settings', '/dashboard/portsettings', RiUserSettingsLine)}
+            {renderStandalone('Settings', '/dashboard/settings', Settings)}
+          </div>
+
+          <div style={dividerStyle} />
+
+          {/* ── Group 4: Public Profile + Contact ── */}
+          <div style={sectionGroupStyle}>
+            <div style={{ position: 'relative' }} className="sidebar-tooltip-wrap">
               <NavLink
-                to={path}
+                to={`/u/${user?.username}`}
                 className="sidebar-standalone-link"
-                style={getStandaloneLinkStyle(collapsed)}
+                style={getStandaloneLinkStyle()}
                 onClick={handleLinkClick}
+                target="_blank"
               >
-                <Icon style={standaloneIconStyle} />
-                <span style={standaloneLabelStyle}>{name}</span>
-                {collapsed && <Tooltip>{name}</Tooltip>}
+                <Globe style={standaloneIconStyle} />
+                <span style={standaloneLabelStyle}>Public Profile</span>
+                {collapsed && <Tooltip>Public Profile</Tooltip>}
               </NavLink>
             </div>
-          ))}
-
-          {/* Public Profile */}
-          <div
-            style={{ position: 'relative', padding: `0 ${collapsed ? '6px' : '8px'}`, transition: 'padding 0.28s' }}
-            className="sidebar-tooltip-wrap"
-          >
-            <NavLink
-              to={`/u/${user?.username}`}
-              className="sidebar-standalone-link"
-              style={getStandaloneLinkStyle(collapsed)}
-              onClick={handleLinkClick}
-              target="_blank"
-            >
-              <Globe style={standaloneIconStyle} />
-              <span style={standaloneLabelStyle}>Public Profile</span>
-              {collapsed && <Tooltip>Public Profile</Tooltip>}
-            </NavLink>
+            {renderStandalone('Contact', '/dashboard/contact', Mail)}
           </div>
 
-          {/* Admin section */}
+          {/* ── Admin section ── */}
           {isAdmin && (
             <>
               <div style={dividerStyle} />
               <p style={sectionLabelStyle}>Admin</p>
+              <div style={sectionGroupStyle}>
+                <div style={{ position: 'relative' }} className="sidebar-tooltip-wrap">
+                  <button
+                    style={getTriggerStyle(openKey === 'admin')}
+                    className="sidebar-trigger"
+                    onClick={() => toggle('admin')}
+                  >
+                    <span style={getTriggerIconStyle(openKey === 'admin')} className="trigger-icon">
+                      <BarChart3 style={{ width: 17, height: 17 }} />
+                    </span>
+                    <span style={getTriggerLabelStyle(openKey === 'admin')} className="trigger-label">
+                      Admin Panel
+                    </span>
+                    <ChevronDown style={getChevronStyle(openKey === 'admin')} />
+                    {collapsed && <Tooltip>Admin Panel</Tooltip>}
+                  </button>
 
-              <div style={sectionWrapStyle} className="sidebar-tooltip-wrap">
-                <button
-                  style={getTriggerStyle(openKey === 'admin')}
-                  className="sidebar-trigger"
-                  onClick={() => toggle('admin')}
-                  title={collapsed ? 'Admin' : undefined}
-                >
-                  <span style={getTriggerIconStyle(openKey === 'admin')} className="trigger-icon">
-                    <BarChart3 style={{ width: 17, height: 17 }} />
-                  </span>
-                  <span style={getTriggerLabelStyle(openKey === 'admin')} className="trigger-label">
-                    Admin Panel
-                  </span>
-                  <ChevronDown style={getChevronStyle(openKey === 'admin')} />
-                  {collapsed && <Tooltip>Admin Panel</Tooltip>}
-                </button>
-
-                <div style={getSubMenuStyle(openKey === 'admin', 108)}>
-                  <div style={subInnerStyle}>
-                    <NavLink to="/dashboard/admin/templates" className="sidebar-sub-link" onClick={handleLinkClick}>
-                      <LayoutGrid size={14} style={{ marginRight: '4px' }} />
-                      Templates
-                    </NavLink>
-                    <NavLink to="/dashboard/admin/users" className="sidebar-sub-link" onClick={handleLinkClick}>
-                      <Users size={14} style={{ marginRight: '4px' }} />
-                      Users
-                    </NavLink>
+                  <div style={getSubMenuStyle(openKey === 'admin', 80)}>
+                    <div style={subInnerStyle}>
+                      <NavLink to="/dashboard/admin/templates" className="sidebar-sub-link" onClick={handleLinkClick}>
+                        <LayoutGrid size={13} style={{ marginRight: '3px' }} />
+                        Templates
+                      </NavLink>
+                      <NavLink to="/dashboard/admin/users" className="sidebar-sub-link" onClick={handleLinkClick}>
+                        <Users size={13} style={{ marginRight: '3px' }} />
+                        Users
+                      </NavLink>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -745,17 +667,31 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
         {/* User area */}
         <div style={userAreaStyle} className="sidebar-user-area">
           <div style={avatarStyle}>{!user?.profileImage && user?.username?.[0]?.toUpperCase()}</div>
-          <div style={userInfoStyle}>
-            <span style={{ display: 'block', fontSize: '0.84rem', fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+          <div style={{
+            flex: 1, overflow: 'hidden',
+            opacity: collapsed ? 0 : 1,
+            width: collapsed ? '0' : 'auto',
+            transition: 'opacity 0.18s ease, width 0.28s ease',
+            pointerEvents: 'none',
+            display: 'flex', flexDirection: 'column', gap: '0.15rem',
+          }}>
+            <span style={{ display: 'block', fontSize: '0.82rem', fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
               {user?.username}
             </span>
             {isAdmin && (
-              <span style={{ display: 'block', fontSize: '0.7rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
+              <span style={{ display: 'block', fontSize: '0.68rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
                 👑 {user?.role === 'superadmin' ? 'Super Admin' : 'Admin'}
               </span>
             )}
           </div>
-          <div style={themeWrapStyle}>
+          <div style={{
+            flexShrink: 0,
+            opacity: collapsed ? 0 : 1,
+            width: collapsed ? '0' : 'auto',
+            overflow: 'hidden',
+            transition: 'opacity 0.18s ease, width 0.28s ease',
+            pointerEvents: collapsed ? 'none' : 'auto',
+          }}>
             <ThemeToggle />
           </div>
           {collapsed && <Tooltip>{user?.username}</Tooltip>}

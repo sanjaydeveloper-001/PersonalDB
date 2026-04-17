@@ -6,7 +6,6 @@ import toast from 'react-hot-toast'
 import { apiService } from '../../services/apiService'
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 `
 
 // ── Animations ────────────────────────────────────────────────────────────────
@@ -35,7 +34,7 @@ const cardReveal = keyframes`
 // ── Page ──────────────────────────────────────────────────────────────────────
 const PageWrap = styled.div`
   max-width: 100%;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   animation: ${fadeUp} 0.4s ease both;
 `
 
@@ -85,7 +84,7 @@ const StatPill = styled.div`
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 16px; padding: 1.25rem 1.75rem; text-align: center;
   backdrop-filter: blur(10px); min-width: 120px;
-  .num  { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; font-family: 'IBM Plex Mono', monospace; }
+  .num  { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; font-family: 'JetBrains Mono', monospace; }
   .lbl  { font-size: 0.68rem; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; }
   .trk  { margin-top: 0.75rem; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.08); overflow: hidden; }
   .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg,#3b82f6,#a78bfa); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
@@ -95,7 +94,7 @@ const CreateBtn = styled.button`
   padding: 0.75rem 1.375rem;
   background: linear-gradient(135deg, #3b82f6, #1d4ed8);
   color: #fff; border: none; border-radius: 12px;
-  font-size: 0.875rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem; font-weight: 700; font-family: 'DM Sans', sans-serif;
   cursor: pointer; transition: all 0.2s;
   box-shadow: 0 4px 15px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
   &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.45); }
@@ -176,7 +175,7 @@ const GreenDot = styled.span`
   display: inline-block; animation: ${pulseDot} 1.8s ease infinite;
 `
 const IndexTag = styled.div`
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem; font-weight: 600; color: #94a3b8;
   background: #f1f5f9; border: 1px solid #e2e8f0;
   padding: 0.2rem 0.5rem; border-radius: 6px;
@@ -204,7 +203,7 @@ const TermDots = styled.div`
   span:nth-child(3) { background: #4ade80; opacity: 0.8; }
 `
 const KeyVal = styled.div`
-  font-family: 'IBM Plex Mono', monospace; font-size: 0.72rem; color: #64748b;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #64748b;
   letter-spacing: 0.04em; word-break: break-all; line-height: 1.5; transition: color 0.2s;
 `
 const CopyHint = styled.div`
@@ -234,7 +233,7 @@ const ActBtn = styled.button`
   height: 32px; padding: 0 0.75rem;
   display: inline-flex; align-items: center; gap: 0.35rem;
   border-radius: 8px; border: 1px solid; cursor: pointer;
-  font-size: 0.72rem; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.72rem; font-weight: 700; font-family: 'DM Sans', sans-serif;
   transition: all 0.18s; background: transparent;
   ${p => p.$danger ? css`
     border-color:#fecaca; color:#f87171;
@@ -329,7 +328,7 @@ const InputIcon  = styled.div`
 const StyledInput = styled.input`
   width:100%; padding:0.875rem 1rem 0.875rem 2.75rem;
   border:1.5px solid #e2e8f0; border-radius:12px;
-  font-size:0.9rem; font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:0.9rem; font-family:'DM Sans',sans-serif;
   color:#0f172a; transition:all 0.2s; box-sizing:border-box;
   &::placeholder { color:#c4cdd8; }
   &:focus { outline:none; border-color:#6366f1; box-shadow:0 0 0 4px rgba(99,102,241,0.1); }
@@ -339,7 +338,7 @@ const ModalFooter  = styled.div`display:flex; gap:0.75rem; justify-content:flex-
 const BtnSecondary = styled.button`
   padding:0.75rem 1.375rem; border-radius:10px; border:1.5px solid #e2e8f0;
   background:#fff; color:#64748b; font-size:0.875rem; font-weight:600;
-  font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; transition:all 0.15s;
+  font-family:'DM Sans',sans-serif; cursor:pointer; transition:all 0.15s;
   &:hover:not(:disabled) { background:#f8fafc; border-color:#cbd5e1; color:#0f172a; }
   &:disabled { opacity:0.5; cursor:not-allowed; }
 `
@@ -347,7 +346,7 @@ const BtnPrimary = styled.button`
   display:inline-flex; align-items:center; gap:0.5rem;
   padding:0.75rem 1.5rem; border-radius:10px; border:none;
   background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff;
-  font-size:0.875rem; font-weight:700; font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:0.875rem; font-weight:700; font-family:'DM Sans',sans-serif;
   cursor:pointer; transition:all 0.2s;
   box-shadow:0 4px 14px rgba(99,102,241,0.3),inset 0 1px 0 rgba(255,255,255,0.12);
   &:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 8px 22px rgba(99,102,241,0.4); }
@@ -369,14 +368,14 @@ const KeyRevealBox = styled.div`
     background-size:200%; animation:${shimmer} 3s linear infinite; pointer-events:none; }
 `
 const RevealKey = styled.div`
-  font-family:'IBM Plex Mono',monospace; font-size:0.75rem; color:#a5b4fc;
+  font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#a5b4fc;
   word-break:break-all; line-height:1.7; position:relative; z-index:1;
 `
 const CopyRevealBtn = styled.button`
   display:flex; align-items:center; gap:0.4rem;
   background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
   color:#94a3b8; padding:0.4rem 0.875rem; border-radius:7px;
-  cursor:pointer; font-size:0.72rem; font-family:'Plus Jakarta Sans',sans-serif;
+  cursor:pointer; font-size:0.72rem; font-family:'DM Sans',sans-serif;
   font-weight:600; margin-top:0.75rem; transition:all 0.15s; position:relative; z-index:1;
   &:hover { background:rgba(255,255,255,0.12); color:#e2e8f0; }
   svg { width:11px; height:11px; }
@@ -586,7 +585,7 @@ const KeysPage = () => {
               </KeyRevealBox>
             )}
             <BodyText style={{ fontSize:'0.82rem', color:'#64748b', margin:0 }}>
-              Usage: <code style={{ background:'#f1f5f9', padding:'0.15rem 0.4rem', borderRadius:5, fontFamily:'IBM Plex Mono,monospace', fontSize:'0.78rem' }}>
+              Usage: <code style={{ background:'#f1f5f9', padding:'0.15rem 0.4rem', borderRadius:5, fontFamily:'JetBrains Mono,monospace', fontSize:'0.78rem' }}>
                 Authorization: Bearer {newKeyData?.key}
               </code>
             </BodyText>

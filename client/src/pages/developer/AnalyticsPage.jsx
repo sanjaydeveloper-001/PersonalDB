@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 import { apiService } from '../../services/apiService'
 
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
 `
 
 // ── Animations ────────────────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ const countUp = keyframes`
 // ── Layout ─────────────────────────────────────────────────────────────────────
 const PageWrap = styled.div`
   max-width: 100%;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   animation: ${fadeUp} 0.4s ease both;
 `
 
@@ -111,7 +111,7 @@ const RefreshBtn = styled.button`
   border-radius: 10px;
   font-size: 0.875rem;
   font-weight: 600;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
   backdrop-filter: blur(6px);

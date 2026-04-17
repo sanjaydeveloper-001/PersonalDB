@@ -16,13 +16,13 @@ const shimmer = keyframes`
 
 // ── Global ───────────────────────────────────────────────────────────────────
 const GlobalStyle = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 `
 
 // ── Layout ───────────────────────────────────────────────────────────────────
 const PageWrap = styled.div`
   max-width: 100%;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   animation: ${fadeUp} 0.5s ease both;
 `
 
@@ -248,7 +248,7 @@ const ExpandBtn = styled.button`
   color: #2563eb;
   font-size: 0.8rem;
   font-weight: 600;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   cursor: pointer;
   padding: 0.5rem 0;
   transition: color 0.15s;
@@ -322,7 +322,7 @@ const CopyBtn = styled.button`
   cursor: pointer;
   font-size: 0.72rem;
   display: flex; align-items: center; gap: 0.3rem;
-  font-family: 'Sora', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   transition: all 0.15s;
 
   &:hover {

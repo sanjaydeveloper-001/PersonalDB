@@ -13,6 +13,8 @@ import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
 import OAuthSuccess from './pages/auth/OAuthSuccess'
 import NotFoundPage from './pages/NotFoundPage'
+import DocsPage from './pages/DocsPage'
+import ContactPage from './pages/ContactPage'
 
 // Dashboard
 import Dashboard from './pages/dashboard/Dashboard'
@@ -32,7 +34,7 @@ import CertificationsPage from './pages/portfolio/CertificationsPage'
 import InterestsPage from './pages/portfolio/InterestsPage'
 
 // Developer
-import DocsPage from './pages/developer/DocsPage'
+import DeveloperDocsPage from './pages/developer/DocsPage'
 import KeysPage from './pages/developer/KeysPage'
 import AnalyticsPage from './pages/developer/AnalyticsPage'
 
@@ -58,6 +60,7 @@ function App() {
           <Routes>
             {/* Public */}
             <Route path="/" element={<Home />} />
+            <Route path="/docs" element={<DocsPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -86,12 +89,13 @@ function App() {
               <Route path="portfolio/interests"      element={<InterestsPage />} />
 
               {/* Developer */}
-              <Route path="developer/docs"      element={<DocsPage />} />
+              <Route path="developer/docs"      element={<DeveloperDocsPage />} />
               <Route path="developer/keys"      element={<KeysPage />} />
               <Route path="developer/analytics" element={<AnalyticsPage />} />
 
               {/* Standalone */}
               <Route path="account"      element={<AccountPage />} />
+              <Route path="contact"      element={<ContactPage />} />
               <Route path="settings"     element={<SettingsPage />} />
               <Route path="portsettings" element={<PortfolioSettingsPage />} />
 

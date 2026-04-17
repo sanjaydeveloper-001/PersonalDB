@@ -74,7 +74,7 @@ const IconBox = styled.div`
 `;
 
 const PageTitle = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.85rem; font-weight: 800;
   color: var(--text-primary);
   line-height: 1; margin: 0 0 0.3rem;
@@ -216,7 +216,7 @@ const SecTitleWrap = styled.div`
 `;
 
 const SecTitle = styled.h3`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.94rem; font-weight: 800;
   color: var(--text-primary); margin: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -351,7 +351,7 @@ const EmptyPageIcon = styled.div`
 `;
 
 const EmptyPageTitle = styled.p`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1rem; font-weight: 700;
   color: var(--text-primary); margin: 0;
 `;

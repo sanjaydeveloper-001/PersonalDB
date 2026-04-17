@@ -1,20 +1,15 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import nodemailer from 'nodemailer';
 import User from '../../models/common/User.js';
 import { generateToken } from '../../utils/generateToken.js';
 import { generateSignedUrl } from './uploadController.js';
-
-// ── Email transporter ─────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+import {
+  sendWelcomeEmail,
+  sendWelcomeEmailAsync,
+  sendOtpEmail,
+  generateAndSendOtp,
+  verifyOtpAndGetToken,
+  sendPasswordChangedEmailAsync,
+  sendAccountDeletedEmailAsync,
+} from '../../services/email/emailService.js';
 
 const cookieOptions = () => ({
   httpOnly: true,
@@ -47,9 +42,28 @@ export const registerUser = async (req, res) => {
       email: email || undefined,
     });
 
+    // Send welcome email if email is provided
+    if (email) {
+      try {
+        await sendWelcomeEmail(email, username);
+      } catch (emailError) {
+        console.warn('[registerUser] Welcome email failed, but user registered:', emailError.message);
+      }
+    }
+
     res.cookie('token', generateToken(user._id), cookieOptions());
     res.status(201).json({ _id: user._id, username: user.username, birthYear: user.birthYear });
   } catch (error) {
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      if (field === 'username') {
+        return res.status(400).json({ message: 'Username already taken' });
+      } else if (field === 'email') {
+        return res.status(400).json({ message: 'Email already in use' });
+      }
+      return res.status(400).json({ message: `${field} already exists` });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -132,6 +146,12 @@ export const changePassword = async (req, res) => {
 
     user.password = newPassword;
     await user.save();
+
+    // Send password changed email asynchronously if user has email
+    if (user.email) {
+      sendPasswordChangedEmailAsync(user.email, user.username);
+    }
+
     res.json({ message: 'Password changed successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -150,7 +170,18 @@ export const deleteAccount = async (req, res) => {
     const isMatch = await user.matchPassword(password);
     if (!isMatch) return res.status(401).json({ message: 'Incorrect password. Account not deleted.' });
 
+    // Save user email and username before deletion
+    const userEmail = user.email;
+    const username = user.username;
+
+    // Delete account
     await User.findByIdAndDelete(req.user._id);
+
+    // Send account deletion confirmation email asynchronously if user has email
+    if (userEmail) {
+      sendAccountDeletedEmailAsync(userEmail, username);
+    }
+
     res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
     res.json({ message: 'Account deleted successfully' });
   } catch (error) {
@@ -167,32 +198,7 @@ export const sendOtp = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ message: 'No account found with this email' });
 
-    // Generate 6-digit OTP
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const otpHash = await bcrypt.hash(otp, 10);
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    user.otpHash = otpHash;
-    user.otpExpiry = otpExpiry;
-    await user.save();
-
-    // Send OTP email
-    await transporter.sendMail({
-      from: `"PersonalDB" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: 'Your Password Reset OTP',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 12px;">
-          <h2 style="color: #1e40af; margin-bottom: 8px;">Password Reset</h2>
-          <p style="color: #475569;">Use the OTP below to reset your PersonalDB password. It is valid for <strong>10 minutes</strong>.</p>
-          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px 32px; text-align: center; margin: 24px 0;">
-            <span style="font-size: 2.5rem; font-weight: 700; letter-spacing: 0.3em; color: #1e40af;">${otp}</span>
-          </div>
-          <p style="color: #94a3b8; font-size: 0.85rem;">If you did not request this, please ignore this email. Your password will remain unchanged.</p>
-        </div>
-      `,
-    });
-
+    await generateAndSendOtp(user, email.toLowerCase());
     res.json({ message: 'OTP sent to your email address' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -208,31 +214,10 @@ export const verifyOtp = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) return res.status(404).json({ message: 'No account found with this email' });
 
-    if (!user.otpHash || !user.otpExpiry) {
-      return res.status(400).json({ message: 'No OTP found. Please request a new one.' });
-    }
-
-    if (new Date() > user.otpExpiry) {
-      user.otpHash = undefined;
-      user.otpExpiry = undefined;
-      await user.save();
-      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
-    }
-
-    const isMatch = await bcrypt.compare(otp, user.otpHash);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid OTP. Please try again.' });
-
-    // OTP is valid — issue a short-lived reset token so the client can call resetPassword
-    const resetToken = generateToken(user._id, '15m');
-
-    // Clear OTP fields
-    user.otpHash = undefined;
-    user.otpExpiry = undefined;
-    await user.save();
-
-    res.json({ message: 'OTP verified successfully', resetToken });
+    const result = await verifyOtpAndGetToken(user, otp, generateToken);
+    res.json({ message: result.message, resetToken: result.resetToken });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(error.status || 500).json({ message: error.message });
   }
 };
 

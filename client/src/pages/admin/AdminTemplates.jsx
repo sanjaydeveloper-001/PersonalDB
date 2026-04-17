@@ -48,7 +48,7 @@ const IconBox = styled.div`
 `
 
 const PageTitle = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem;
   font-weight: 800;
   color: var(--text-primary, #e2e8f0);
@@ -145,7 +145,7 @@ const StatCard = styled.div`
 `
 
 const StatValue = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2.25rem;
   font-weight: 800;
   color: var(--accent, #00d4ff);
@@ -326,7 +326,7 @@ const GridBody = styled.div`
 `
 
 const GridName = styled.div`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-weight: 700;
   font-size: 0.9rem;
   color: var(--text-primary, #e2e8f0);

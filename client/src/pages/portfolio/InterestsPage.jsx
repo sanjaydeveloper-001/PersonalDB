@@ -40,7 +40,7 @@ const IconBox = styled.div`
 `
 
 const PageTitle = styled.h1`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 2rem; font-weight: 800;
   color: var(--text-primary); line-height: 1;
   margin: 0 0 0.35rem;

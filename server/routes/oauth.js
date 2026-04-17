@@ -1,6 +1,7 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
+import { sendWelcomeEmailAsync } from '../services/email/emailService.js';
 
 const router = express.Router();
 
@@ -41,6 +42,11 @@ router.get('/google/callback',
       sameSite: 'lax',
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
+
+    // Send welcome email asynchronously if new user (non-blocking)
+    if (req.user._isNewUser && req.user.email) {
+      sendWelcomeEmailAsync(req.user.email, req.user.username);
+    }
 
     // ✅ Redirect to frontend — no token in URL
     res.redirect(`${process.env.CLIENT_URL1}/dashboard`);

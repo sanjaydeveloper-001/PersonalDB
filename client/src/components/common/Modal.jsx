@@ -47,7 +47,7 @@ const ModalHeader = styled.div`
 const ModalTitle = styled.h3`
   font-size: 1rem;
   font-weight: 700;
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   color: var(--text-primary);
   margin: 0;
 `

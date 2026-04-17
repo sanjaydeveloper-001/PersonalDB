@@ -137,13 +137,13 @@ const UrlPreviewBox = styled.div`
 
   span.base {
     color: #94a3b8;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 
   span.username {
     color: #3b82f6;
     font-weight: 700;
-    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-family: 'JetBrains Mono', monospace;
   }
 `
 
@@ -184,7 +184,7 @@ const DomainPrefix = styled.div`
   font-size: 0.88rem;
   font-weight: 600;
   color: #64748b;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'JetBrains Mono', monospace;
   white-space: nowrap;
   user-select: none;
 `
@@ -196,7 +196,7 @@ const DomainInput = styled.input`
   outline: none;
   font-size: 0.95rem;
   color: #0f172a;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'JetBrains Mono', monospace;
   letter-spacing: 0.02em;
   background: transparent;
   min-width: 0;

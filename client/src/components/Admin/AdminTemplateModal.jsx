@@ -69,7 +69,7 @@ const ModalHeader = styled.div`
 `
 
 const ModalTitle = styled.h2`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 1.4rem;
   font-weight: 800;
   color: var(--text-primary, #e2e8f0);
@@ -139,7 +139,7 @@ const SCardIcon = styled.div`
 `
 
 const SCardTitle = styled.span`
-  font-family: 'Syne', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-primary, #e2e8f0);
@@ -295,7 +295,7 @@ const FTextarea = styled.textarea`
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border, rgba(59,130,246,0.1));
   border-radius: 10px;
-  font-family: 'Courier New', monospace;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
   color: var(--text-primary, #e2e8f0);
   transition: all 0.22s ease;
