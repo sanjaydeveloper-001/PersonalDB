@@ -1,4 +1,5 @@
 import User from '../models/common/User.js';
+import { generateSignedUrl } from './vault/uploadController.js';
 
 // Get all users with stats
 export const getAllUsersAdmin = async (req, res) => {
@@ -6,6 +7,17 @@ export const getAllUsersAdmin = async (req, res) => {
     const users = await User.find()
       .select('-password')
       .sort({ createdAt: -1 });
+
+    // Generate signed URLs for profile images
+    for (let user of users) {
+      if (user.profileImage?.startsWith('avatars/')) {
+        try {
+          user.profileImage = await generateSignedUrl(user.profileImage, 3600);
+        } catch (err) {
+          console.warn('[getAllUsersAdmin] Could not generate signed URL:', err.message);
+        }
+      }
+    }
 
     const stats = {
       total: users.length,
@@ -42,6 +54,15 @@ export const getUserAdmin = async (req, res) => {
         success: false, 
         message: 'User not found' 
       });
+    }
+
+    // Generate signed URL if user has a profile image
+    if (user.profileImage?.startsWith('avatars/')) {
+      try {
+        user.profileImage = await generateSignedUrl(user.profileImage, 3600);
+      } catch (err) {
+        console.warn('[getUserAdmin] Could not generate signed URL:', err.message);
+      }
     }
 
     res.json({
@@ -89,6 +110,15 @@ export const updateUserRoleAdmin = async (req, res) => {
         success: false, 
         message: 'User not found' 
       });
+    }
+
+    // Generate signed URL if user has a profile image
+    if (user.profileImage?.startsWith('avatars/')) {
+      try {
+        user.profileImage = await generateSignedUrl(user.profileImage, 3600);
+      } catch (err) {
+        console.warn('[updateUserRoleAdmin] Could not generate signed URL:', err.message);
+      }
     }
 
     res.json({
@@ -159,6 +189,17 @@ export const searchUserAdmin = async (req, res) => {
     const users = await User.find(query)
       .select('-password')
       .limit(10);
+
+    // Generate signed URLs for profile images
+    for (let user of users) {
+      if (user.profileImage?.startsWith('avatars/')) {
+        try {
+          user.profileImage = await generateSignedUrl(user.profileImage, 3600);
+        } catch (err) {
+          console.warn('[searchUserAdmin] Could not generate signed URL:', err.message);
+        }
+      }
+    }
 
     res.json({
       success: true,

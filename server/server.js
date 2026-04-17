@@ -1,7 +1,12 @@
-import './config/env.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+import passport from 'passport';
 import { connectPortfolioDB, connectVaultDB } from './config/db.js';
 import { errorHandler } from './middleware/error.js';
 
@@ -14,7 +19,7 @@ app.use(cookieParser());
 // CORS configuration
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+    if (!origin) return callback(null, true); 
     if (origin.includes('.localhost:5173')) {
       return callback(null, true);
     }
@@ -31,15 +36,41 @@ app.use(cors({
     }
     return callback(new Error('Not allowed by CORS'));
   },
-
   credentials: true,
 }));
+
+// ✅ EXPRESS-SESSION must come BEFORE passport middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your_session_secret_key_change_in_production',
+  resave: false,
+  saveUninitialized: false,
+  store: MongoStore.create({ 
+    mongoUrl: process.env.MONGO_URI_PORTFOLIO || 'mongodb://localhost:27017/portfolio',
+    serverSelectionTimeoutMS: 30000,
+    connectTimeoutMS: 15000,
+    family: 4,
+  }),
+  cookie: { 
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+    httpOnly: true,
+    sameSite: 'lax',
+  },
+}));
+
+// ✅ PASSPORT INITIALIZATION must come AFTER session
+app.use(passport.initialize());
+app.use(passport.session());
+
 async function startServer() {
 
   await connectPortfolioDB();
   await connectVaultDB();
 
   console.log("✅ Databases connected");
+
+  // ✅ IMPORT PASSPORT CONFIG AFTER DB CONNECTS (prevents circular dependency)
+  await import('./config/passport.js');
 
   // IMPORT ROUTES AFTER DB CONNECTS
   const profileRoutes = (await import('./routes/portfolio/profileRoutes.js')).default;
@@ -60,10 +91,11 @@ async function startServer() {
   const apiPortfolioRoutes = (await import('./routes/apiPortfolioRoutes.js')).default;
   const publicFileRoutes = (await import('./routes/publicFileRoutes.js')).default;
 
-  const searchRoutes = (await import('./routes/searchRoutes.js')).default; 
+  const searchRoutes = (await import('./routes/searchRoutes.js')).default;
   const templateRoutes = (await import('./routes/templateRoutes.js')).default;
-  const adminRoutes = (await import('./routes/adminRoutes.js')).default;  
+  const adminRoutes = (await import('./routes/adminRoutes.js')).default;
   const userRoutes = (await import('./routes/userRoutes.js')).default;
+  const oauthRoutes = (await import('./routes/oauth.js')).default;
 
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
@@ -76,11 +108,12 @@ async function startServer() {
   app.use('/api/portfolio/upload', portfolioUploadRoutes);
 
   app.use('/api/auth', authRoutes);
+  app.use('/api/auth', oauthRoutes);
   app.use('/public', publicFileRoutes);
   app.use('/api/templates', templateRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/users', userRoutes);
-  
+
   app.use('/api/vault/items', itemRoutes);
   app.use('/api/vault/resume', resumeRoutes);
   app.use('/api/vault/upload', vaultUploadRoutes);
@@ -88,7 +121,7 @@ async function startServer() {
   // ✅ NEW ROUTES (API Key + JWT, for external apps)
   app.use('/api/getport', apiPortfolioRoutes);
   app.use('/api/search', searchRoutes);
-  app.use('/api', publicRoutes); 
+  app.use('/api', publicRoutes);
   app.use('/api/keys', apiKeyRoutes);
 
   app.get('/', (req, res) => res.send('Personal Database API is running...'));
@@ -96,11 +129,10 @@ async function startServer() {
   app.use(errorHandler);
 
   const PORT = process.env.PORT || 5000;
-  
+
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
   });
-
 }
 
 startServer();

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { KeyRound, Mail, Calendar, MapPin, Users, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react'
-import api from '../../services/api'
+import { KeyRound, Mail, ShieldCheck, Lock, AlertCircle, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react'
+import { authService } from '../../services/authService'
+
+// ── Styled components ─────────────────────────────────────────────────────────
 
 const AuthContainer = styled.div`
   min-height: 100vh;
@@ -30,17 +32,13 @@ const Logo = styled(Link)`
   color: #1e40af;
   text-decoration: none;
   transition: color 0.3s ease;
-
-  &:hover {
-    color: #1e3a8a;
-  }
+  &:hover { color: #1e3a8a; }
 `
 
 const HeaderLinks = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
-
   a {
     text-decoration: none;
     color: #3b82f6;
@@ -48,11 +46,7 @@ const HeaderLinks = styled.div`
     padding: 8px 16px;
     border-radius: 6px;
     transition: all 0.3s ease;
-
-    &:hover {
-      background: #eff6ff;
-      color: #1e40af;
-    }
+    &:hover { background: #eff6ff; color: #1e40af; }
   }
 `
 
@@ -62,30 +56,23 @@ const MainContent = styled.main`
   align-items: center;
   justify-content: center;
   padding: 2rem;
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
+  @media (max-width: 768px) { padding: 1rem; }
 `
 
 const FormContainer = styled.div`
   width: 100%;
-  max-width: 500px;
+  max-width: 460px;
   background: white;
   border-radius: 16px;
   padding: 3rem 2.5rem;
   box-shadow: 0 10px 40px rgba(59, 130, 246, 0.1);
   border: 1px solid rgba(59, 130, 246, 0.1);
-
-  @media (max-width: 768px) {
-    padding: 2rem 1.5rem;
-    max-width: 100%;
-  }
+  @media (max-width: 768px) { padding: 2rem 1.5rem; max-width: 100%; }
 `
 
 const FormHeader = styled.div`
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 `
 
 const FormTitle = styled.h2`
@@ -97,27 +84,29 @@ const FormTitle = styled.h2`
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-
-  svg {
-    color: #3b82f6;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 1.6rem;
-  }
+  svg { color: #3b82f6; }
+  @media (max-width: 768px) { font-size: 1.6rem; }
 `
 
 const StepIndicator = styled.div`
-  text-align: center;
-  font-size: 0.85rem;
-  color: #64748b;
-  margin-bottom: 1rem;
-  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0 0.75rem;
+`
+
+const StepDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${({ active }) => active ? '#3b82f6' : '#e2e8f0'};
+  transition: background 0.3s ease;
 `
 
 const FormSubtitle = styled.p`
   color: #64748b;
   font-size: 0.95rem;
+  margin-top: 0.25rem;
 `
 
 const FormGroup = styled.div`
@@ -125,20 +114,14 @@ const FormGroup = styled.div`
 `
 
 const Label = styled.label`
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
   color: #0f172a;
   margin-bottom: 0.6rem;
   font-size: 0.95rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  svg {
-    color: #3b82f6;
-    width: 18px;
-    height: 18px;
-  }
+  svg { color: #3b82f6; width: 18px; height: 18px; }
 `
 
 const InputField = styled.input`
@@ -151,22 +134,24 @@ const InputField = styled.input`
   background: white;
   transition: all 0.3s ease;
   font-family: inherit;
-
+  box-sizing: border-box;
   &:focus {
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     background: #eff6ff;
   }
+  &::placeholder { color: #94a3b8; }
+  @media (max-width: 768px) { padding: 0.65rem 0.9rem; font-size: 0.9rem; }
+`
 
-  &::placeholder {
-    color: #94a3b8;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.65rem 0.9rem;
-    font-size: 0.9rem;
-  }
+const OtpInput = styled(InputField)`
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  padding: 1rem;
+  color: #1e40af;
 `
 
 const SubmitButton = styled.button`
@@ -180,27 +165,36 @@ const SubmitButton = styled.button`
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
     background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
   }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+  @media (max-width: 768px) { padding: 0.8rem 1.2rem; font-size: 0.95rem; }
+`
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  @media (max-width: 768px) {
-    padding: 0.8rem 1.2rem;
-    font-size: 0.95rem;
-  }
+const ResendButton = styled.button`
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 1rem auto 0;
+  transition: color 0.3s ease;
+  &:hover:not(:disabled) { color: #1e40af; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  svg { width: 16px; height: 16px; }
 `
 
 const AlertBox = styled.div`
@@ -211,17 +205,23 @@ const AlertBox = styled.div`
   align-items: flex-start;
   gap: 0.75rem;
   font-size: 0.9rem;
-  background: ${props => props.type === 'error' ? '#fef2f2' : '#f0fdf4'};
-  border: 1px solid ${props => props.type === 'error' ? '#fecaca' : '#86efac'};
-  color: ${props => props.type === 'error' ? '#991b1b' : '#166534'};
+  background: ${({ type }) => type === 'error' ? '#fef2f2' : '#f0fdf4'};
+  border: 1px solid ${({ type }) => type === 'error' ? '#fecaca' : '#86efac'};
+  color: ${({ type }) => type === 'error' ? '#991b1b' : '#166534'};
+  svg { width: 20px; height: 20px; flex-shrink: 0; color: ${({ type }) => type === 'error' ? '#dc2626' : '#22c55e'}; margin-top: 2px; }
+`
 
-  svg {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    color: ${props => props.type === 'error' ? '#dc2626' : '#22c55e'};
-    margin-top: 2px;
-  }
+const InfoBox = styled.div`
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: #1e40af;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
 `
 
 const BackLink = styled(Link)`
@@ -232,93 +232,95 @@ const BackLink = styled(Link)`
   text-decoration: none;
   font-weight: 500;
   margin-top: 1.5rem;
+  font-size: 0.9rem;
   transition: all 0.3s ease;
-
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  &:hover {
-    color: #1e40af;
-    transform: translateX(-4px);
-  }
+  svg { width: 16px; height: 16px; }
+  &:hover { color: #1e40af; transform: translateX(-4px); }
 `
+
+// ── Component ─────────────────────────────────────────────────────────────────
+
+const STEPS = {
+  EMAIL: 1,
+  OTP: 2,
+  RESET: 3,
+}
 
 const ForgotPassword = () => {
   const navigate = useNavigate()
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState({
-    username: '',
-    birthYear: '',
-    placeAnswer: '',
-    friendAnswer: '',
-    newPassword: ''
-  })
+
+  const [step, setStep] = useState(STEPS.EMAIL)
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [resetToken, setResetToken] = useState(null)
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
-  const set = (field) => (e) => {
-    setForm(prev => ({ ...prev, [field]: e.target.value }))
-    setError('')
-  }
+  const clearMessages = () => { setError(''); setSuccess('') }
 
-  const handleVerify = async (e) => {
+  // Step 1 — send OTP to email
+  const handleSendOtp = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
-
-    if (!form.username || !form.birthYear || !form.placeAnswer || !form.friendAnswer) {
-      setError('All fields are required')
-      return
-    }
+    clearMessages()
+    if (!email) { setError('Please enter your email address'); return }
 
     setLoading(true)
     try {
-      await api.post('/vault/auth/verify-security', {
-        username: form.username,
-        birthYear: form.birthYear,
-        placeAnswer: form.placeAnswer,
-        friendAnswer: form.friendAnswer,
-      })
-      setSuccess('Identity verified successfully!')
-      setTimeout(() => setStep(2), 1000)
+      await authService.sendOtp(email)
+      setSuccess('OTP sent! Check your inbox (and spam folder).')
+      setTimeout(() => { setSuccess(''); setStep(STEPS.OTP) }, 1200)
     } catch (err) {
-      setError(err.response?.data?.message || 'Identity verification failed. Please check your information.')
+      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleReset = async (e) => {
+  // Step 2 — verify OTP
+  const handleVerifyOtp = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
-
-    if (!form.newPassword) {
-      setError('Please enter a new password')
-      return
-    }
-
-    if (form.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return
-    }
+    clearMessages()
+    if (!otp || otp.length !== 6) { setError('Please enter the 6-digit OTP'); return }
 
     setLoading(true)
     try {
-      await api.post('/vault/auth/reset-password', {
-        username: form.username,
-        newPassword: form.newPassword
-      })
-      setSuccess('Password reset successfully! Redirecting to login...')
+      const data = await authService.verifyOtp(email, otp)
+      setResetToken(data.resetToken)
+      setSuccess('OTP verified! Set your new password.')
+      setTimeout(() => { setSuccess(''); setStep(STEPS.RESET) }, 1000)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Invalid or expired OTP. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Step 3 — reset password
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    clearMessages()
+    if (!newPassword) { setError('Please enter a new password'); return }
+    if (newPassword.length < 6) { setError('Password must be at least 6 characters'); return }
+
+    setLoading(true)
+    try {
+      await authService.resetPassword(newPassword, resetToken)
+      setSuccess('Password reset successfully! Redirecting to login…')
       setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Password reset failed. Please try again.')
+      setError(err.response?.data?.message || 'Password reset failed. Please start over.')
     } finally {
       setLoading(false)
     }
+  }
+
+  const stepSubtitles = {
+    [STEPS.EMAIL]: 'Enter the email linked to your account',
+    [STEPS.OTP]:   `We sent a 6-digit code to ${email}`,
+    [STEPS.RESET]: 'Choose a strong new password',
   }
 
   return (
@@ -334,16 +336,13 @@ const ForgotPassword = () => {
       <MainContent>
         <FormContainer>
           <FormHeader>
-            <FormTitle>
-              <KeyRound size={32} />
-              Reset Password
-            </FormTitle>
-            <StepIndicator>Step {step} of 2</StepIndicator>
-            <FormSubtitle>
-              {step === 1
-                ? 'Verify your identity using your security questions'
-                : 'Create your new password'}
-            </FormSubtitle>
+            <FormTitle><KeyRound size={32} /> Reset Password</FormTitle>
+            <StepIndicator>
+              {[STEPS.EMAIL, STEPS.OTP, STEPS.RESET].map(s => (
+                <StepDot key={s} active={step >= s} />
+              ))}
+            </StepIndicator>
+            <FormSubtitle>{stepSubtitles[step]}</FormSubtitle>
           </FormHeader>
 
           {error && (
@@ -360,99 +359,108 @@ const ForgotPassword = () => {
             </AlertBox>
           )}
 
-          {step === 1 ? (
-            <form onSubmit={handleVerify}>
+          {/* ── Step 1: Email ────────────────────────────────────────────── */}
+          {step === STEPS.EMAIL && (
+            <form onSubmit={handleSendOtp}>
               <FormGroup>
-                <Label htmlFor="username">
-                  <Mail size={18} />
-                  Username
-                </Label>
+                <Label htmlFor="email"><Mail size={18} /> Email Address</Label>
                 <InputField
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={form.username}
-                  onChange={set('username')}
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); clearMessages() }}
                   required
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="birthYear">
-                  <Calendar size={18} />
-                  Birth Year
-                </Label>
-                <InputField
-                  id="birthYear"
-                  type="number"
-                  placeholder="e.g. 1995"
-                  value={form.birthYear}
-                  onChange={set('birthYear')}
-                  required
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="placeAnswer">
-                  <MapPin size={18} />
-                  Where were you born?
-                </Label>
-                <InputField
-                  id="placeAnswer"
-                  type="text"
-                  placeholder="Enter your birthplace"
-                  value={form.placeAnswer}
-                  onChange={set('placeAnswer')}
-                  required
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="friendAnswer">
-                  <Users size={18} />
-                  Best friend's name?
-                </Label>
-                <InputField
-                  id="friendAnswer"
-                  type="text"
-                  placeholder="Enter your best friend's name"
-                  value={form.friendAnswer}
-                  onChange={set('friendAnswer')}
-                  required
+                  autoFocus
                 />
               </FormGroup>
 
               <SubmitButton type="submit" disabled={loading}>
-                {loading ? 'Verifying...' : 'Verify Identity'}
-              </SubmitButton>
-            </form>
-          ) : (
-            <form onSubmit={handleReset}>
-              <FormGroup>
-                <Label htmlFor="newPassword">
-                  <Lock size={18} />
-                  New Password
-                </Label>
-                <InputField
-                  id="newPassword"
-                  type="password"
-                  placeholder="Enter at least 6 characters"
-                  value={form.newPassword}
-                  onChange={set('newPassword')}
-                  required
-                />
-              </FormGroup>
-
-              <SubmitButton type="submit" disabled={loading}>
-                {loading ? 'Resetting...' : 'Reset Password'}
+                {loading ? 'Sending OTP…' : 'Send OTP'}
               </SubmitButton>
             </form>
           )}
 
-          <BackLink to="/login">
-            <ArrowLeft />
-            Back to login
-          </BackLink>
+          {/* ── Step 2: OTP ──────────────────────────────────────────────── */}
+          {step === STEPS.OTP && (
+            <>
+              <InfoBox>
+                <ShieldCheck size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+                The OTP is valid for <strong>&nbsp;10 minutes</strong>. Enter it below.
+              </InfoBox>
+
+              <form onSubmit={handleVerifyOtp}>
+                <FormGroup>
+                  <Label htmlFor="otp"><ShieldCheck size={18} /> One-Time Password</Label>
+                  <OtpInput
+                    id="otp"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="000000"
+                    value={otp}
+                    onChange={(e) => { setOtp(e.target.value.replace(/\D/g, '')); clearMessages() }}
+                    required
+                    autoFocus
+                  />
+                </FormGroup>
+
+                <SubmitButton type="submit" disabled={loading || otp.length !== 6}>
+                  {loading ? 'Verifying…' : 'Verify OTP'}
+                </SubmitButton>
+              </form>
+
+              <ResendButton
+                type="button"
+                disabled={loading}
+                onClick={async () => {
+                  clearMessages()
+                  setLoading(true)
+                  try {
+                    await authService.sendOtp(email)
+                    setSuccess('New OTP sent!')
+                    setTimeout(() => setSuccess(''), 3000)
+                  } catch (err) {
+                    setError(err.response?.data?.message || 'Failed to resend OTP.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+              >
+                <RefreshCw />
+                Resend OTP
+              </ResendButton>
+            </>
+          )}
+
+          {/* ── Step 3: New password ─────────────────────────────────────── */}
+          {step === STEPS.RESET && (
+            <form onSubmit={handleResetPassword}>
+              <FormGroup>
+                <Label htmlFor="newPassword"><Lock size={18} /> New Password</Label>
+                <InputField
+                  id="newPassword"
+                  type="password"
+                  placeholder="At least 6 characters"
+                  value={newPassword}
+                  onChange={(e) => { setNewPassword(e.target.value); clearMessages() }}
+                  required
+                  autoFocus
+                />
+              </FormGroup>
+
+              <SubmitButton type="submit" disabled={loading}>
+                {loading ? 'Resetting…' : 'Reset Password'}
+              </SubmitButton>
+            </form>
+          )}
+
+          <div>
+            <BackLink to="/login">
+              <ArrowLeft />
+              Back to login
+            </BackLink>
+          </div>
         </FormContainer>
       </MainContent>
     </AuthContainer>

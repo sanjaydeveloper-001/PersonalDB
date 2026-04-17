@@ -14,16 +14,24 @@ const apiKeySchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema(
   {
     username: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true, minlength: 6 },
-    email: { type: String, sparse: true, lowercase: true, trim: true },
-    birthYear: { type: Number },
-    placeAnswerHash: { type: String },
-    friendAnswerHash: { type: String },
 
-    profileImage: {
-      type: String,
-      default: null,
-    },
+    password: { type: String, minlength: 6, default: null },
+
+    email: { type: String, sparse: true, lowercase: true, trim: true },
+
+    birthYear: { type: Number },
+
+    // OTP for password reset
+    otpHash:   { type: String, default: null },
+    otpExpiry: { type: Date,   default: null },
+
+    profileImage: { type: String, default: null },
+
+    // ── Google OAuth fields ───────────────────────────────────────────────────
+    googleId: { type: String, sparse: true, unique: true },
+    googleEmail: { type: String, sparse: true },
+    googleAvatar: { type: String, default: null },
+    authProvider: { type: String, enum: ['local', 'google'], default: 'local' },
 
     // API Keys
     apiKeys: [apiKeySchema],
@@ -39,7 +47,7 @@ const userSchema = new mongoose.Schema(
     portdomain: {
       type: String,
       unique: true,
-      sparse: true,   // allow null during pre-save before auto-assign runs
+      sparse: true,
       lowercase: true,
       trim: true,
       match: /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/,
@@ -68,16 +76,17 @@ const userSchema = new mongoose.Schema(
       privacy: {
         activityLog:      { type: Boolean, default: true },
         analyticsSharing: { type: Boolean, default: false },
-        publicProfile:    { type: Boolean, default: false },
+        publicProfile:    { type: Boolean, default: true },
       },
     },
   },
   { timestamps: true }
 );
 
-// ── Hash password before saving ──────────────────────────────────────────────
+// ── Hash password before saving ───────────────────────────────────────────────
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  // Only hash if password exists and has been modified
+  if (!this.isModified('password') || !this.password) return next();
   try {
     this.password = await bcrypt.hash(this.password, 10);
     next();
@@ -86,7 +95,7 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// ── Auto-generate portdomain from username if not provided ───────────────────
+// ── Auto-generate portdomain from username if not provided ────────────────────
 userSchema.pre('save', async function (next) {
   if (this.portdomain) return next();
 
@@ -112,7 +121,8 @@ userSchema.pre('save', async function (next) {
 
 // ── Instance method: compare passwords ───────────────────────────────────────
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
-};
+}; 
 
 export default getPortfolioDB().model('User', userSchema);

@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const userData = await authService.getMe()
         setUser(userData)
-      } catch (error) {
+      } catch {
         setUser(null)
       } finally {
         setLoading(false)
@@ -27,42 +27,42 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (username, password) => {
-    try {
-      const userData = await authService.login({ username, password })
-      setUser(userData)
-      toast.success('Logged in successfully')
-      navigate('/dashboard')
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Login failed')
-    }
+    const userData = await authService.login({ username, password })
+    setUser(userData)
+    toast.success('Logged in successfully')
+    navigate('/dashboard')
   }
 
-  const register = async (username, password, birthYear, placeAnswer, friendAnswer) => {
-    try {
-      const userData = await authService.register({
-        username, password, birthYear, placeAnswer, friendAnswer,
-      })
-      setUser(userData)
-      toast.success('Account created')
-      navigate('/dashboard')
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Registration failed')
-    }
+  const register = async ({ username, password, birthYear, email }) => {
+    const userData = await authService.register({ username, password, birthYear, email })
+    setUser(userData)
+    toast.success('Account created successfully')
+    navigate('/dashboard')
   }
 
   const logout = async () => {
     try {
       await authService.logout()
+    } catch {
+      // swallow — cookie will be cleared by backend regardless
+    }
+    setUser(null)
+    toast.success('Logged out')
+    navigate('/login')
+  }
+
+  // Refresh user data (e.g., after auth state changes)
+  const refreshUser = async () => {
+    try {
+      const userData = await authService.getMe()
+      setUser(userData)
+    } catch {
       setUser(null)
-      toast.success('Logged out')
-      navigate('/login')
-    } catch (error) {
-      toast.error('Logout failed')
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

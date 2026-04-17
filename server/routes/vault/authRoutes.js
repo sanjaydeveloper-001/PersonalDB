@@ -1,10 +1,11 @@
 import express from 'express';
-import { 
-  registerUser, 
-  loginUser, 
-  logoutUser, 
-  getMe, 
-  verifySecurity, 
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getMe,
+  sendOtp,
+  verifyOtp,
   resetPassword,
   verifyPassword,
   changePassword,
@@ -20,13 +21,17 @@ import { protect } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-// Public routes
+// ── Public routes ─────────────────────────────────────────────────────────────
 router.post('/register', registerUser);
 router.post('/login', loginUser);
-router.post('/verify-security', verifySecurity);
-router.post('/reset-password', resetPassword);
 
-// Protected routes
+// OTP-based password reset (no auth required)
+router.post('/forgot-password/send-otp', sendOtp);
+router.post('/forgot-password/verify-otp', verifyOtp);
+// resetPassword uses the short-lived resetToken returned by verifyOtp
+router.post('/forgot-password/reset', protect, resetPassword);
+
+// ── Protected routes ──────────────────────────────────────────────────────────
 router.post('/logout', protect, logoutUser);
 router.get('/me', protect, getMe);
 router.post('/verify-password', protect, verifyPassword);

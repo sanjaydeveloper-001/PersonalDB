@@ -26,7 +26,7 @@ const slideIn = keyframes`
 
 /* ── Layout ── */
 const PageWrap = styled.div`
-  max-width: 860px;
+  max-width: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -64,7 +64,7 @@ const AvatarWrap = styled.div`
 `
 
 const AvatarCircle = styled.div`
-  width: 88px; height: 88px;
+  width: 160px; height: 160px;
   border-radius: 50%;
   background: ${({ $hasImg }) => $hasImg ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1e40af)'};
   border: 2px solid rgba(59,130,246,0.3);
@@ -76,7 +76,7 @@ const AvatarCircle = styled.div`
   img { width: 100%; height: 100%; object-fit: cover; }
 
   span {
-    color: white; font-size: 2.2rem; font-weight: 800;
+    color: white; font-size: 3.5rem; font-weight: 800;
     font-family: 'Syne', sans-serif;
   }
 `
@@ -99,8 +99,8 @@ const AvatarOverlay = styled.div`
 
 const AvatarRemove = styled.button`
   position: absolute;
-  top: -4px; right: -4px;
-  width: 22px; height: 22px;
+  top: -8px; right: -8px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   background: #ef4444;
   border: 2px solid var(--bg-card, #161b27);
@@ -108,7 +108,15 @@ const AvatarRemove = styled.button`
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  svg { width: 10px; height: 10px; }
+  opacity: 0;
+  pointer-events: none;
+  svg { width: 14px; height: 14px; }
+  
+  ${AvatarWrap}:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
   &:hover { background: #dc2626; transform: scale(1.1); }
 `
 
@@ -605,9 +613,11 @@ const AccountPage = () => {
   const fileInputRef = useRef(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
 
+  const runningUrl = import.meta.env.VITE_RUNNING_URL || window.location.origin
+
   const publicUrl = user?.portdomain
-    ? `${window.location.origin}/u/${user.portdomain}`
-    : `${window.location.origin}/u/${user?.username}`
+    ? `${runningUrl}/u/${user.portdomain}`
+    : `${runningUrl}/u/${user?.username}`
 
   const copyUrl = () => {
     navigator.clipboard.writeText(publicUrl)
@@ -691,7 +701,7 @@ const AccountPage = () => {
   const totalRequests = user?.apiKeys?.reduce((s, k) => s + (k.requestCount || 0), 0) ?? 0
 
   // Backend now returns a short-lived signed URL in profileImageUrl
-  const avatarUrl = user?.profileImageUrl || null
+  const avatarUrl =  user?.profileImage || null
 
   return (
     <PageWrap>
@@ -728,7 +738,7 @@ const AccountPage = () => {
           <HeroMeta>
             <HeroName>{user?.username}</HeroName>
             <HeroSub>
-              {user?.portdomain ? `${user.portdomain}.josan.tech` : 'PersonalDB member'}
+              {user?.portdomain ? `${runningUrl}/u/${user.portdomain}` : 'PersonalDB member'}
             </HeroSub>
             <BadgeRow>
               <Badge $bg="rgba(16,185,129,0.1)" $color="#10b981" $border="rgba(16,185,129,0.2)">
@@ -796,7 +806,7 @@ const AccountPage = () => {
             label="Custom domain"
             value={user?.portdomain}
             placeholder="yourname"
-            prefix="personaldb.josan.tech/u/"
+            prefix={`${runningUrl}/u/`}
             onSave={saveDomain}
             hint="Your personal subdomain. Must be 3–32 chars, lowercase, hyphens allowed."
           />

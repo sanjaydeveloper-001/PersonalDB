@@ -8,8 +8,6 @@
  */
 import express from 'express'
 import multer from 'multer'
-import path from 'path'
-import { v4 as uuidv4 } from 'uuid'
 import { protect } from '../middleware/auth.js'
 import {
   getMe,
@@ -24,18 +22,9 @@ import {
 const router = express.Router()
 
 /* ── Multer config for avatar uploads ── */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'public/uploads/avatars')   // make sure this directory exists
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase()
-    cb(null, `${uuidv4()}${ext}`)
-  },
-})
-
+// Use memory storage so files can be uploaded directly to S3
 const avatarUpload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB hard limit
   fileFilter: (req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']

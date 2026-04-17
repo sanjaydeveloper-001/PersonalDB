@@ -232,7 +232,7 @@ const UserNameCell = styled.div`
 const SmallAvatar = styled.div`
   width: 36px; height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15));
+  background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15))'};
   border: 1px solid rgba(59,130,246,0.2);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Syne', sans-serif;
@@ -315,7 +315,7 @@ const UserTop = styled.div`
 const Avatar = styled.div`
   width: 44px; height: 44px;
   border-radius: 13px;
-  background: linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15));
+  background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15))'};
   border: 1px solid rgba(59,130,246,0.2);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Syne', sans-serif;
@@ -323,6 +323,7 @@ const Avatar = styled.div`
   color: #3b82f6;
   text-transform: uppercase;
   flex-shrink: 0;
+  color: ${({ $bgImage }) => $bgImage ? 'transparent' : '#3b82f6'};
 `
 
 const UserInfo = styled.div`
@@ -749,7 +750,7 @@ const AdminUsers = () => {
               : filtered.map((user) => (
                 <TableRow key={user._id}>
                   <UserNameCell>
-                    <SmallAvatar>{user.username?.[0] || '?'}</SmallAvatar>
+                    <SmallAvatar $bgImage={user.profileImage}>{!user.profileImage && (user.username?.[0] || '?')}</SmallAvatar>
                     <div>
                       <CellName>@{user.username || 'unknown'}</CellName>
                       <CellEmail>{user.email || 'no email'}</CellEmail>
@@ -792,7 +793,7 @@ const AdminUsers = () => {
               : filtered.map((user, i) => (
                 <UCard key={user._id} $i={i}>
                   <UserTop>
-                    <Avatar>{user.username?.[0] || '?'}</Avatar>
+                    <Avatar $bgImage={user.profileImage}>{!user.profileImage && (user.username?.[0] || '?')}</Avatar>
                     <UserInfo>
                       <Username>@{user.username || 'unknown'}</Username>
                       <UserEmail>

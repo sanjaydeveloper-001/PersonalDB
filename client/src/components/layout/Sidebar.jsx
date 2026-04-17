@@ -385,11 +385,13 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
     height: '32px',
     minWidth: '32px',
     borderRadius: '50%',
-    background: 'linear-gradient(135deg, #3b82f6, #1e40af)',
+    background: user?.profileImage 
+      ? `url(${user.profileImage}) center/cover`
+      : 'linear-gradient(135deg, #3b82f6, #1e40af)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: 'white',
+    color: user?.profileImage ? 'transparent' : 'white',
     fontSize: '0.78rem',
     fontWeight: 700,
     flexShrink: 0,
@@ -742,7 +744,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
 
         {/* User area */}
         <div style={userAreaStyle} className="sidebar-user-area">
-          <div style={avatarStyle}>{user?.username?.[0]?.toUpperCase()}</div>
+          <div style={avatarStyle}>{!user?.profileImage && user?.username?.[0]?.toUpperCase()}</div>
           <div style={userInfoStyle}>
             <span style={{ display: 'block', fontSize: '0.84rem', fontWeight: 500, color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
               {user?.username}

@@ -14,6 +14,40 @@ export const generateSignedUrl = async (key, expiresIn = 3600) => {
 }
 
 /* ═══════════════════════════════════════
+   Upload Google profile picture to S3
+   Downloads from Google URL and uploads to avatars/userId
+═══════════════════════════════════════ */
+export const uploadGoogleProfilePicture = async (googleImageUrl, userId) => {
+  try {
+    if (!googleImageUrl) return null
+    
+    // Download image from Google
+    const response = await fetch(googleImageUrl)
+    if (!response.ok) {
+      return null
+    }
+    
+    // Use arrayBuffer() for native fetch, then convert to Buffer
+    const arrayBuffer = await response.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    const contentType = response.headers.get('content-type') || 'image/jpeg'
+    
+    // Upload to S3 with key format: avatars/userId
+    const key = `avatars/${userId}`
+    await s3Client.send(new PutObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType,
+    }))
+    
+    return key
+  } catch (error) {
+    return null
+  }
+}
+
+/* ═══════════════════════════════════════
    Reusable: upload a multer file to S3
    folder  — e.g. 'avatars/userId' or 'portfolio'
    Returns the S3 key string.

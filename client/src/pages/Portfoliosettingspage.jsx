@@ -394,7 +394,7 @@ const Spinner = styled.div`
 /* ════════════════════════════════════════
    CONSTANTS
 ═══════════════════════════════════════ */
-const BASE_URL = 'https://personaldb.josan.tech'
+
 const PATH_PREFIX = '/u/'
 
 /**
@@ -445,6 +445,7 @@ const PortfolioSettingsPage = () => {
   const [takenUsernames, setTakenUsernames] = useState([])     // pre-fetched list
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  const runningUrl = import.meta.env.VITE_RUNNING_URL || window.location.origin
 
   /* ── Fetch all templates ── */
   useEffect(() => {
@@ -539,7 +540,7 @@ const PortfolioSettingsPage = () => {
       if (result.success) {
         setCurrentUsername(usernameInput)
         setUsernameStatus('idle')
-        toast.success(`✅ Your portfolio is now at ${BASE_URL}${PATH_PREFIX}${usernameInput}`)
+        toast.success(`✅ Your portfolio is now at ${runningUrl}${PATH_PREFIX}${usernameInput}`)
       } else {
         toast.error(result.message || 'Failed to update username')
         if (result.code === 'DOMAIN_TAKEN') {
@@ -665,11 +666,11 @@ const PortfolioSettingsPage = () => {
               <Globe />
               Portfolio URL
             </DomainTitle>
-            <DomainSubtitle>Claim your personal portfolio link on personaldb.josan.tech</DomainSubtitle>
+            <DomainSubtitle>Claim your personal portfolio link on {runningUrl}</DomainSubtitle>
           </DomainTitleGroup>
           {currentUsername && (
             <CurrentDomainBadge
-              href={`${BASE_URL}${PATH_PREFIX}${currentUsername}`}
+              href={`${runningUrl}${PATH_PREFIX}${currentUsername}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -682,7 +683,7 @@ const PortfolioSettingsPage = () => {
         {/* ── Live URL preview ── */}
         <UrlPreviewBox>
           <Globe size={14} />
-          <span className="base">{BASE_URL}{PATH_PREFIX}</span>
+          <span className="base">{runningUrl}{PATH_PREFIX}</span>
           <span className="username">{usernameInput || 'your-username'}</span>
         </UrlPreviewBox>
 

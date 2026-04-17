@@ -11,6 +11,7 @@ import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import ForgotPassword from './pages/auth/ForgotPassword'
 import SecurityQuestions from './pages/auth/SecurityQuestions'
+import OAuthSuccess from './pages/auth/OAuthSuccess'
 import NotFoundPage from './pages/NotFoundPage'
 
 // Dashboard
@@ -61,6 +62,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/security-questions" element={<SecurityQuestions />} />
+            <Route path="/auth/success" element={<OAuthSuccess />} />
 
             {/* Public Portfolio via path */}
             <Route path="/u/:portdomain" element={<PublicProfilePage />} />
