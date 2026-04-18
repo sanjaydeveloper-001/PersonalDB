@@ -7,6 +7,11 @@ export const authService = {
     return data
   },
 
+  verify2FALogin: async ({ otp, backupCode }) => {
+    const { data } = await api.post('/auth/login/2fa', { otp, backupCode })
+    return data
+  },
+
   register: async ({ username, password, birthYear, email }) => {
     const { data } = await api.post('/auth/register', { username, password, birthYear, email })
     return data

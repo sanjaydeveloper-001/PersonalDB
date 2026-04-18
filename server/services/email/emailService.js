@@ -236,3 +236,49 @@ export const sendContactEmailAsync = (username, email, issueType, message) => {
     console.error('[Email] Background contact email send failed:', err.message);
   });
 };
+
+// ────────────────────────────────────────────────────────────────────────────────
+// 2FA DISABLE FUNCTIONS
+// ────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Send 2FA disable verification email with token
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ * @param {string} disableToken - Verification token
+ * @param {string} frontendUrl - Frontend URL for verification link
+ */
+export const send2FADisableEmail = async (email, username, disableToken, frontendUrl = 'http://localhost:5173') => {
+  const verifyLink = `${frontendUrl}/verify-2fa-disable?token=${disableToken}`;
+  
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 12px;">
+      <h2 style="color: #dc2626; margin-bottom: 8px;">Disable Two-Factor Authentication</h2>
+      <p style="color: #475569;">We received a request to disable 2FA on your PersonalDB account. Click the link below to confirm:</p>
+      
+      <div style="margin: 24px 0;">
+        <a href="${verifyLink}" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600;">Disable 2FA</a>
+      </div>
+      
+      <p style="color: #94a3b8; font-size: 0.85rem;">Or copy this link:</p>
+      <p style="color: #1e40af; font-size: 0.85rem; word-break: break-all;">${verifyLink}</p>
+      
+      <p style="color: #94a3b8; font-size: 0.85rem; margin-top: 24px;">This link is valid for <strong>30 minutes</strong>. If you did not request this, please ignore this email.</p>
+    </div>
+  `;
+  
+  return sendEmail(email, 'Disable Two-Factor Authentication', html);
+};
+
+/**
+ * Send 2FA disable verification email asynchronously
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ * @param {string} disableToken - Verification token
+ * @param {string} frontendUrl - Frontend URL for verification link
+ */
+export const send2FADisableEmailAsync = (email, username, disableToken, frontendUrl) => {
+  send2FADisableEmail(email, username, disableToken, frontendUrl).catch(err => {
+    console.error('[Email] 2FA disable email send failed:', err.message);
+  });
+};

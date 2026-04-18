@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>User Name · Brutalist Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f2f0eb;
+      --paper: #fffdf8;
+      --ink: #111111;
+      --ink-soft: #333333;
+      --ink-muted: #777777;
+      --ink-faint: #bbbbbb;
+      --yellow: #f5e642;
+      --yellow2: #e8d800;
+      --red: #e63329;
+      --blue: #1a2fff;
+      --border: #111111;
+      --font-display: 'Syne', system-ui, sans-serif;
+      --font-body: 'Instrument Sans', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); font-family: var(--font-body); color: var(--ink); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+
+    @keyframes slideIn { from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)} }
+    @keyframes marquee { 0%{transform:translateX(0)}100%{transform:translateX(-50%)} }
+
+    .page { min-height: 100vh; position: relative; }
+
+    /* Grid lines background */
+    .page::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: linear-gradient(rgba(17,17,17,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(17,17,17,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* Marquee */
+    .marquee-wrap { overflow: hidden; background: var(--ink); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink); padding: 0.5rem 0; }
+    .marquee-track { display: flex; gap: 0; animation: marquee 20s linear infinite; width: max-content; }
+    .marquee-item { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--yellow); padding: 0 2rem; white-space: nowrap; }
+    .marquee-dot { color: var(--red); }
+
+    /* Nav */
+    .top-nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg); border-bottom: 2px solid var(--ink);
+      padding: 0 2rem; display: flex; align-items: stretch; height: 3.5rem;
+    }
+    .nav-logo { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; padding-right: 2rem; border-right: 2px solid var(--ink); }
+    .nav-btn {
+      background: none; border: none; font-family: var(--font-display); font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); cursor: pointer;
+      padding: 0 1.25rem; display: flex; align-items: center; gap: 0.4rem;
+      border-right: 1px solid var(--ink); transition: all 0.15s;
+    }
+    .nav-btn:hover { background: var(--yellow); color: var(--ink); }
+    .nav-btn svg { width: 0.85rem; height: 0.85rem; }
+    .nav-spacer { flex: 1; }
+    .nav-status { display: flex; align-items: center; padding: 0 1.5rem; font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); border-left: 2px solid var(--ink); }
+
+    .inner { max-width: 1200px; margin: 0 auto; padding: 0 2rem 5rem; position: relative; z-index: 1; }
+    @media (max-width: 640px) { .inner { padding: 0 1rem 3rem; } }
+
+    /* Hero */
+    .hero { border: 2px solid var(--ink); border-top: none; background: var(--paper); margin-bottom: 2rem; animation: slideUp 0.5s ease both; }
+
+    .hero-top {
+      display: grid; grid-template-columns: 1fr auto;
+      border-bottom: 2px solid var(--ink); padding: 2.5rem 2.5rem 2rem;
+      gap: 2rem; align-items: start;
+    }
+    @media (max-width: 760px) { .hero-top { grid-template-columns: 1fr; } }
+
+    .hero-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--ink-muted); margin-bottom: 0.875rem; }
+    .hero-name {
+      font-family: var(--font-display); font-weight: 800;
+      font-size: clamp(2.75rem, 7vw, 6.5rem); line-height: 0.9;
+      text-transform: uppercase; letter-spacing: -0.03em; color: var(--ink);
+    }
+    .hero-name .accent { color: var(--red); }
+
+    .hero-right-block { display: flex; flex-direction: column; gap: 1rem; align-items: flex-end; }
+    @media (max-width: 760px) { .hero-right-block { align-items: flex-start; } }
+
+    .role-badge {
+      background: var(--yellow); color: var(--ink); font-family: var(--font-display);
+      font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 0.5rem 1.25rem; border: 2px solid var(--ink);
+    }
+    .avatar-box {
+      width: 120px; height: 120px; border: 2px solid var(--ink); overflow: hidden; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-box svg { width: 3.5rem; height: 3.5rem; color: var(--ink-muted); opacity: 0.5; }
+
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); border-top: 2px solid var(--ink); border-bottom: 2px solid var(--ink);
+    }
+    .stat-col { padding: 1.25rem 1.5rem; border-right: 2px solid var(--ink); }
+    .stat-col:last-child { border-right: none; }
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .stat-col:nth-child(2) { border-right: none; } .stat-col:nth-child(3) { border-right: 2px solid var(--ink); } }
+    .stat-n { font-family: var(--font-display); font-size: 2.5rem; font-weight: 800; color: var(--ink); line-height: 1; }
+    .stat-l { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--ink-muted); font-weight: 700; margin-top: 0.2rem; }
+
+    .hero-body { padding: 2rem 2.5rem; display: grid; grid-template-columns: 1fr auto; gap: 2.5rem; align-items: start; }
+    @media (max-width: 760px) { .hero-body { grid-template-columns: 1fr; gap: 1.5rem; } }
+
+    .hero-summary { font-size: clamp(0.925rem,1.8vw,1.05rem); line-height: 1.9; color: var(--ink-soft); max-width: 600px; }
+    .hero-meta { display: flex; flex-direction: column; gap: 0.5rem; }
+    .meta-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--ink-muted); font-weight: 500; white-space: nowrap; }
+    .meta-item svg { width: 0.875rem; height: 0.875rem; }
+
+    .hero-cta { padding: 1.5rem 2.5rem; display: flex; gap: 1rem; flex-wrap: wrap; border-top: 2px solid var(--ink); }
+    .btn-yellow {
+      display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-display);
+      font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+      background: var(--yellow); color: var(--ink); padding: 0.625rem 1.375rem;
+      border: 2px solid var(--ink); text-decoration: none; transition: all 0.15s;
+    }
+    .btn-yellow:hover { background: var(--ink); color: var(--yellow); }
+    .btn-yellow svg { width: 0.8rem; height: 0.8rem; }
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 0.5rem; font-family: var(--font-display);
+      font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em;
+      background: transparent; color: var(--ink); padding: 0.625rem 1.375rem;
+      border: 2px solid var(--ink); text-decoration: none; transition: all 0.15s;
+    }
+    .btn-outline:hover { background: var(--ink); color: var(--bg); }
+    .btn-outline svg { width: 0.75rem; height: 0.75rem; }
+
+    /* Section */
+    .section { margin-bottom: 2rem; animation: slideUp 0.6s ease both; }
+    .sec-header {
+      display: flex; align-items: stretch; border: 2px solid var(--ink); border-bottom: none;
+      background: var(--paper); height: 3rem;
+    }
+    .sec-num { font-family: var(--font-display); font-size: 0.7rem; font-weight: 800; color: white; background: var(--ink); display: flex; align-items: center; padding: 0 1rem; min-width: 3.5rem; border-right: 2px solid var(--ink); }
+    .sec-title { font-family: var(--font-display); font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; display: flex; align-items: center; padding: 0 1.5rem; flex: 1; }
+    .sec-count { font-size: 0.7rem; font-weight: 700; color: var(--ink-muted); display: flex; align-items: center; padding: 0 1.25rem; border-left: 2px solid var(--ink); text-transform: uppercase; letter-spacing: 0.1em; }
+
+    .sec-body { border: 2px solid var(--ink); background: var(--paper); }
+
+    /* Timeline */
+    .timeline-row {
+      display: grid; grid-template-columns: 160px 1fr;
+      border-bottom: 1px solid var(--ink);
+    }
+    .timeline-row:last-child { border-bottom: none; }
+    @media (max-width: 620px) { .timeline-row { grid-template-columns: 1fr; } }
+    .t-date-col { padding: 1.5rem; border-right: 2px solid var(--ink); background: var(--bg); }
+    @media (max-width: 620px) { .t-date-col { border-right: none; border-bottom: 1px solid var(--ink); padding: 0.875rem 1.25rem; } }
+    .t-dur { font-family: var(--font-display); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink); }
+    .t-type { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-muted); margin-top: 0.25rem; }
+    .t-body { padding: 1.5rem; }
+    .t-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
+    .t-sub { font-size: 0.85rem; color: var(--red); font-weight: 600; margin-bottom: 0.625rem; }
+    .t-desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.75; }
+    .t-score { font-size: 0.8rem; font-weight: 700; color: var(--ink-muted); margin-top: 0.35rem; font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Projects */
+    .proj-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); }
+    .proj-card { border-right: 2px solid var(--ink); padding: 2rem; position: relative; transition: background 0.15s; }
+    .proj-card:last-child { border-right: none; }
+    .proj-card:hover { background: var(--yellow); }
+    @media (max-width: 640px) { .proj-grid { grid-template-columns: 1fr; } .proj-card { border-right: none; border-bottom: 2px solid var(--ink); } .proj-card:last-child { border-bottom: none; } }
+
+    .proj-num { font-family: var(--font-display); font-size: 4rem; font-weight: 800; color: var(--bg); line-height: 1; margin-bottom: 0.75rem; }
+    .proj-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--ink); margin-bottom: 0.625rem; }
+    .proj-desc { font-size: 0.85rem; color: var(--ink-soft); line-height: 1.7; margin-bottom: 0.875rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 1rem; }
+    .tag { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.2rem 0.5rem; border: 1.5px solid var(--ink); color: var(--ink); background: transparent; }
+    .proj-links { display: flex; gap: 0.5rem; }
+    .proj-link { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--font-display); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.35rem 0.75rem; border: 2px solid var(--ink); text-decoration: none; color: var(--ink); transition: all 0.15s; }
+    .proj-link:hover { background: var(--ink); color: var(--yellow); }
+    .proj-link svg { width: 0.65rem; height: 0.65rem; }
+
+    /* Skills */
+    .skill-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); }
+    .skill-block { padding: 1.5rem; border-right: 1px solid var(--ink); }
+    .skill-block:last-child { border-right: none; }
+    @media (max-width: 640px) { .skill-grid { grid-template-columns: 1fr; } .skill-block { border-right: none; border-bottom: 1px solid var(--ink); } .skill-block:last-child { border-bottom: none; } }
+    .skill-cat { font-family: var(--font-display); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink); margin-bottom: 1rem; padding-bottom: 0.625rem; border-bottom: 2px solid var(--ink); }
+    .skill-list { display: flex; flex-direction: column; gap: 0.375rem; }
+    .skill-item { font-size: 0.83rem; font-weight: 500; color: var(--ink-soft); padding: 0.375rem 0.5rem; transition: background 0.15s; }
+    .skill-item:hover { background: var(--yellow); color: var(--ink); }
+
+    /* Certs */
+    .cert-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(240px,1fr)); }
+    .cert-card { padding: 1.5rem; border-right: 1px solid var(--ink); transition: background 0.15s; }
+    .cert-card:last-child { border-right: none; }
+    .cert-card:hover { background: var(--yellow); }
+    @media (max-width: 640px) { .cert-grid { grid-template-columns: 1fr; } .cert-card { border-right: none; border-bottom: 1px solid var(--ink); } .cert-card:last-child { border-bottom: none; } }
+    .cert-icon { font-family: var(--font-display); font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); margin-bottom: 0.625rem; }
+    .cert-name { font-family: var(--font-display); font-size: 0.975rem; font-weight: 700; color: var(--ink); margin-bottom: 0.2rem; }
+    .cert-issuer { font-size: 0.8rem; color: var(--red); font-weight: 600; margin-bottom: 0.625rem; }
+    .cert-link { display: inline-flex; align-items: center; gap: 0.3rem; font-family: var(--font-display); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-muted); text-decoration: none; transition: color 0.2s; }
+    .cert-link:hover { color: var(--ink); }
+    .cert-link svg { width: 0.65rem; height: 0.65rem; }
+
+    /* Interests */
+    .interest-row { padding: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .interest-tag { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.4rem 0.875rem; border: 2px solid var(--ink); color: var(--ink); transition: all 0.15s; cursor: default; }
+    .interest-tag:hover { background: var(--ink); color: var(--yellow); }
+
+    /* Footer */
+    .footer { margin-top: 3rem; border: 2px solid var(--ink); background: var(--ink); color: var(--bg); padding: 2rem 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .footer-name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+    .footer-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .footer-link { font-family: var(--font-display); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-faint); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; transition: color 0.2s; }
+    .footer-link:hover { color: var(--yellow); }
+    .footer-link svg { width: 0.75rem; height: 0.75rem; }
+    .footer-copy { font-size: 0.7rem; color: var(--ink-faint); font-weight: 500; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <nav class="top-nav">
+    <div class="nav-logo">Portfolio</div>
+    <button class="nav-btn" id="backBtn"><i data-lucide="arrow-left"></i> Back</button>
+    <button class="nav-btn" id="homeBtn"><i data-lucide="home"></i> Home</button>
+    <span class="nav-spacer"></span>
+    <span class="nav-status">Available for Work</span>
+  </nav>
+  <div class="marquee-wrap" id="marquee-wrap"></div>
+  <div class="inner" id="app-root"></div>
+</div>
+
+<script>
+  const BRAND_SVGS = {
+    'Github': `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>`,
+    'Linkedin': `<svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>`
+  };
+  function getIconHTML(name) {
+    if (BRAND_SVGS[name]) return BRAND_SVGS[name];
+    const m = { 'Globe':'globe','Mail':'mail','Phone':'phone','FileText':'file-text' };
+    return `<i data-lucide="${m[name]||name.toLowerCase().replace(/([a-z])([A-Z])/g,'$1-$2').toLowerCase()}"></i>`;
+  }
+  function buildSocialHref(item) { let l=item.link||""; if(!l) return null; if(item.icon==='Mail'&&!l.startsWith('mailto:')) return `mailto:${l}`; return l; }
+
+  const portfolioData = {
+    "profile": { "social": [{"name":"GitHub","link":"https://github.com/example-dev","icon":"Github"},{"name":"LinkedIn","link":"https://linkedin.com/in/example-profile","icon":"Linkedin"},{"name":"Portfolio","link":"https://example.dev","icon":"Globe"}], "cvLink": "#", "domain": "Full Stack Developer", "email": "user@example.com", "location": "San Francisco, CA", "name": "User Name", "phone": "+1 (555) 123-4567", "profilePhotoUrl": null, "summary": "Passionate full-stack developer with expertise in building modern web applications. I love creating clean, responsive interfaces and scalable backend systems. Always eager to learn new technologies and contribute to impactful projects." },
+    "education": [{"_id":"edu_1","institution":"State University of Technology","course":"M.Sc. in Computer Science","duration":"2022–2024","cgpa":"3.9/4.0"},{"_id":"edu_2","institution":"Metro Public School","course":"Higher Secondary Education","duration":"2020–2022","percentage":"92.5"}],
+    "experience": [{"_id":"exp_1","company":"Digital Innovations Inc.","role":"Full Stack Developer Intern","duration":"6 months","description":"Collaborated on building enterprise web apps using React, Node.js, and MongoDB. Improved API performance by 30% and contributed to code reviews and agile workflows.","type":"Internship"},{"_id":"exp_2","company":"Creative Labs","role":"Frontend Developer (Freelance)","duration":"1 year","description":"Developed responsive websites and interactive dashboards for clients, ensuring cross-browser compatibility and modern UI/UX standards.","type":"Freelance"}],
+    "projects": [{"_id":"proj_1","title":"TaskFlow Manager","tech":["MERN","Tailwind","JWT","Redux Toolkit"],"description":"A full-stack productivity app with task boards, real-time updates, and user authentication.","demo":"https://demo-taskflow.example.com","repo":"https://github.com/example/taskflow"},{"_id":"proj_2","title":"WeatherDash","tech":["React","OpenWeather API","Chart.js","CSS Modules"],"description":"Real-time weather dashboard with 7-day forecasts, interactive maps, and location search.","demo":"https://weatherdash.example.com","repo":"https://github.com/example/weatherdash"}],
+    "skills":{"skills":[{"category":"Frontend","items":["React","Vue.js","Tailwind CSS","TypeScript"]},{"category":"Backend","items":["Node.js","Express","Python","PostgreSQL","MongoDB"]},{"category":"Tools & DevOps","items":["Git/GitHub","Docker","VS Code","Postman","Vercel"]}]},
+    "certifications":[{"_id":"cert_1","name":"Meta Backend Developer Professional","issuer":"Coursera","link":"https://coursera.org/verify/example"},{"_id":"cert_2","name":"AWS Cloud Practitioner","issuer":"Amazon Web Services","link":"https://aws.amazon.com/verification/example"}],
+    "interests":{"interests":["Open Source","Cloud Architecture","UI/UX Design","Tech Writing","Hiking","Chess"]}
+  };
+
+  function renderApp(data) {
+    const p = data.profile;
+    const fullName = p.name||'User Name';
+    const [fn,...ln] = fullName.split(' '); const lastName = ln.join(' ')||'';
+    const socialLinks = (p.social||[]).filter(i=>buildSocialHref(i));
+    const edu=data.education, exp=data.experience, proj=data.projects, certs=data.certifications;
+    const interestList = data.interests?.interests||[];
+    const skills = data.skills?.skills||[];
+
+    // Marquee
+    const items = [fullName, p.domain||'Full Stack Dev', p.location||'Remote', 'Open to Work', ...skills.flatMap(s=>s.items).slice(0,6)];
+    const marqueeHTML = [...items,...items].map(i=>`<span class="marquee-item">${i} <span class="marquee-dot">◆</span></span>`).join('');
+    document.getElementById('marquee-wrap').innerHTML = `<div class="marquee-track">${marqueeHTML}</div>`;
+
+    const html = `
+      <div class="hero" style="margin-top:2rem">
+        <div class="hero-top">
+          <div>
+            <div class="hero-label">Portfolio · ${new Date().getFullYear()}</div>
+            <div class="hero-name">${fn}<br><span class="accent">${lastName}</span></div>
+          </div>
+          <div class="hero-right-block">
+            <div class="role-badge">${p.domain||'Full Stack Developer'}</div>
+            <div class="avatar-box">
+              ${p.profilePhotoUrl ? `<img src="${p.profilePhotoUrl}" alt="${fullName}">` : `<i data-lucide="user"></i>`}
+            </div>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-col"><div class="stat-n">${edu.length}</div><div class="stat-l">Education</div></div>
+          <div class="stat-col"><div class="stat-n">${exp.length}</div><div class="stat-l">Roles</div></div>
+          <div class="stat-col"><div class="stat-n">${proj.length}</div><div class="stat-l">Projects</div></div>
+          <div class="stat-col"><div class="stat-n">${certs.length}</div><div class="stat-l">Certs</div></div>
+        </div>
+        <div class="hero-body">
+          ${p.summary ? `<div class="hero-summary">${p.summary}</div>` : ''}
+          <div class="hero-meta">
+            ${p.email ? `<div class="meta-item"><i data-lucide="mail"></i>${p.email}</div>` : ''}
+            ${p.phone ? `<div class="meta-item"><i data-lucide="phone"></i>${p.phone}</div>` : ''}
+            ${p.location ? `<div class="meta-item"><i data-lucide="map-pin"></i>${p.location}</div>` : ''}
+          </div>
+        </div>
+        <div class="hero-cta">
+          ${p.cvLink ? `<a href="${p.cvLink}" target="_blank" class="btn-yellow"><i data-lucide="file-text"></i>Resume</a>` : ''}
+          ${socialLinks.map(item=>`<a href="${buildSocialHref(item)}" target="_blank" class="btn-outline">${getIconHTML(item.icon)}${item.name}</a>`).join('')}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-header"><div class="sec-num">01</div><div class="sec-title">Education</div><div class="sec-count">${edu.length} records</div></div>
+        <div class="sec-body">
+          ${edu.map(e=>{const score=e.cgpa?`CGPA: ${e.cgpa}`:(e.percentage?`Score: ${e.percentage}%`:null); return `<div class="timeline-row">
+            <div class="t-date-col"><div class="t-dur">${e.duration||'N/A'}</div></div>
+            <div class="t-body">
+              <div class="t-title">${e.institution}</div>
+              <div class="t-sub">${e.course}</div>
+              ${score?`<div class="t-score">${score}</div>`:''}
+            </div>
+          </div>`;}).join('')}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-header"><div class="sec-num">02</div><div class="sec-title">Experience</div><div class="sec-count">${exp.length} records</div></div>
+        <div class="sec-body">
+          ${exp.map(e=>`<div class="timeline-row">
+            <div class="t-date-col"><div class="t-dur">${e.duration||'N/A'}</div>${e.type?`<div class="t-type">${e.type}</div>`:''}</div>
+            <div class="t-body">
+              <div class="t-title">${e.role}</div>
+              <div class="t-sub">${e.company}</div>
+              ${e.description?`<div class="t-desc">${e.description}</div>`:''}
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-header"><div class="sec-num">03</div><div class="sec-title">Projects</div><div class="sec-count">${proj.length} repos</div></div>
+        <div class="sec-body">
+          <div class="proj-grid">
+            ${proj.map((pr,i)=>`<div class="proj-card">
+              <div class="proj-num">0${i+1}</div>
+              <div class="proj-title">${pr.title}</div>
+              ${pr.description?`<div class="proj-desc">${pr.description}</div>`:''}
+              ${pr.tech?.length?`<div class="tag-row">${pr.tech.map(t=>`<span class="tag">${t}</span>`).join('')}</div>`:''}
+              <div class="proj-links">
+                ${pr.demo?`<a href="${pr.demo}" target="_blank" class="proj-link">Live <i data-lucide="arrow-up-right"></i></a>`:''}
+                ${pr.repo?`<a href="${pr.repo}" target="_blank" class="proj-link">Repo ${BRAND_SVGS['Github']}</a>`:''}
+              </div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-header"><div class="sec-num">04</div><div class="sec-title">Skills</div><div class="sec-count">${skills.reduce((a,c)=>a+c.items.length,0)} items</div></div>
+        <div class="sec-body">
+          <div class="skill-grid">
+            ${skills.map(cat=>`<div class="skill-block">
+              <div class="skill-cat">${cat.category}</div>
+              <div class="skill-list">${cat.items.map(item=>`<div class="skill-item">${item}</div>`).join('')}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="sec-header"><div class="sec-num">05</div><div class="sec-title">Certifications</div><div class="sec-count">${certs.length} credentials</div></div>
+        <div class="sec-body">
+          <div class="cert-grid">
+            ${certs.map(c=>`<div class="cert-card">
+              <div class="cert-icon">★ Verified</div>
+              <div class="cert-name">${c.name}</div>
+              <div class="cert-issuer">${c.issuer}</div>
+              ${c.link?`<a href="${c.link}" target="_blank" class="cert-link">View <i data-lucide="arrow-up-right"></i></a>`:''}
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      ${interestList.length?`<div class="section">
+        <div class="sec-header"><div class="sec-num">06</div><div class="sec-title">Interests</div></div>
+        <div class="sec-body"><div class="interest-row">${interestList.map(i=>`<span class="interest-tag">${i}</span>`).join('')}</div></div>
+      </div>`:''}
+
+      <footer class="footer">
+        <div><div class="footer-name">${fullName}</div><div class="footer-copy">© ${new Date().getFullYear()} All Rights Reserved</div></div>
+        <div class="footer-links">
+          ${p.email?`<a href="mailto:${p.email}" class="footer-link"><i data-lucide="mail"></i>${p.email}</a>`:''}
+          ${socialLinks.map(item=>`<a href="${buildSocialHref(item)}" target="_blank" class="footer-link">${getIconHTML(item.icon)}${item.name}</a>`).join('')}
+        </div>
+      </footer>
+    `;
+    document.getElementById('app-root').innerHTML = html;
+    if(typeof lucide!=='undefined') lucide.createIcons(); else setTimeout(()=>lucide.createIcons(),100);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>renderApp(portfolioData));
+  else renderApp(portfolioData);
+  document.getElementById('backBtn').addEventListener('click',()=>window.history.back());
+  document.getElementById('homeBtn').addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+</script>
+</body>
+</html>

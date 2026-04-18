@@ -2,6 +2,7 @@ import express from 'express';
 import {
   registerUser,
   loginUser,
+  verify2FALogin,
   logoutUser,
   getMe,
   sendOtp,
@@ -24,6 +25,7 @@ const router = express.Router();
 // ── Public routes ─────────────────────────────────────────────────────────────
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/login/2fa', verify2FALogin);
 
 // OTP-based password reset (no auth required)
 router.post('/forgot-password/send-otp', sendOtp);

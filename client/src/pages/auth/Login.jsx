@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { LogIn, Mail, Lock, AlertCircle, CheckCircle, Loader, Eye, EyeOff } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { useAuth } from '../../contexts/AuthContext'
+import { twoFactorService } from '../../services/twoFactorService'
 import GoogleLoginButton from '../../components/common/GoogleLoginButton'
 
 // ── Styled components ─────────────────────────────────────────────────────────
@@ -234,14 +236,18 @@ const GoogleButtonWrapper = styled.div`
 
 const Login = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, verify2FA } = useAuth()
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [disableLoading, setDisableLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [needs2FA, setNeeds2FA] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [backupCode, setBackupCode] = useState('')
 
   useEffect(() => {
     // Any other initialization can go here if needed
@@ -259,12 +265,60 @@ const Login = () => {
 
     setLoading(true)
     try {
-      await login(username, password)
-      setSuccess('Login successful! Redirecting...')
+      const result = await login(username, password)
+      if (result?.requires2FA) {
+        setNeeds2FA(true)
+        setSuccess('')
+      } else {
+        setSuccess('Login successful! Redirecting...')
+      }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleVerify2FA = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    if (!otp && !backupCode) {
+      setError('Please enter your 2FA code or backup code')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await verify2FA({ otp, backupCode })
+      setSuccess('Login successful! Redirecting...')
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || '2FA verification failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDisable2FARequest = async () => {
+    if (!window.confirm('Are you sure you want to disable 2FA? A verification email will be sent to your registered email address.')) {
+      return
+    }
+
+    setDisableLoading(true)
+    try {
+      await twoFactorService.requestDisableEmail()
+      toast.success('Disable email sent! Check your inbox for verification link.')
+      setNeeds2FA(false)
+      setOtp('')
+      setBackupCode('')
+      setUsername('')
+      setPassword('')
+      setError('')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to send disable email. Please try again.')
+      toast.error('Failed to send disable email')
+    } finally {
+      setDisableLoading(false)
     }
   }
 
@@ -283,8 +337,16 @@ const Login = () => {
       <MainContent>
         <FormContainer>
           <FormHeader>
-            <FormTitle><LogIn size={32} /> Sign In</FormTitle>
-            <FormSubtitle>Access your PersonalDB account</FormSubtitle>
+            <FormTitle>
+              {needs2FA ? (
+                <>🔐 Two-Factor Authentication</>
+              ) : (
+                <><LogIn size={32} /> Sign In</>
+              )}
+            </FormTitle>
+            <FormSubtitle>
+              {needs2FA ? 'Enter your 2FA code' : 'Access your PersonalDB account'}
+            </FormSubtitle>
           </FormHeader>
 
           {error && (
@@ -301,62 +363,129 @@ const Login = () => {
             </AlertBox>
           )}
 
-          <form onSubmit={handleSubmit}>
-            <FormGroup>
-              <Label htmlFor="username"><Mail size={18} /> Username</Label>
-              <InputField
-                id="username"
-                type="text"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </FormGroup>
-
-            <FormGroup>
-              <Label htmlFor="password"><Lock size={18} /> Password</Label>
-              <PasswordWrapper>
+          {!needs2FA ? (
+            <form onSubmit={handleSubmit}>
+              <FormGroup>
+                <Label htmlFor="username"><Mail size={18} /> Username</Label>
                 <InputField
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="username"
+                  type="text"
+                  placeholder="Enter your username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
-                <PasswordToggleButton
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="password"><Lock size={18} /> Password</Label>
+                <PasswordWrapper>
+                  <InputField
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <PasswordToggleButton
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </PasswordToggleButton>
+                </PasswordWrapper>
+              </FormGroup>
+
+              <SubmitButton type="submit" disabled={loading}>
+                {loading ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <LogIn size={18} />}
+                {loading ? 'Signing in…' : 'Sign In'}
+              </SubmitButton>
+            </form>
+          ) : (
+            <form onSubmit={handleVerify2FA}>
+              <FormGroup>
+                <Label htmlFor="otp">📱 6-Digit Code</Label>
+                <InputField
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength="6"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <Label htmlFor="backupCode">Or Use Backup Code</Label>
+                <InputField
+                  id="backupCode"
+                  type="text"
+                  placeholder="Enter your backup code (optional)"
+                  value={backupCode}
+                  onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+                />
+              </FormGroup>
+
+              <SubmitButton type="submit" disabled={loading}>
+                {loading ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <>🔓 Verify</>}
+                {loading ? 'Verifying…' : 'Verify & Sign In'}
+              </SubmitButton>
+
+              <FooterLinks style={{ marginTop: '1rem', justifyContent: 'space-between' }}>
+                <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => {
+                    setNeeds2FA(false)
+                    setOtp('')
+                    setBackupCode('')
+                    setError('')
+                  }}
+                  style={{ background: 'none', border: 'none', color: '#3b82f6', cursor: 'pointer', textDecoration: 'underline' }}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </PasswordToggleButton>
-              </PasswordWrapper>
-            </FormGroup>
+                  ← Back to login
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDisable2FARequest}
+                  disabled={disableLoading}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    color: '#dc2626', 
+                    cursor: disableLoading ? 'not-allowed' : 'pointer', 
+                    textDecoration: 'underline',
+                    opacity: disableLoading ? 0.6 : 1
+                  }}
+                >
+                  {disableLoading ? '⏳ Sending...' : '🔓 Disable 2FA'}
+                </button>
+              </FooterLinks>
+            </form>
+          )}
 
-            <SubmitButton type="submit" disabled={loading}>
-              {loading ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <LogIn size={18} />}
-              {loading ? 'Signing in…' : 'Sign In'}
-            </SubmitButton>
-          </form>
+          {!needs2FA && (
+            <>
+              <Divider>
+                <span>Or continue with</span>
+              </Divider>
 
-          <Divider>
-            <span>Or continue with</span>
-          </Divider>
+              <GoogleButtonWrapper>
+                <GoogleLoginButton text="Sign in with Google" className="w-full" />
+              </GoogleButtonWrapper>
 
-          <GoogleButtonWrapper>
-            <GoogleLoginButton text="Sign in with Google" className="w-full" />
-          </GoogleButtonWrapper>
+              <FooterLinks>
+                <Link to="/forgot-password">Forgot password?</Link>
+                <Link to="/register">Create account</Link>
+              </FooterLinks>
 
-          <FooterLinks>
-            <Link to="/forgot-password">Forgot password?</Link>
-            <Link to="/register">Create account</Link>
-          </FooterLinks>
-
-          <SignUpLink>
-            Don't have an account? <Link to="/register">Sign up here</Link>
-          </SignUpLink>
+              <SignUpLink>
+                Don't have an account? <Link to="/register">Sign up here</Link>
+              </SignUpLink>
+            </>
+          )}
         </FormContainer>
       </MainContent>
     </AuthContainer>

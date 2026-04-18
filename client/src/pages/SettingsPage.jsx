@@ -8,8 +8,10 @@ import {
   Activity, Clock, Check,
 } from 'lucide-react'
 import { authService } from '../services/authService'
+import { twoFactorService } from '../services/twoFactorService'
 import { useAuth } from '../contexts/AuthContext'
 import toast from 'react-hot-toast'
+import TwoFactorModal from '../components/TwoFactorModal'
 
 /* ─── Animations ─── */
 const fadeUp = keyframes`
@@ -645,11 +647,46 @@ const SettingsPage = () => {
   })
   const [privacyLoading, setPrivacyLoading] = useState(false)
 
+  /* ── 2FA modal ── */
+  const [twoFactorModalOpen, setTwoFactorModalOpen] = useState(false)
+  const [twoFactorStatus, setTwoFactorStatus] = useState({ enabled: false, backupCodesRemaining: 0 })
+  const [disableEmailLoading, setDisableEmailLoading] = useState(false)
+
   useEffect(() => {
     authService.getPrivacyPreferences()
       .then(data => setPrivacy(data))
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    loadTwoFactorStatus()
+  }, [])
+
+  const loadTwoFactorStatus = async () => {
+    try {
+      const status = await twoFactorService.getStatus()
+      setTwoFactorStatus(status)
+    } catch (err) {
+      console.error('Failed to load 2FA status:', err)
+    }
+  }
+
+  const handle2FAModalClose = () => {
+    setTwoFactorModalOpen(false)
+    loadTwoFactorStatus()
+  }
+
+  const handleRequestDisableEmail = async () => {
+    try {
+      setDisableEmailLoading(true)
+      await twoFactorService.requestDisableEmail()
+      toast.success('Disable email sent! Check your inbox for verification link.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to send disable email')
+    } finally {
+      setDisableEmailLoading(false)
+    }
+  }
 
   const handleSavePrivacy = async () => {
     setPrivacyLoading(true)
@@ -748,16 +785,32 @@ const SettingsPage = () => {
             desc="Add an extra layer of security to your account">
             <InfoRow>
               <InfoLabel>Status</InfoLabel>
-              <InfoBadge $color="blue">Not enabled</InfoBadge>
+              <InfoBadge $color={twoFactorStatus.enabled ? 'green' : 'blue'}>
+                {twoFactorStatus.enabled ? '✓ Enabled' : 'Not enabled'}
+              </InfoBadge>
             </InfoRow>
+            {twoFactorStatus.enabled && (
+              <InfoRow>
+                <InfoLabel>Backup codes remaining</InfoLabel>
+                <InfoValue>{twoFactorStatus.backupCodesRemaining}</InfoValue>
+              </InfoRow>
+            )}
             <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '1rem 0 0', lineHeight: 1.6 }}>
-              Two-factor authentication adds an extra step when signing in to keep your account secure.
+              Two-factor authentication adds an extra step when signing in to keep your account secure. Use an authenticator app like Google Authenticator or Microsoft Authenticator.
             </p>
-            <BtnRow $end>
-              <OutlineBtn type="button" onClick={() => toast('Coming soon!')}>
-                <Shield /> Enable 2FA
-              </OutlineBtn>
-            </BtnRow>
+            {!twoFactorStatus.enabled ? (
+              <BtnRow $end>
+                <OutlineBtn type="button" onClick={() => setTwoFactorModalOpen(true)}>
+                  <Shield /> Enable 2FA
+                </OutlineBtn>
+              </BtnRow>
+            ) : (
+              <BtnRow $end>
+                <OutlineBtn type="button" onClick={handleRequestDisableEmail} disabled={disableEmailLoading}>
+                  {disableEmailLoading ? '⏳ Sending...' : '📧 Disable via Email'}
+                </OutlineBtn>
+              </BtnRow>
+            )}
           </Section>
 
           <Section icon={<Clock />} iconColor="slate" title="Login history"
@@ -1012,6 +1065,12 @@ const SettingsPage = () => {
       <Content>
         {renderContent()}
       </Content>
+
+      {/* ── 2FA Modal ── */}
+      <TwoFactorModal
+        isOpen={twoFactorModalOpen}
+        onClose={handle2FAModalClose}
+      />
     </Root>
   )
 }

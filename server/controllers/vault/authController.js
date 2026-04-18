@@ -1,6 +1,7 @@
 import User from '../../models/common/User.js';
 import { generateToken } from '../../utils/generateToken.js';
 import { generateSignedUrl } from './uploadController.js';
+import { verifyOTP, verifyAndConsumeBackupCode, getDecryptedSecret } from '../../services/twoFactorAuth.js';
 import {
   sendWelcomeEmail,
   sendWelcomeEmailAsync,
@@ -74,6 +75,23 @@ export const loginUser = async (req, res) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username });
     if (user && (await user.matchPassword(password))) {
+      // Check if 2FA is enabled
+      if (user.twoFactorAuth?.enabled) {
+        // Store user ID in session for 2FA verification
+        req.session.pendingUser = {
+          userId: user._id.toString(),
+          username: user.username,
+          email: user.email,
+          createdAt: Date.now(),
+        };
+
+        return res.json({
+          requires2FA: true,
+          message: 'Please enter your 2FA code',
+        });
+      }
+
+      // If 2FA not enabled, issue token immediately
       res.cookie('token', generateToken(user._id), cookieOptions());
       return res.json({ _id: user._id, username: user.username, birthYear: user.birthYear });
     }
@@ -87,6 +105,70 @@ export const loginUser = async (req, res) => {
 export const logoutUser = (req, res) => {
   res.cookie('token', '', { httpOnly: true, expires: new Date(0) });
   res.json({ message: 'Logged out successfully' });
+};
+
+// ── Verify 2FA code during login ──────────────────────────────────────────────
+export const verify2FALogin = async (req, res) => {
+  try {
+    const { otp, backupCode } = req.body;
+
+    // Check if there's a pending user in session
+    if (!req.session.pendingUser) {
+      return res.status(401).json({ message: 'No pending login. Please log in first.' });
+    }
+
+    // Check if session expired (10 minutes)
+    const sessionAge = Date.now() - req.session.pendingUser.createdAt;
+    if (sessionAge > 10 * 60 * 1000) {
+      delete req.session.pendingUser;
+      return res.status(401).json({ message: 'Login session expired. Please log in again.' });
+    }
+
+    const user = await User.findById(req.session.pendingUser.userId);
+    if (!user || !user.twoFactorAuth?.enabled) {
+      return res.status(401).json({ message: 'Invalid 2FA request' });
+    }
+
+    // Get decrypted secret
+    const secret = getDecryptedSecret(user);
+
+    if (!secret) {
+      return res.status(500).json({ message: 'Failed to retrieve 2FA secret' });
+    }
+
+    let isValid = false;
+
+    // Try OTP verification
+    if (otp && otp.length === 6) {
+      isValid = verifyOTP(secret, otp);
+    }
+
+    // Try backup code if OTP fails or not provided
+    if (!isValid && backupCode) {
+      isValid = verifyAndConsumeBackupCode(user, backupCode);
+      if (isValid) {
+        // Save user to persist backup code removal
+        await user.save();
+      }
+    }
+
+    if (!isValid) {
+      return res.status(401).json({ message: 'Invalid 2FA code or backup code' });
+    }
+
+    // 2FA verified, issue token
+    delete req.session.pendingUser;
+    res.cookie('token', generateToken(user._id), cookieOptions());
+    return res.json({
+      _id: user._id,
+      username: user.username,
+      birthYear: user.birthYear,
+      message: 'Login successful',
+    });
+  } catch (error) {
+    console.error('[verify2FALogin] Error:', error.message);
+    res.status(500).json({ message: error.message });
+  }
 };
 
 // ── Get current user ──────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ export const useAuth = () => useContext(AuthContext)
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [requires2FA, setRequires2FA] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -27,8 +28,25 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (username, password) => {
-    const userData = await authService.login({ username, password })
+    const result = await authService.login({ username, password })
+    
+    // Check if 2FA is required
+    if (result.requires2FA) {
+      setRequires2FA(true)
+      return { requires2FA: true }
+    }
+
+    // Normal login (no 2FA)
+    setUser(result)
+    toast.success('Logged in successfully')
+    navigate('/dashboard')
+    return result
+  }
+
+  const verify2FA = async ({ otp, backupCode }) => {
+    const userData = await authService.verify2FALogin({ otp, backupCode })
     setUser(userData)
+    setRequires2FA(false)
     toast.success('Logged in successfully')
     navigate('/dashboard')
   }
@@ -62,7 +80,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, refreshUser, requires2FA, verify2FA }}>
       {children}
     </AuthContext.Provider>
   )

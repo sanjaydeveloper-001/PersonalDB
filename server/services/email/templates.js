@@ -99,7 +99,7 @@ export const welcomeEmailTemplate = (username) => `
       <div style="margin: 32px 0 0 0; padding: 24px 0; border-top: 1px solid #e5e7eb; text-align: center;">
         <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">Questions? We're here to help!</p>
         <p style="margin: 0; font-size: 14px;">
-          <a href="${process.env.CLIENT_URL1 || 'https://personaldb.josan.tech'}/contact" style="color: #1e40af; text-decoration: none; font-weight: 600;">Contact Support</a>
+          <a href="${process.env.CLIENT_URL1 || 'https://personaldb.josan.tech'}/dashboard/contact" style="color: #1e40af; text-decoration: none; font-weight: 600;">Contact Support</a>
           &nbsp; • &nbsp;
           <a href="${process.env.CLIENT_URL1 || 'https://personaldb.josan.tech'}/docs" style="color: #1e40af; text-decoration: none; font-weight: 600;">View Documentation</a>
         </p>

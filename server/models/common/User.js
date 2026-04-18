@@ -79,6 +79,17 @@ const userSchema = new mongoose.Schema(
         publicProfile:    { type: Boolean, default: true },
       },
     },
+
+    // Two-Factor Authentication (TOTP)
+    twoFactorAuth: {
+      enabled: { type: Boolean, default: false },
+      secret: { type: String, default: null }, // Encrypted base32 secret
+      backupCodes: [{ type: String }], // Encrypted backup codes
+      disableToken: {
+        hash: { type: String, default: null }, // Hash of disable token
+        expiresAt: { type: Date, default: null }, // Token expiration time
+      },
+    },
   },
   { timestamps: true }
 );

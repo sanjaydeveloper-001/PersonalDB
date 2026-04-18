@@ -97,6 +97,7 @@ async function startServer() {
   const userRoutes = (await import('./routes/userRoutes.js')).default;
   const oauthRoutes = (await import('./routes/oauth.js')).default;
   const contactRoutes = (await import('./routes/contactRoutes.js')).default;
+  const twoFactorRoutes = (await import('./routes/twoFactorRoutes.js')).default;
 
   // ✅ EXISTING ROUTES (JWT only, for web dashboard)
   app.use('/api/portfolio/profile', profileRoutes);
@@ -110,6 +111,7 @@ async function startServer() {
 
   app.use('/api/auth', authRoutes);
   app.use('/api/auth', oauthRoutes);
+  app.use('/api/auth/2fa', twoFactorRoutes);
   app.use('/public', publicFileRoutes);
   app.use('/api/templates', templateRoutes);
   app.use('/api/admin', adminRoutes);
