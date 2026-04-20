@@ -3,6 +3,7 @@ import Review from '../models/common/Review.js';
 import User from '../models/common/User.js';
 import Experience from '../models/portfolio/Experience.js';
 import { sendReviewApprovedEmailAsync, sendReviewRejectedEmailAsync } from '../services/email/emailService.js';
+import { generateSignedUrl } from './vault/uploadController.js';
 
 // Create a new review for the website
 export const createReview = async (req, res) => {
@@ -94,7 +95,24 @@ export const getAllPublishedReviews = async (req, res) => {
       .sort({ date: -1 })
       .limit(parseInt(limit))
       .skip(skip)
-      .populate('userId', 'username profileImage googleAvatar');
+      .lean();
+
+    // Generate signed URLs for profile images in parallel
+    const reviewsWithUrls = await Promise.all(
+      reviews.map(async (review) => {
+        if (review.profileImage && review.profileImage.startsWith('avatars/')) {
+          try {
+            review.profileImageUrl = await generateSignedUrl(review.profileImage, 3600);
+          } catch (err) {
+            console.warn('Could not generate signed URL for profile image:', err.message);
+            review.profileImageUrl = null;
+          }
+        } else {
+          review.profileImageUrl = null;
+        }
+        return review;
+      })
+    );
 
     const total = await Review.countDocuments({
       isPublished: true,
@@ -103,7 +121,7 @@ export const getAllPublishedReviews = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: reviews,
+      data: reviewsWithUrls,
       pagination: {
         total,
         page: parseInt(page),
@@ -153,11 +171,28 @@ export const getPendingReviews = async (req, res) => {
 
     const reviews = await Review.find({ status: 'pending' })
       .sort({ date: -1 })
-      .populate('userId', 'username email profileImage');
+      .lean();
+
+    // Generate signed URLs for profile images in parallel
+    const reviewsWithUrls = await Promise.all(
+      reviews.map(async (review) => {
+        if (review.profileImage && review.profileImage.startsWith('avatars/')) {
+          try {
+            review.profileImageUrl = await generateSignedUrl(review.profileImage, 3600);
+          } catch (err) {
+            console.warn('Could not generate signed URL for profile image:', err.message);
+            review.profileImageUrl = null;
+          }
+        } else {
+          review.profileImageUrl = null;
+        }
+        return review;
+      })
+    );
 
     res.status(200).json({
       success: true,
-      data: reviews,
+      data: reviewsWithUrls,
     });
   } catch (error) {
     console.error('Error fetching pending reviews:', error);
@@ -352,11 +387,28 @@ export const getAllReviews = async (req, res) => {
 
     const reviews = await Review.find()
       .sort({ date: -1 })
-      .populate('userId', 'username profileImage');
+      .lean();
+
+    // Generate signed URLs for profile images in parallel
+    const reviewsWithUrls = await Promise.all(
+      reviews.map(async (review) => {
+        if (review.profileImage && review.profileImage.startsWith('avatars/')) {
+          try {
+            review.profileImageUrl = await generateSignedUrl(review.profileImage, 3600);
+          } catch (err) {
+            console.warn('Could not generate signed URL for profile image:', err.message);
+            review.profileImageUrl = null;
+          }
+        } else {
+          review.profileImageUrl = null;
+        }
+        return review;
+      })
+    );
 
     res.status(200).json({
       success: true,
-      data: reviews,
+      data: reviewsWithUrls,
     });
   } catch (error) {
     console.error('Error fetching all reviews:', error);

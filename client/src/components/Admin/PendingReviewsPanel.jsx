@@ -84,12 +84,22 @@ const ReviewerInfo = styled.div`
   gap: 1rem;
 `;
 
-const ReviewerImage = styled.img`
+const ReviewerAvatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #e5e7eb;
+  background: ${props => props.$hasImage ? 'transparent' : 'linear-gradient(135deg, #3b82f6, #1e40af)'};
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 `;
 
 const ReviewerDetails = styled.div``;
@@ -387,12 +397,16 @@ export default function PendingReviewsPanel() {
             <ReviewItem key={review._id}>
               <ReviewHeader>
                 <ReviewerInfo>
-                  {review.profileImage && (
-                    <ReviewerImage src={review.profileImage} alt={review.reviewerName} />
-                  )}
+                  <ReviewerAvatar 
+                    $hasImage={!!review.profileImageUrl}
+                    style={review.profileImageUrl ? {
+                      backgroundImage: `url('${review.profileImageUrl}')`,
+                    } : {}}
+                  >
+                    {!review.profileImageUrl && (review.reviewerName?.charAt(0).toUpperCase() || '?')}
+                  </ReviewerAvatar>
                   <ReviewerDetails>
                     <ReviewerName>{review.reviewerName}</ReviewerName>
-                    <ReviewerRole>{review.userRole}</ReviewerRole>
                   </ReviewerDetails>
                 </ReviewerInfo>
                 <StatusBadge className={review.status}>

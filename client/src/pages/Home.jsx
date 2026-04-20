@@ -1175,8 +1175,20 @@ const Home = () => {
                     </div>
                     <p>"{review.message}"</p>
                     <div className="author">
-                      <div className="avatar">
-                        {review.reviewerName?.charAt(0).toUpperCase() || '?'}
+                      <div 
+                        className="avatar" 
+                        style={
+                          review.profileImageUrl 
+                            ? {
+                                backgroundImage: `url('${review.profileImageUrl}')`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                backgroundRepeat: 'no-repeat',
+                              }
+                            : {}
+                        }
+                      >
+                        {!review.profileImageUrl && (review.reviewerName?.charAt(0).toUpperCase() || '?')}
                       </div>
                       <div className="author-info">
                         <div className="name">{review.reviewerName || 'Anonymous'}</div>
