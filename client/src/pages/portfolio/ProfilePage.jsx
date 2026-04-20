@@ -613,6 +613,127 @@ const ValidationHint = styled.small`
   }
 `;
 
+/* ── Resume Section ──────────────────────────────────────────── */
+const ResumeBox = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-top: 0.75rem;
+  transition: all 0.22s;
+  
+  &:hover {
+    background: rgba(0, 212, 255, 0.04);
+    border-color: rgba(0, 212, 255, 0.2);
+  }
+`;
+
+const ResumeIcon = styled.div`
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 10px;
+  color: #60a5fa;
+  flex-shrink: 0;
+`;
+
+const ResumeInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const ResumeName = styled.div`
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.2rem;
+`;
+
+const ResumeDate = styled.small`
+  font-size: 0.72rem;
+  color: var(--text-muted);
+`;
+
+const ResumeActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+`;
+
+const ResumeBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #60a5fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #93c5fd;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ResumeDeleteBtn = styled(ResumeBtn)`
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.5);
+    color: #ef4444;
+  }
+`;
+
+const ResumeUploadZone = styled.label`
+  flex: 1;
+  min-height: 78px;
+  border: 1.5px dashed rgba(59, 130, 246, 0.22);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  cursor: ${({ $uploading }) => ($uploading ? "not-allowed" : "pointer")};
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  transition: all 0.22s;
+  opacity: ${({ $uploading }) => ($uploading ? 0.6 : 1)};
+  
+  &:hover {
+    ${({ $uploading }) => !$uploading && `
+      border-color: #60a5fa;
+      background: rgba(59, 130, 246, 0.05);
+      color: #60a5fa;
+    `}
+  }
+`;
+
 /* ── Custom Icon Picker ──────────────────────────────────────── */
 const PickerWrap = styled.div`
   position: relative;
@@ -781,14 +902,19 @@ const ProfilePage = () => {
     email: "",
     cvLink: "",
     profilePhoto: "",
+    resume: "",
   });
   const [social, setSocial] = useState([]);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState("");
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeData, setResumeData] = useState({ name: "", url: "" });
+  const [resumeUploading, setResumeUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const fileRef = useRef();
+  const resumeRef = useRef();
 
   useEffect(() => {
     loadProfile();
@@ -812,6 +938,14 @@ const ProfilePage = () => {
         if (data.profilePhotoUrl) setPhotoPreview(data.profilePhotoUrl);
         else if (data.profilePhoto?.startsWith("http"))
           setPhotoPreview(data.profilePhoto);
+        
+        // Load resume data
+        if (data.resume) {
+          setResumeData({
+            name: data.resume.split('/').pop(),
+            url: data.resumeUrl || "",
+          });
+        }
       }
     } catch (err) {
       console.error("Failed to load profile:", err);
@@ -841,6 +975,42 @@ const ProfilePage = () => {
     if (!file) return;
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setResumeUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("resume", file);
+      const { data } = await portfolioService.uploadResume(formData);
+      setResumeData({
+        name: file.name,
+        url: data.url,
+      });
+      setResumeFile(null);
+      toast.success("Resume uploaded successfully!");
+    } catch (err) {
+      console.error("Resume upload error:", err);
+      toast.error(err.response?.data?.message || "Failed to upload resume");
+    } finally {
+      setResumeUploading(false);
+    }
+  };
+
+  const handleResumeDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete your resume?")) return;
+
+    try {
+      await portfolioService.deleteResume();
+      setResumeData({ name: "", url: "" });
+      toast.success("Resume deleted successfully!");
+    } catch (err) {
+      console.error("Resume delete error:", err);
+      toast.error(err.response?.data?.message || "Failed to delete resume");
+    }
   };
 
   /* ── Social helpers ── */
@@ -1116,7 +1286,7 @@ const ProfilePage = () => {
               {/* ── CV / Resume ── */}
               <FieldWrap $full>
                 <FLabel>
-                  <FileText size={12} /> CV / Resume
+                  <FileText size={12} /> CV / Resume Link
                 </FLabel>
 
                 <FInput
@@ -1140,9 +1310,7 @@ const ProfilePage = () => {
                 ) : (
                   <CvHint>
                     <FileText size={11} />
-                    You can upload your resume in the{" "}
-                    <strong>Vault</strong>, get the public link, and paste it
-                    here.
+                    Paste a link to your CV hosted on Google Drive, Dropbox, etc.
                   </CvHint>
                 )}
 
@@ -1152,11 +1320,74 @@ const ProfilePage = () => {
                   </ValidationHint>
                 )}
               </FieldWrap>
+
+              {/* ── Resume Upload ── */}
+              <FieldWrap $full>
+                <FLabel>
+                  <FileText size={12} /> Upload Resume (PDF/DOC/DOCX)
+                </FLabel>
+
+                {resumeData.url ? (
+                  <ResumeBox>
+                    <ResumeIcon>
+                      <FileText size={20} />
+                    </ResumeIcon>
+                    <ResumeInfo>
+                      <ResumeName title={resumeData.name}>
+                        {resumeData.name}
+                      </ResumeName>
+                      <ResumeDate>Ready to download</ResumeDate>
+                    </ResumeInfo>
+                    <ResumeActions>
+                      <ResumeBtn
+                        type="button"
+                        onClick={() => {
+                          if (resumeData.url) {
+                            window.open(resumeData.url, "_blank");
+                          }
+                        }}
+                      >
+                        <ExternalLink size={14} />
+                        Download
+                      </ResumeBtn>
+                      <ResumeDeleteBtn
+                        type="button"
+                        onClick={handleResumeDelete}
+                      >
+                        <Trash2 size={14} />
+                        Remove
+                      </ResumeDeleteBtn>
+                    </ResumeActions>
+                  </ResumeBox>
+                ) : (
+                  <ResumeUploadZone
+                    htmlFor="resume-file"
+                    $uploading={resumeUploading}
+                  >
+                    <FileText size={20} />
+                    <span>
+                      {resumeUploading
+                        ? "Uploading…"
+                        : "Click to upload or drag & drop"}
+                    </span>
+                    <small style={{ fontSize: "0.7rem" }}>
+                      PDF, DOC or DOCX up to 10MB
+                    </small>
+                  </ResumeUploadZone>
+                )}
+                <input
+                  id="resume-file"
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  hidden
+                  onChange={handleResumeUpload}
+                  disabled={resumeUploading}
+                  ref={resumeRef}
+                />
+              </FieldWrap>
             </Grid2>
           </SCardBody>
         </SCard>
-
-        {/* ── Social Links ── */}
         <SCard $i={2}>
           <SCardHead>
             <SCardHeadIcon $bg="rgba(167,139,250,0.1)" $c="#A78BFA">

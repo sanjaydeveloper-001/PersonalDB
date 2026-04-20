@@ -12,6 +12,7 @@ const profileSchema = new mongoose.Schema({
   email: String,
   cvLink: String,
   profilePhoto: String,
+  resume: String,
   contact: [{ id: Number, name: String, link: String, icon: String }],
   social: [{ id: Number, name: String, link: String, icon: String, color: String }],
 }, { timestamps: true });

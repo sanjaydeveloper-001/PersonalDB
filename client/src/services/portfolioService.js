@@ -31,4 +31,6 @@ export const portfolioService = {
   updateInterests: (data) => api.put('/portfolio/interests', data),
 
   uploadImage: (formData) => api.post('/portfolio/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  uploadResume: (formData) => api.post('/portfolio/upload/resume', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  deleteResume: () => api.delete('/portfolio/upload/resume'),
 }

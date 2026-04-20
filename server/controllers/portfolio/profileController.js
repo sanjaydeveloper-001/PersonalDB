@@ -6,6 +6,8 @@ export const getProfile = async (req, res) => {
     let profile = await Profile.findOne({ user: req.user._id });
     if (!profile) profile = await new Profile({ user: req.user._id }).save();
     profile = profile.toObject();
+    
+    // Generate signed URLs for profile photo
     if (profile.profilePhoto?.startsWith('portfolio/')) {
       try {
         profile.profilePhotoUrl = await generateSignedUrl(profile.profilePhoto, 3600);
@@ -13,6 +15,16 @@ export const getProfile = async (req, res) => {
         console.warn('Could not generate signed URL for profile photo:', err.message);
       }
     }
+
+    // Generate signed URL for resume
+    if (profile.resume?.startsWith('resume/')) {
+      try {
+        profile.resumeUrl = await generateSignedUrl(profile.resume, 3600);
+      } catch (err) {
+        console.warn('Could not generate signed URL for resume:', err.message);
+      }
+    }
+
     res.json(profile);
   } catch (err) {
     res.status(500).json({ message: err.message });
