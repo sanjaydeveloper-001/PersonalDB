@@ -7,6 +7,8 @@ import {
   accountDeletedTemplate,
   passwordChangedTemplate,
   contactFormTemplate,
+  reviewApprovedTemplate,
+  reviewRejectedTemplate,
 } from './templates.js';
 
 // ── Helper function to send email ─────────────────────────────────────────────
@@ -18,7 +20,6 @@ const sendEmail = async (to, subject, html) => {
       subject,
       html,
     });
-    console.log(`[Email] ${subject} sent to ${to}`);
     return info;
   } catch (error) {
     console.error(`[Email] Failed to send ${subject} to ${to}:`, error.message);
@@ -280,5 +281,47 @@ export const send2FADisableEmail = async (email, username, disableToken, fronten
 export const send2FADisableEmailAsync = (email, username, disableToken, frontendUrl) => {
   send2FADisableEmail(email, username, disableToken, frontendUrl).catch(err => {
     console.error('[Email] 2FA disable email send failed:', err.message);
+  });
+};
+
+/**
+ * Send review approved email
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ */
+export const sendReviewApprovedEmail = async (email, username) => {
+  const html = reviewApprovedTemplate(username);
+  return sendEmail(email, '✓ Your PersonalDB Review Has Been Approved!', html);
+};
+
+/**
+ * Send review approved email asynchronously (non-blocking)
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ */
+export const sendReviewApprovedEmailAsync = (email, username) => {
+  sendReviewApprovedEmail(email, username).catch(err => {
+    console.error('[Email] Review approved email send failed:', err.message);
+  });
+};
+
+/**
+ * Send review rejected email
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ */
+export const sendReviewRejectedEmail = async (email, username) => {
+  const html = reviewRejectedTemplate(username);
+  return sendEmail(email, 'Review Not Approved - PersonalDB', html);
+};
+
+/**
+ * Send review rejected email asynchronously (non-blocking)
+ * @param {string} email - User's email
+ * @param {string} username - User's username
+ */
+export const sendReviewRejectedEmailAsync = (email, username) => {
+  sendReviewRejectedEmail(email, username).catch(err => {
+    console.error('[Email] Review rejected email send failed:', err.message);
   });
 };

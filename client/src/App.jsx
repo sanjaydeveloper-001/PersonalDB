@@ -48,6 +48,7 @@ import PortfolioSettingsPage from './pages/Portfoliosettingspage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminTemplates from './pages/admin/AdminTemplates.jsx'
 import AdminUsers from './pages/admin/AdminUsers.jsx'
+import AdminReviews from './pages/admin/AdminReviews.jsx'
 import PublicProfilePage from './pages/PublicProfilePage.jsx'
 
 
@@ -105,6 +106,7 @@ function App() {
               <Route path="admin/*" element={<AdminLayout />}>
                 <Route path="templates" element={<AdminTemplates />} />
                 <Route path="users"     element={<AdminUsers />} />
+                <Route path="reviews"   element={<AdminReviews />} />
                 <Route index element={<Navigate to="templates" replace />} />
               </Route>
             </Route>

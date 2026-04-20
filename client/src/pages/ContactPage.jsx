@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {
   Mail, Shield, Clock, MapPin, Send, CheckCircle,
@@ -285,6 +285,17 @@ export default function ContactPage() {
   });
   const [loading, setLoading]   = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Sync form when user data loads
+  useEffect(() => {
+    if (user?.username || user?.email) {
+      setForm(p => ({
+        ...p,
+        username: user.username || '',
+        email: user.email || '',
+      }));
+    }
+  }, [user]);
 
   const issueTypes = [
     { value: 'bug',      label: 'Bug Report' },

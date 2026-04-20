@@ -253,3 +253,91 @@ ${message}
 
 // Note: Login alert template removed per user request - only welcome emails are sent now
 // If needed in the future, can be restored from git history or by keeping the template code
+
+/**
+ * Review Approved Email Template
+ * @param {string} username - User's username
+ * @returns {string} HTML email template
+ */
+export const reviewApprovedTemplate = (username) => `
+  <div style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+    
+    <!-- Header Banner -->
+    <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 48px 32px; text-align: center; color: white;">
+      <h1 style="margin: 0 0 12px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">✓ Review Approved!</h1>
+      <p style="margin: 0; font-size: 16px; font-weight: 300; opacity: 0.95;">Your feedback is now live on PersonalDB</p>
+    </div>
+
+    <!-- Main Content -->
+    <div style="padding: 48px 32px;">
+      <p style="margin: 0 0 16px 0; font-size: 16px; color: #1f2937; line-height: 1.6;">
+        Hi <strong style="color: #10b981;">${username}</strong>,
+      </p>
+      <p style="margin: 0 0 24px 0; font-size: 15px; color: #4b5563; line-height: 1.8;">
+        Great news! Your review has been approved and is now visible to all PersonalDB users on our homepage. Thank you for sharing your feedback and helping us improve!
+      </p>
+
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #10b981; border-radius: 8px; padding: 20px; margin: 24px 0;">
+        <p style="margin: 0; font-size: 14px; color: #166534; line-height: 1.8;">
+          Your review is now helping other professionals discover PersonalDB. We really appreciate your support!
+        </p>
+      </div>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.CLIENT_URL1 || 'https://personaldb.josan.tech'}" style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+          Visit PersonalDB
+        </a>
+      </div>
+
+      <p style="margin: 32px 0 0 0; padding: 24px 0 0 0; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280;">
+        Thank you for being part of the PersonalDB community!
+      </p>
+    </div>
+  </div>
+`;
+
+/**
+ * Review Rejected Email Template
+ * @param {string} username - User's username
+ * @returns {string} HTML email template
+ */
+export const reviewRejectedTemplate = (username) => `
+  <div style="font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);">
+    
+    <!-- Header Banner -->
+    <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 48px 32px; text-align: center; color: white;">
+      <h1 style="margin: 0 0 12px 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">Review Not Approved</h1>
+      <p style="margin: 0; font-size: 16px; font-weight: 300; opacity: 0.95;">We need you to review our guidelines</p>
+    </div>
+
+    <!-- Main Content -->
+    <div style="padding: 48px 32px;">
+      <p style="margin: 0 0 16px 0; font-size: 16px; color: #1f2937; line-height: 1.6;">
+        Hi <strong style="color: #ef4444;">${username}</strong>,
+      </p>
+      <p style="margin: 0 0 24px 0; font-size: 15px; color: #4b5563; line-height: 1.8;">
+        Thank you for submitting your review! Unfortunately, your review could not be approved as it may not comply with our community guidelines. We encourage constructive feedback that focuses on your genuine experience with PersonalDB.
+      </p>
+
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 8px; padding: 20px; margin: 24px 0;">
+        <h3 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #7f1d1d;">Why might a review be rejected?</h3>
+        <ul style="margin: 0; padding: 0 0 0 20px; font-size: 14px; color: #991b1b; line-height: 2;">
+          <li>Contains inappropriate or offensive language</li>
+          <li>Promotes competing services</li>
+          <li>Appears to be spam or fake</li>
+          <li>Does not follow community guidelines</li>
+        </ul>
+      </div>
+
+      <p style="margin: 24px 0 0 0; font-size: 15px; color: #4b5563; line-height: 1.8;">
+        You're welcome to submit another review anytime. We appreciate your interest in helping us improve!
+      </p>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="${process.env.CLIENT_URL1 || 'https://personaldb.josan.tech'}/dashboard" style="display: inline-block; background: linear-gradient(135deg, #1e40af, #2563eb); color: white; padding: 14px 40px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 15px; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+`;

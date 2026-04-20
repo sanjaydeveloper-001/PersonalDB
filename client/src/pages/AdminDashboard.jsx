@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import { LayoutGrid, Users, Settings, LogOut } from 'lucide-react'
+import { LayoutGrid, Users, Settings, LogOut, MessageSquare } from 'lucide-react'
 import AdminTemplates from '../components/Admin/AdminTemplates'
 import AdminUsers from '../components/Admin/AdminUsers'
+import PendingReviewsPanel from '../components/Admin/PendingReviewsPanel'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -128,6 +129,14 @@ const AdminDashboard = () => {
           Users
         </NavItem>
 
+        <NavItem
+          $active={activeSection === 'reviews'}
+          onClick={() => setActiveSection('reviews')}
+        >
+          <MessageSquare />
+          Reviews
+        </NavItem>
+
         <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
           <NavItem onClick={handleLogout}>
             <LogOut />
@@ -140,6 +149,7 @@ const AdminDashboard = () => {
       <MainContent>
         {activeSection === 'templates' && <AdminTemplates />}
         {activeSection === 'users' && <AdminUsers />}
+        {activeSection === 'reviews' && <PendingReviewsPanel />}
       </MainContent>
     </Root>
   )

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { Briefcase, FileText, Star, Target, BarChart3, Globe, Lock, Shield, Folder, Key, Eye, RefreshCw, Github, Twitter, Linkedin, Mail, ArrowRight } from 'lucide-react';
+import { Briefcase, Star, Target, Globe, Lock, Shield, Folder, Eye, Github, Twitter, Linkedin, Mail, ArrowRight, MessageSquare, Zap, Share } from 'lucide-react';
 import SearchBar from '../components/common/SearchBar';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -676,6 +677,57 @@ const InfoSidebar = styled.div`
   }
 `;
 
+const ReviewsInfoCard = styled.div`
+  position: relative;
+  z-index: 1;
+  padding: 2rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+  margin-top: 1.5rem;
+
+  .review-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #f59e0b, #dc2626);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-bottom: 1rem;
+  }
+
+  .review-title {
+    font-weight: 700;
+    color: #b45309;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-desc {
+    color: #92400e;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .review-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #d97706;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: #b45309;
+      transform: translateX(2px);
+    }
+  }
+`;
+
 const CTASection = styled.section`
   padding: 120px 2rem;
   text-align: center;
@@ -919,6 +971,27 @@ const FooterBottom = styled.div`
 const Home = () => {
   const [activeTab, setActiveTab] = useState('portfolio');
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewsError, setReviewsError] = useState(null);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const { data } = await api.get('/reviews/all?limit=10');
+        setReviews(data.data || []);
+        setReviewsError(null);
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+        setReviewsError(error.message);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    fetchReviews();
+  }, []);
 
   return (
     <HomeContainer>
@@ -1009,17 +1082,12 @@ const Home = () => {
               <FeatureCard>
                 <Briefcase className="icon" size={56} strokeWidth={1.5} />
                 <h3>Professional Portfolio</h3>
-                <p>Create stunning portfolios that showcase your projects, experience, and skills to impress employers.</p>
-              </FeatureCard>
-              <FeatureCard>
-                <FileText className="icon" size={56} strokeWidth={1.5} />
-                <h3>Resume Generator</h3>
-                <p>Generate professional resumes with a single click and keep them updated automatically.</p>
+                <p>Create stunning portfolios that showcase your profile, projects, and experience to impress employers.</p>
               </FeatureCard>
               <FeatureCard>
                 <Star className="icon" size={56} strokeWidth={1.5} />
                 <h3>Showcase Skills</h3>
-                <p>Display your expertise, certifications, and achievements in an organized, professional manner.</p>
+                <p>Display your expertise and technical skills in an organized, professional manner.</p>
               </FeatureCard>
               <FeatureCard>
                 <Target className="icon" size={56} strokeWidth={1.5} />
@@ -1027,14 +1095,19 @@ const Home = () => {
                 <p>Highlight your best projects with detailed descriptions, images, and links to live demos.</p>
               </FeatureCard>
               <FeatureCard>
-                <BarChart3 className="icon" size={56} strokeWidth={1.5} />
-                <h3>Analytics & Stats</h3>
-                <p>Track profile views, engagement metrics, and insights about who's visiting your portfolio.</p>
-              </FeatureCard>
-              <FeatureCard>
                 <Globe className="icon" size={56} strokeWidth={1.5} />
                 <h3>Custom Domain</h3>
                 <p>Connect your own domain name to create a branded, professional online presence.</p>
+              </FeatureCard>
+              <FeatureCard>
+                <Briefcase className="icon" size={56} strokeWidth={1.5} />
+                <h3>Experience & Education</h3>
+                <p>Showcase your work experience, education history, and career progression in detail.</p>
+              </FeatureCard>
+              <FeatureCard>
+                <Star className="icon" size={56} strokeWidth={1.5} />
+                <h3>Interests & Certifications</h3>
+                <p>Display your professional certifications, interests, and areas of expertise.</p>
               </FeatureCard>
             </>
           ) : (
@@ -1046,18 +1119,13 @@ const Home = () => {
               </FeatureCard>
               <FeatureCard>
                 <Shield className="icon" size={56} strokeWidth={1.5} />
-                <h3>Password Protection</h3>
-                <p>Secure vault access with master password and biometric authentication options.</p>
+                <h3>Secure Storage</h3>
+                <p>Store and protect all your important files, documents, and sensitive information safely.</p>
               </FeatureCard>
               <FeatureCard>
                 <Folder className="icon" size={56} strokeWidth={1.5} />
-                <h3>File Storage</h3>
-                <p>Store and organize documents, certificates, and files securely in unlimited storage.</p>
-              </FeatureCard>
-              <FeatureCard>
-                <Key className="icon" size={56} strokeWidth={1.5} />
-                <h3>Password Manager</h3>
-                <p>Manage all your passwords safely with auto-fill and password generation tools.</p>
+                <h3>File Organization</h3>
+                <p>Organize your files with folders, categories, and easy-to-use management tools.</p>
               </FeatureCard>
               <FeatureCard>
                 <Eye className="icon" size={56} strokeWidth={1.5} />
@@ -1065,9 +1133,14 @@ const Home = () => {
                 <p>Full control over what data you store and share with granular permission settings.</p>
               </FeatureCard>
               <FeatureCard>
-                <RefreshCw className="icon" size={56} strokeWidth={1.5} />
-                <h3>Sync & Backup</h3>
-                <p>Automatic backup and sync across all your devices to keep data always available.</p>
+                <Zap className="icon" size={56} strokeWidth={1.5} />
+                <h3>Trash & Recovery</h3>
+                <p>Safely delete files with a trash bin that lets you recover deleted items anytime.</p>
+              </FeatureCard>
+              <FeatureCard>
+                <Share className="icon" size={56} strokeWidth={1.5} />
+                <h3>Public File Sharing</h3>
+                <p>Share files and documents publicly with anyone, even without an account.</p>
               </FeatureCard>
             </>
           )}
@@ -1082,50 +1155,68 @@ const Home = () => {
         <ReviewsContainer>
           <ReviewsContent>
             <ReviewsGrid>
-              <ReviewCard>
-                <div className="stars">⭐⭐⭐⭐⭐</div>
-                <p>"PersonalDB has completely transformed how I manage my professional life. The portfolio builder is intuitive and the secure vault gives me peace of mind."</p>
-                <div className="author">
-                  <div className="avatar">AJ</div>
-                  <div className="author-info">
-                    <div className="name">Alex Johnson</div>
-                    <div className="title">Software Engineer</div>
-                  </div>
+              {reviewsLoading ? (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  Loading reviews...
                 </div>
-              </ReviewCard>
-              <ReviewCard>
-                <div className="stars">⭐⭐⭐⭐⭐</div>
-                <p>"The resume generator saved me hours! I can now keep my resume updated automatically from my portfolio data. Highly recommended."</p>
-                <div className="author">
-                  <div className="avatar">SM</div>
-                  <div className="author-info">
-                    <div className="name">Sarah Miller</div>
-                    <div className="title">Product Designer</div>
-                  </div>
+              ) : reviewsError ? (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+                  Unable to load reviews. Please try again later.
                 </div>
-              </ReviewCard>
-              <ReviewCard>
-                <div className="stars">⭐⭐⭐⭐⭐</div>
-                <p>"Security is top-notch. I trust PersonalDB with all my sensitive information. The organization features are amazing and user-friendly."</p>
-                <div className="author">
-                  <div className="avatar">MC</div>
-                  <div className="author-info">
-                    <div className="name">Michael Chen</div>
-                    <div className="title">Data Analyst</div>
-                  </div>
+              ) : reviews.length === 0 ? (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  No reviews yet. Be the first to leave a review!
                 </div>
-              </ReviewCard>
+              ) : (
+                reviews.map((review) => (
+                  <ReviewCard key={review._id}>
+                    <div className="stars">
+                      {'⭐'.repeat(review.stars)}
+                    </div>
+                    <p>"{review.message}"</p>
+                    <div className="author">
+                      <div className="avatar">
+                        {review.reviewerName?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                      <div className="author-info">
+                        <div className="name">{review.reviewerName || 'Anonymous'}</div>
+                      </div>
+                    </div>
+                  </ReviewCard>
+                ))
+              )}
             </ReviewsGrid>
           </ReviewsContent>
 
           <InfoSidebar>
-            <div className="sidebar-title">More Information</div>
-            <div className="sidebar-items">
-              <div className="sidebar-item"><span>→</span><span>Getting Started Guide</span></div>
-              <div className="sidebar-item"><span>→</span><span>Documentation</span></div>
-              <div className="sidebar-item"><span>→</span><span>Video Tutorials</span></div>
-              <div className="sidebar-item"><span>→</span><span>Pricing Plans</span></div>
-            </div>
+            <ReviewsInfoCard>
+              <div className="review-icon">
+                <MessageSquare size={24} />
+              </div>
+              <div className="review-title">Share Your Experience</div>
+              <p className="review-desc">
+                Reviews help professionals showcase their credibility. Browse portfolios and leave authentic feedback.
+              </p>
+              <button 
+                onClick={() => user ? navigate('/dashboard') : navigate('/login')}
+                className="review-link"
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  padding: 0, 
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#d97706',
+                  fontWeight: '600',
+                  textDecoration: 'none',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {user ? 'Go to Dashboard' : 'Explore & Review'} <ArrowRight size={16} />
+              </button>
+            </ReviewsInfoCard>
           </InfoSidebar>
         </ReviewsContainer>
       </ReviewsSection>

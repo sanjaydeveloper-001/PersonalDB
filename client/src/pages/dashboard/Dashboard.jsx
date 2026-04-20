@@ -1,13 +1,16 @@
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import styled, { keyframes, css, createGlobalStyle } from 'styled-components'
 import { useAuth } from '../../contexts/AuthContext'
 import SearchBar from '../../components/common/SearchBar'
+import ReviewModal from '../../components/ReviewModal'
+import UserReviewStatus from '../../components/UserReviewStatus'
 import {
   Lock, Briefcase, Terminal, User,
   Globe, Key, FolderKanban, GraduationCap,
   BarChart3, FileCode2, Zap, Shield,
   ArrowUpRight, Database, Activity, CheckCircle2,
-  TrendingUp, Layers, Cpu, Bell
+  TrendingUp, Layers, Cpu, Star, MessageSquare
 } from 'lucide-react'
 
 /* ─── Global search z-fix ─────────────────────────────────── */
@@ -143,12 +146,6 @@ const IconBtn = styled.button`
   svg { width: 16px; height: 16px; color: #64748b; }
   &:hover { border-color: #3b82f6; background: #eff6ff;
     svg { color: #3b82f6; } }
-`
-const NotifDot = styled.span`
-  position: absolute; top: 8px; right: 8px;
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #ef4444;
-  animation: ${pulse} 2s ease-in-out infinite;
 `
 
 /* ─── HERO BAND ──────────────────────────────────────────── */
@@ -415,6 +412,34 @@ const TipText = styled.div``
 const TipTitle = styled.p`font-size: 0.82rem; font-weight: 700; color: #0d1117; margin: 0 0 0.2rem;`
 const TipDesc = styled.p`font-size: 0.74rem; color: #64748b; margin: 0; line-height: 1.55;`
 
+/* ─── Review Button ─────────────────────────────────────── */
+const ReviewButton = styled.button`
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  &:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+  }
+  &:active {
+    transform: translateY(0);
+  }
+`
+
+const ReviewDescription = styled.p`
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.6;
+`
+
 /* ─── Helpers ─────────────────────────────────────────────── */
 const timeGreet = () => {
   const h = new Date().getHours()
@@ -426,6 +451,8 @@ const timeGreet = () => {
 /* ─── Component ───────────────────────────────────────────── */
 const Dashboard = () => {
   const { user } = useAuth()
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [refreshReviews, setRefreshReviews] = useState(0)
 
   const bars = [
     { h: 28, color: 'rgba(255,255,255,0.2)', delay: 200 },
@@ -456,9 +483,6 @@ const Dashboard = () => {
             <SearchWrap>
               <SearchBar onSelectUser={(u) => console.log(u)} />
             </SearchWrap>
-            <div style={{ position: 'relative' }}>
-              <IconBtn><Bell /><NotifDot /></IconBtn>
-            </div>
           </HeaderRight>
         </Header>
 
@@ -469,15 +493,13 @@ const Dashboard = () => {
           <HeroCorner />
           <HeroLeft>
             <HeroPill><PulseDot />All systems operational</HeroPill>
-            <HeroH>Your personal<br />data universe</HeroH>
+            <HeroH>Welcome back,<br /><span style={{color: '#60a5fa'}}>{user?.username}</span></HeroH>
             <HeroSub>
-              Everything you store, build, and ship — encrypted, organised,
-              and accessible in one intelligent workspace.
+              Manage your secure vault, portfolio, and developer tools.
             </HeroSub>
             <HeroMeta>
               <MetaBit><Shield size={13}/><strong>256-bit</strong> encryption</MetaBit>
-              <MetaBit><Cpu size={13}/><strong>3</strong> modules active</MetaBit>
-              <MetaBit><TrendingUp size={13}/><strong>100%</strong> uptime</MetaBit>
+              <MetaBit><CheckCircle2 size={13}/><strong>Secure</strong></MetaBit>
             </HeroMeta>
           </HeroLeft>
           <HeroRight>
@@ -495,10 +517,10 @@ const Dashboard = () => {
         {/* ── Stats ── */}
         <StatsStrip>
           {[
-            { icon: Lock,     bg: '#eff6ff', c: '#2563eb', accent: '#3b82f6', val: '—',   lab: 'Vault Items',     chip: 'Active', live: true  },
-            { icon: Globe,    bg: '#f0fdf4', c: '#16a34a', accent: '#22c55e', val: '1',   lab: 'Public Profile',  chip: 'Live',   live: true  },
-            { icon: Key,      bg: '#faf5ff', c: '#7c3aed', accent: '#8b5cf6', val: '—',   lab: 'API Keys',        chip: 'Manage', live: false },
-            { icon: BarChart3,bg: '#fff7ed', c: '#ea580c', accent: '#f97316', val: '—',   lab: 'API Calls',       chip: 'Track',  live: false },
+            { icon: Lock,     bg: '#eff6ff', c: '#2563eb', accent: '#3b82f6', val: '—',   lab: 'Vault',      chip: 'Secured', live: true  },
+            { icon: Globe,    bg: '#f0fdf4', c: '#16a34a', accent: '#22c55e', val: '1',   lab: 'Portfolio',  chip: 'Live',    live: true  },
+            { icon: Key,      bg: '#faf5ff', c: '#7c3aed', accent: '#8b5cf6', val: '—',   lab: 'API Keys',   chip: 'Ready',   live: false },
+            { icon: Zap,      bg: '#fef3c7', c: '#ca8a04', accent: '#f97316', val: '—',   lab: 'Developer',  chip: 'Active',  live: true  },
           ].map(({ icon: Icon, bg, c, accent, val, lab, chip, live }, i) => (
             <Stat key={i} $accent={accent}>
               <StatHead>
@@ -513,114 +535,83 @@ const Dashboard = () => {
 
         {/* ── Main Grid ── */}
         <MainGrid>
-          {/* Activity */}
+          {/* Data Summary */}
           <Card>
             <CardHead>
-              <CardTitle><Activity />Recent Activity</CardTitle>
-              <ViewLink to="/dashboard/vault/items">View all <ArrowUpRight /></ViewLink>
+              <CardTitle><Database />Data Summary</CardTitle>
             </CardHead>
-            <AList>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {[
-                { icon: Shield,       bg: '#eff6ff', c: '#2563eb', text: 'Vault initialized',            time: 'Today', bb: '#eff6ff', bc: '#2563eb', badge: 'Vault'     },
-                { icon: User,         bg: '#f0fdf4', c: '#16a34a', text: 'Portfolio profile created',    time: 'Today', bb: '#f0fdf4', bc: '#16a34a', badge: 'Portfolio' },
-                { icon: Terminal,     bg: '#faf5ff', c: '#7c3aed', text: 'Developer module unlocked',    time: 'Today', bb: '#faf5ff', bc: '#7c3aed', badge: 'Dev'       },
-                { icon: CheckCircle2, bg: '#f0fdf4', c: '#16a34a', text: 'Account setup complete',       time: 'Today', bb: '#fff7ed', bc: '#ea580c', badge: 'Account'   },
-                { icon: Zap,          bg: '#fefce8', c: '#ca8a04', text: 'Ready — build your portfolio', time: 'Now',   bb: '#fefce8', bc: '#ca8a04', badge: 'Tip'       },
-              ].map(({ icon: Icon, bg, c, text, time, bb, bc, badge }, i) => (
-                <ARow key={i}>
-                  <AIcon $bg={bg} $c={c}><Icon /></AIcon>
-                  <AInfo>
-                    <AText>{text}</AText>
-                    <ATime>{time}</ATime>
-                  </AInfo>
-                  <ABadge $bg={bb} $c={bc}>{badge}</ABadge>
-                </ARow>
+                { label: 'Vault Items', val: '—', icon: Lock, c: '#2563eb' },
+                { label: 'Portfolio Profile', val: '1', icon: Globe, c: '#16a34a' },
+                { label: 'API Keys', val: '—', icon: Key, c: '#7c3aed' },
+                { label: 'Storage Used', val: '—', icon: Zap, c: '#ca8a04' },
+              ].map(({ label, val, icon: Icon, c }, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: i < 3 ? '1px solid #f8fafc' : 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${c}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon size={14} color={c} />
+                    </div>
+                    <span style={{ fontSize: '0.85rem', fontWeight: '500', color: '#334155' }}>{label}</span>
+                  </div>
+                  <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0d1117' }}>{val}</span>
+                </div>
               ))}
-            </AList>
+            </div>
           </Card>
 
-          {/* Right col */}
+          {/* Recommendations */}
           <RightCol>
-            {/* Modules */}
             <Card>
               <CardHead>
-                <CardTitle><Layers />Module Status</CardTitle>
+                <CardTitle><Zap />Next Steps</CardTitle>
               </CardHead>
-              <ModuleGrid>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                 {[
-                  { to: '/dashboard/vault/items',       icon: Lock,     name: 'Vault',     desc: 'Encrypted credential storage', bg: '#eff6ff', c: '#2563eb', tileBg: '#fafcff', tileBor: '#dbeafe', statusC: '#16a34a', status: 'Active' },
-                  { to: '/dashboard/portfolio/profile', icon: Briefcase,name: 'Portfolio', desc: 'Public profile is live',       bg: '#f0fdf4', c: '#16a34a', tileBg: '#fafffe', tileBor: '#bbf7d0', statusC: '#16a34a', status: 'Live'   },
-                  { to: '/dashboard/developer/keys',    icon: Terminal,  name: 'Developer', desc: 'API & key management',        bg: '#faf5ff', c: '#7c3aed', tileBg: '#fdf8ff', tileBor: '#e9d5ff', statusC: '#7c3aed', status: 'Ready'  },
-                ].map(({ to, icon: Icon, name, desc, bg, c, tileBg, tileBor, statusC, status }) => (
-                  <ModuleTile key={to} to={to} $bg={tileBg} $bor={tileBor}>
-                    <ModuleIcon $bg={bg} $c={c}><Icon /></ModuleIcon>
-                    <ModInfo>
-                      <ModName>{name}</ModName>
-                      <ModDesc>{desc}</ModDesc>
-                    </ModInfo>
-                    <ModStatus $c={statusC}><StatusDot />{status}</ModStatus>
-                  </ModuleTile>
+                  { title: 'Secure Your Vault', desc: 'Add credentials and files', icon: Lock, c: '#2563eb' },
+                  { title: 'Complete Your Profile', desc: 'Add projects and skills', icon: Globe, c: '#16a34a' },
+                  { title: 'Generate API Key', desc: 'Enable programmatic access', icon: Key, c: '#7c3aed' },
+                ].map(({ title, desc, icon: Icon, c }, i) => (
+                  <div key={i} style={{ padding: '0.85rem', borderRadius: '10px', background: `${c}08`, border: `1.5px solid ${c}20`, display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                    <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: `${c}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                      <Icon size={13} color={c} />
+                    </div>
+                    <div>
+                      <p style={{ margin: '0 0 0.2rem', fontSize: '0.82rem', fontWeight: '600', color: '#0d1117' }}>{title}</p>
+                      <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748b' }}>{desc}</p>
+                    </div>
+                  </div>
                 ))}
-              </ModuleGrid>
-            </Card>
-
-            {/* Quick Jump */}
-            <Card>
-              <CardHead>
-                <CardTitle><Zap />Quick Jump</CardTitle>
-              </CardHead>
-              <QGrid>
-                {[
-                  { to: '/dashboard/vault/items',         icon: Lock,         label: 'Vault Items',  c: '#2563eb', hov: '#eff6ff', bor: 'rgba(37,99,235,0.2)'  },
-                  { to: '/dashboard/portfolio/profile',   icon: User,         label: 'My Profile',   c: '#16a34a', hov: '#f0fdf4', bor: 'rgba(22,163,74,0.2)'  },
-                  { to: '/dashboard/portfolio/projects',  icon: FolderKanban, label: 'Projects',     c: '#16a34a', hov: '#f0fdf4', bor: 'rgba(22,163,74,0.2)'  },
-                  { to: '/dashboard/portfolio/education', icon: GraduationCap,label: 'Education',    c: '#0891b2', hov: '#ecfeff', bor: 'rgba(8,145,178,0.2)'  },
-                  { to: '/dashboard/developer/keys',      icon: Key,          label: 'API Keys',     c: '#7c3aed', hov: '#faf5ff', bor: 'rgba(124,58,237,0.2)' },
-                  { to: '/dashboard/developer/docs',      icon: FileCode2,    label: 'API Docs',     c: '#7c3aed', hov: '#faf5ff', bor: 'rgba(124,58,237,0.2)' },
-                  { to: '/dashboard/developer/analytics', icon: BarChart3,    label: 'Analytics',    c: '#0891b2', hov: '#ecfeff', bor: 'rgba(8,145,178,0.2)'  },
-                  { to: '/dashboard/vault/public',        icon: Globe,        label: 'Public Files', c: '#2563eb', hov: '#eff6ff', bor: 'rgba(37,99,235,0.2)'  },
-                ].map(({ to, icon: Icon, label, c, hov, bor }) => (
-                  <QItem key={to} to={to} $c={c} $hov={hov} $bor={bor}>
-                    <Icon />{label}
-                  </QItem>
-                ))}
-              </QGrid>
+              </div>
             </Card>
           </RightCol>
         </MainGrid>
 
-        {/* ── Bottom Tips ── */}
-        <BottomStrip>
-          {[
-            {
-              icon: Shield, iconBg: '#eff6ff', iconC: '#2563eb',
-              bg: '#fff', bor: '#e8eef6',
-              title: 'Secure your vault',
-              desc: 'Add credentials, secrets and notes to your encrypted vault. Access them anywhere, anytime.'
-            },
-            {
-              icon: Globe, iconBg: '#f0fdf4', iconC: '#16a34a',
-              bg: '#fafffe', bor: '#bbf7d0',
-              title: 'Go live with your portfolio',
-              desc: 'Your profile page is live. Add projects, education and skills to showcase your work.'
-            },
-            {
-              icon: Key, iconBg: '#faf5ff', iconC: '#7c3aed',
-              bg: '#fdf8ff', bor: '#e9d5ff',
-              title: 'Generate your first API key',
-              desc: 'Programmatically access your data. Create a key in the Developer module to get started.'
-            },
-          ].map(({ icon: Icon, iconBg, iconC, bg, bor, title, desc }, i) => (
-            <TipCard key={i} $bg={bg} $bor={bor}>
-              <TipIcon $bg={iconBg} $c={iconC}><Icon /></TipIcon>
-              <TipText>
-                <TipTitle>{title}</TipTitle>
-                <TipDesc>{desc}</TipDesc>
-              </TipText>
-            </TipCard>
-          ))}
-        </BottomStrip>
+        {/* ── Leave a Review Section ── */}
+        <Card>
+          <CardHead>
+            <CardTitle>
+              <MessageSquare size={16} />
+              Feedback
+            </CardTitle>
+            <ReviewButton onClick={() => setShowReviewModal(true)}>
+              Leave a Review
+            </ReviewButton>
+          </CardHead>
+          <ReviewDescription>
+            Share your experience with PersonalDB
+          </ReviewDescription>
+        </Card>
 
+        <UserReviewStatus />
+
+        {user && (
+          <ReviewModal
+            isOpen={showReviewModal}
+            onClose={() => setShowReviewModal(false)}
+            onReviewSubmitted={() => setRefreshReviews(refreshReviews + 1)}
+          />
+        )}
       </Wrap>
     </Page>
   )

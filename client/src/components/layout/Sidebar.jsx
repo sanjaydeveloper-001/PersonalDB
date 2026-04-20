@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   Lock, Briefcase, Globe, Settings, User,
   Database, ChevronLeft, ChevronDown, Terminal, BarChart3, X,
-  LayoutGrid, Users, Mail
+  LayoutGrid, Users, Mail, MessageSquare
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
 import { MdOutlineDashboard } from "react-icons/md"
@@ -655,6 +655,10 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
                       <NavLink to="/dashboard/admin/users" className="sidebar-sub-link" onClick={handleLinkClick}>
                         <Users size={13} style={{ marginRight: '3px' }} />
                         Users
+                      </NavLink>
+                      <NavLink to="/dashboard/admin/reviews" className="sidebar-sub-link" onClick={handleLinkClick}>
+                        <MessageSquare size={13} style={{ marginRight: '3px' }} />
+                        Pending Reviews
                       </NavLink>
                     </div>
                   </div>
