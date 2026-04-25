@@ -562,10 +562,7 @@ const ResultCount = styled.div`
 ══════════════════════════════════ */
 const ModalOverlay = styled.div`
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
@@ -573,7 +570,6 @@ const ModalOverlay = styled.div`
   z-index: 9999;
   animation: ${fadeUp} 0.2s ease both;
   backdrop-filter: blur(3px);
-  overflow: hidden;
 `
 
 const ModalContent = styled.div`
@@ -761,6 +757,17 @@ const AdminUsers = () => {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
   useEffect(() => { fetchUsers() }, [])
+
+  useEffect(() => {
+    if (deleteModal.open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [deleteModal.open])
 
   const fetchUsers = async () => {
     try {

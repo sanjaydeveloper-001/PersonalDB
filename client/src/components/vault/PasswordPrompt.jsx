@@ -232,7 +232,11 @@ const PasswordPrompt = ({ itemId, action = 'view', onSuccess, onClose }) => {
     setPassword(''); setShowPass(false)
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = 'unset'
+    }
   }, [onClose])
 
   const handleSubmit = async (e) => {

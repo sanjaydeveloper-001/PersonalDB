@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import styled, { keyframes } from 'styled-components'
-import { Layout, Settings2, Globe, CheckCircle2, XCircle, Loader2, AlertTriangle, ExternalLink } from 'lucide-react'
+import { Layout, Settings2, Globe, CheckCircle2, XCircle, Loader2, AlertTriangle, ExternalLink, Download } from 'lucide-react'
 import TemplateCard from '../components/Templatecard'
+import PortfolioExportModal from '../components/PortfolioExportModal'
 import toast from 'react-hot-toast'
 import { userService } from '../services/userService'
 
@@ -299,6 +300,89 @@ const SaveDomainBtn = styled.button`
   }
 `
 
+/* ──── EXPORT SECTION ──── */
+const ExportSection = styled.div`
+  background: linear-gradient(135deg, #f0f9ff 0%, #f8fafc 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 0.875rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`
+
+const ExportContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`
+
+const ExportTitle = styled.h3`
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    color: #3b82f6;
+  }
+`
+
+const ExportDesc = styled.p`
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0;
+`
+
+const ExportBtn = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.35);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 600px) {
+    width: 100%;
+    justify-content: center;
+  }
+`
+
 /* ──── TEMPLATES GRID SECTION ──── */
 const GridWrap = styled.div`
   background: white;
@@ -443,6 +527,9 @@ const PortfolioSettingsPage = () => {
   const [checkTimer, setCheckTimer] = useState(null)
   const [savingUsername, setSavingUsername] = useState(false)
   const [takenUsernames, setTakenUsernames] = useState([])     // pre-fetched list
+
+  /* ── Export modal state ── */
+  const [showExportModal, setShowExportModal] = useState(false)
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
   const runningUrl = import.meta.env.VITE_RUNNING_URL || window.location.origin
@@ -739,6 +826,23 @@ const PortfolioSettingsPage = () => {
       </Card>
 
       {/* ════════════════
+          EXPORT SECTION
+      ════════════════ */}
+      <ExportSection>
+        <ExportContent>
+          <ExportTitle>
+            <Download />
+            Export Your Portfolio
+          </ExportTitle>
+          <ExportDesc>Download your complete portfolio data as JSON, Text, or PDF</ExportDesc>
+        </ExportContent>
+        <ExportBtn onClick={() => setShowExportModal(true)}>
+          <Download size={16} />
+          Export Now
+        </ExportBtn>
+      </ExportSection>
+
+      {/* ════════════════
           TEMPLATES GRID
       ════════════════ */}
       <GridWrap>
@@ -779,6 +883,9 @@ const PortfolioSettingsPage = () => {
           </TemplatesGrid>
         )}
       </GridWrap>
+
+      {/* Export Modal */}
+      <PortfolioExportModal isOpen={showExportModal} onClose={() => setShowExportModal(false)} />
     </Root>
   )
 }

@@ -15,6 +15,7 @@ import OAuthSuccess from './pages/auth/OAuthSuccess'
 import Verify2FADisable from './pages/Verify2FADisable'
 import NotFoundPage from './pages/NotFoundPage'
 import DocsPage from './pages/DocsPage'
+import HelpCenterPage from './pages/HelpCenterPage'
 import ContactPage from './pages/ContactPage'
 
 // Dashboard
@@ -63,7 +64,7 @@ function App() {
           <Routes>
             {/* Public */}
             <Route path="/" element={<Home />} />
-            <Route path="/docs" element={<DocsPage />} />
+            <Route path="/docs" element={<HelpCenterPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

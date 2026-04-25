@@ -494,6 +494,161 @@ const FeatureCard = styled.div`
   }
 `;
 
+const StatsSection = styled.section`
+  padding: 100px 2rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+`;
+
+const StatsContainer = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+`;
+
+const StatsHeader = styled.div`
+  text-align: center;
+  margin-bottom: 4rem;
+
+  h2 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 1rem;
+    letter-spacing: -0.01em;
+
+    @media (max-width: 768px) {
+      font-size: 2rem;
+    }
+
+    &::after {
+      content: '';
+      display: block;
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #1e40af);
+      margin: 1.5rem auto 0;
+      border-radius: 2px;
+    }
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: #64748b;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.8;
+
+    @media (max-width: 768px) {
+      font-size: 1rem;
+    }
+  }
+`;
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const StatCard = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #1e40af);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.4s ease;
+  }
+
+  &:hover {
+    transform: translateY(-12px);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+    border-color: #3b82f6;
+
+    &::before {
+      transform: scaleX(1);
+    }
+
+    .stat-number {
+      color: #1e40af;
+    }
+  }
+
+  .stat-number {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: #3b82f6;
+    margin-bottom: 0.5rem;
+    transition: color 0.3s ease;
+
+    @media (max-width: 768px) {
+      font-size: 2.8rem;
+    }
+  }
+
+  .stat-label {
+    font-size: 0.95rem;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.6;
+
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+    }
+  }
+`;
+
 const ReviewsSection = styled.section`
   padding: 100px 2rem;
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
@@ -895,6 +1050,13 @@ const Home = () => {
   const [reviews, setReviews] = useState([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewsError, setReviewsError] = useState(null);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalPortfolios: 0,
+    totalReviews: 0,
+    safetyPercentage: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -911,6 +1073,24 @@ const Home = () => {
       }
     };
     fetchReviews();
+  }, []);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const { data } = await api.get('/stats');
+        if (data.success && data.data) {
+          setStats(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Keep default values if fetch fails
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+    fetchStats();
   }, []);
 
   return (
@@ -1067,6 +1247,42 @@ const Home = () => {
         </FeatureGrid>
       </FeaturesSection>
 
+      {/* Statistics Section */}
+      <StatsSection>
+        <StatsContainer>
+          <StatsHeader>
+            <h2>About Us</h2>
+            <p>we know your professional growth is important, that's why we're committed to providing the best portfolio and data management solution</p>
+          </StatsHeader>
+          <StatsGrid>
+            <StatCard>
+              <div className="stat-number">
+                {statsLoading ? '...' : stats.totalUsers >= 1000 ? `${(stats.totalUsers / 1000).toFixed(1)}K+` : `${stats.totalUsers}+`}
+              </div>
+              <div className="stat-label">Active Users</div>
+            </StatCard>
+            <StatCard>
+              <div className="stat-number">
+                {statsLoading ? '...' : stats.totalPortfolios >= 1000 ? `${(stats.totalPortfolios / 1000).toFixed(1)}K+` : `${stats.totalPortfolios}+`}
+              </div>
+              <div className="stat-label">Portfolios Created</div>
+            </StatCard>
+            <StatCard>
+              <div className="stat-number">
+                {statsLoading ? '...' : stats.totalReviews >= 1000 ? `${(stats.totalReviews / 1000).toFixed(1)}K+` : `${stats.totalReviews}+`}
+              </div>
+              <div className="stat-label">Reviews Given</div>
+            </StatCard>
+            <StatCard>
+              <div className="stat-number">
+                {statsLoading ? '...' : `${stats.safetyPercentage}%`}
+              </div>
+              <div className="stat-label">Security Safety</div>
+            </StatCard>
+          </StatsGrid>
+        </StatsContainer>
+      </StatsSection>
+
       {/* Reviews Section */}
       <ReviewsSection>
         <SectionTitle>User Testimonials</SectionTitle>
@@ -1151,33 +1367,27 @@ const Home = () => {
           <FooterColumn>
             <div className="col-title">Product</div>
             <ul>
-              <li><span>Portfolio</span></li>
-              <li><span>Secure Vault</span></li>
-              <li><span>Resume Builder</span></li>
-              <li><span>Analytics</span></li>
-              <li><span>Pricing</span></li>
+              <li><Link to="/docs?cat=products&sec=portfolio">Portfolio</Link></li>
+              <li><Link to="/docs?cat=products&sec=vault">Secure Vault</Link></li>
             </ul>
           </FooterColumn>
 
           <FooterColumn>
             <div className="col-title">Resources</div>
             <ul>
-              <li><span>Documentation</span></li>
-              <li><span>Getting Started</span></li>
-              <li><span>Video Tutorials</span></li>
-              <li><span>Blog</span></li>
-              <li><span>Changelog</span></li>
+              <li><Link to="/docs?cat=resources&sec=documentation">Documentation</Link></li>
+              <li><Link to="/docs?cat=resources&sec=getting-started">Getting Started</Link></li>
+              <li><Link to="/docs?cat=resources&sec=video-tutorials">Video Tutorials</Link></li>
             </ul>
           </FooterColumn>
 
           <FooterColumn>
             <div className="col-title">Company</div>
             <ul>
-              <li><span>About Us</span></li>
-              <li><span>Careers</span></li>
-              <li><span>Privacy Policy</span></li>
-              <li><span>Terms of Service</span></li>
-              <li><span>Contact</span></li>
+              <li><Link to="/docs?cat=company&sec=about">About Us</Link></li>
+              <li><Link to="/docs?cat=company&sec=privacy">Privacy Policy</Link></li>
+              <li><Link to="/docs?cat=company&sec=terms">Terms of Service</Link></li>
+              <li><Link to="/docs?cat=company&sec=contact">Contact</Link></li>
             </ul>
           </FooterColumn>
         </FooterTop>
