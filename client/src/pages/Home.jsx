@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Briefcase, Star, Target, Globe, Lock, Shield, Folder, Eye, Github, Twitter, Linkedin, Mail, ArrowRight, MessageSquare, Zap, Share } from 'lucide-react';
 import SearchBar from '../components/common/SearchBar';
+import HorizontalScrollReviews from '../components/HorizontalScrollReviews';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
@@ -513,11 +514,25 @@ const ReviewsSection = styled.section`
 `;
 
 const ReviewsContainer = styled.div`
+  display: block;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    margin: 0 auto;
+  }
+`;
+
+const ReviewsContent = styled.div`
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2rem;
+`;
+
+const ReviewsSidebarContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 3rem;
-  max-width: 1300px;
-  margin: 0 auto;
   align-items: start;
 
   @media (max-width: 768px) {
@@ -526,102 +541,7 @@ const ReviewsContainer = styled.div`
   }
 `;
 
-const ReviewsContent = styled.div`
-  position: relative;
-  z-index: 1;
-`;
 
-const ReviewsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const ReviewCard = styled.div`
-  padding: 2.5rem;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid rgba(59, 130, 246, 0.1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #3b82f6, #1e40af);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.4s ease;
-  }
-
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.15);
-    border-color: #3b82f6;
-
-    &::before {
-      transform: scaleX(1);
-    }
-  }
-
-  .stars {
-    font-size: 1.2rem;
-    color: #f59e0b;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    color: #64748b;
-    line-height: 1.8;
-    font-size: 0.95rem;
-    margin-bottom: 1.5rem;
-    font-style: italic;
-  }
-
-  .author {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid rgba(59, 130, 246, 0.1);
-
-    .avatar {
-      width: 45px;
-      height: 45px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #3b82f6, #1e40af);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .author-info {
-      .name {
-        font-weight: 600;
-        color: #0f172a;
-        font-size: 0.95rem;
-      }
-
-      .title {
-        color: #64748b;
-        font-size: 0.8rem;
-      }
-    }
-  }
-`;
 
 const InfoSidebar = styled.div`
   position: relative;
@@ -1153,83 +1073,46 @@ const Home = () => {
         <Subtitle>Join thousands of professionals already using PersonalDB</Subtitle>
 
         <ReviewsContainer>
-          <ReviewsContent>
-            <ReviewsGrid>
-              {reviewsLoading ? (
-                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                  Loading reviews...
-                </div>
-              ) : reviewsError ? (
-                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
-                  Unable to load reviews. Please try again later.
-                </div>
-              ) : reviews.length === 0 ? (
-                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: '#64748b' }}>
-                  No reviews yet. Be the first to leave a review!
-                </div>
-              ) : (
-                reviews.map((review) => (
-                  <ReviewCard key={review._id}>
-                    <div className="stars">
-                      {'⭐'.repeat(review.stars)}
-                    </div>
-                    <p>"{review.message}"</p>
-                    <div className="author">
-                      <div 
-                        className="avatar" 
-                        style={
-                          review.profileImageUrl 
-                            ? {
-                                backgroundImage: `url('${review.profileImageUrl}')`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                backgroundRepeat: 'no-repeat',
-                              }
-                            : {}
-                        }
-                      >
-                        {!review.profileImageUrl && (review.reviewerName?.charAt(0).toUpperCase() || '?')}
-                      </div>
-                      <div className="author-info">
-                        <div className="name">{review.reviewerName || 'Anonymous'}</div>
-                      </div>
-                    </div>
-                  </ReviewCard>
-                ))
-              )}
-            </ReviewsGrid>
-          </ReviewsContent>
+          <ReviewsSidebarContainer>
+            <ReviewsContent>
+              <HorizontalScrollReviews 
+                reviews={reviews}
+                loading={reviewsLoading}
+                error={reviewsError}
+              />
+            </ReviewsContent>
 
-          <InfoSidebar>
-            <ReviewsInfoCard>
-              <div className="review-icon">
-                <MessageSquare size={24} />
-              </div>
-              <div className="review-title">Share Your Experience</div>
-              <p className="review-desc">
-                Reviews help professionals showcase their credibility. Browse portfolios and leave authentic feedback.
-              </p>
-              <button 
-                onClick={() => user ? navigate('/dashboard') : navigate('/login')}
-                className="review-link"
-                style={{ 
-                  background: 'none', 
-                  border: 'none', 
-                  padding: 0, 
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  color: '#d97706',
-                  fontWeight: '600',
-                  textDecoration: 'none',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                {user ? 'Go to Dashboard' : 'Explore & Review'} <ArrowRight size={16} />
-              </button>
-            </ReviewsInfoCard>
-          </InfoSidebar>
+            <InfoSidebar>
+              <ReviewsInfoCard>
+                <div className="review-icon">
+                  <MessageSquare size={24} />
+                </div>
+                <div className="review-title">Share Your Experience</div>
+                <p className="review-desc">
+                  Reviews help professionals showcase their credibility. Browse portfolios and leave authentic feedback.
+                </p>
+                <button 
+                  onClick={() => user ? navigate('/dashboard') : navigate('/login')}
+                  className="review-link"
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    padding: 0, 
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#d97706',
+                    fontWeight: '600',
+                    textDecoration: 'none',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {user ? 'Go to Dashboard' : 'Explore & Review'} <ArrowRight size={16} />
+                </button>
+              </ReviewsInfoCard>
+            </InfoSidebar>
+          </ReviewsSidebarContainer>
         </ReviewsContainer>
       </ReviewsSection>
 

@@ -3,7 +3,7 @@ import styled, { keyframes, css } from 'styled-components'
 import {
   Trash2, Loader, Users, Search, X, ExternalLink,
   Shield, Mail, Calendar, LayoutGrid, List,
-  ChevronDown, UserCircle2, Crown
+  ChevronDown, UserCircle2, Crown, AlertTriangle
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -309,17 +309,17 @@ const UCard = styled.div`
 `
 
 const UserTop = styled.div`
-  display: flex; align-items: center; gap: 0.85rem;
+  display: flex; align-items: flex-start; gap: 1rem; border-bottom: 1px solid rgba(59,130,246,0.08); padding-bottom: 1rem;
 `
 
 const Avatar = styled.div`
-  width: 44px; height: 44px;
-  border-radius: 13px;
-  background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.2), rgba(30,64,175,0.15))'};
-  border: 1px solid rgba(59,130,246,0.2);
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: ${({ $bgImage }) => $bgImage ? `url(${$bgImage}) center/cover` : 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(30,64,175,0.2))'};
+  border: 1px solid rgba(59,130,246,0.25);
   display: flex; align-items: center; justify-content: center;
   font-family: 'DM Sans', sans-serif;
-  font-size: 1.1rem; font-weight: 800;
+  font-size: 1.2rem; font-weight: 800;
   color: #3b82f6;
   text-transform: uppercase;
   flex-shrink: 0;
@@ -327,31 +327,31 @@ const Avatar = styled.div`
 `
 
 const UserInfo = styled.div`
-  flex: 1; min-width: 0;
+  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.35rem;
 `
 
 const Username = styled.div`
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem; font-weight: 700;
+  font-size: 0.95rem; font-weight: 700;
   color: var(--text-primary, #e2e8f0);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 `
 
 const UserEmail = styled.div`
-  font-size: 0.75rem; color: var(--text-muted, #64748b);
+  font-size: 0.78rem; color: var(--text-muted, #64748b);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  display: flex; align-items: center; gap: 0.3rem; margin-top: 0.2rem;
-  svg { width: 11px; height: 11px; flex-shrink: 0; }
+  display: flex; align-items: center; gap: 0.35rem;
+  svg { width: 12px; height: 12px; flex-shrink: 0; }
 `
 
 const UserMeta = styled.div`
-  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap;
 `
 
 const JoinDate = styled.div`
-  display: flex; align-items: center; gap: 0.3rem;
-  font-size: 0.73rem; color: var(--text-muted, #64748b);
-  svg { width: 12px; height: 12px; }
+  display: flex; align-items: center; gap: 0.35rem;
+  font-size: 0.75rem; color: var(--text-muted, #64748b);
+  svg { width: 13px; height: 13px; }
 `
 
 /* ── Role badge ── */
@@ -558,6 +558,131 @@ const ResultCount = styled.div`
 `
 
 /* ══════════════════════════════════
+   DELETE CONFIRMATION MODAL
+══════════════════════════════════ */
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: ${fadeUp} 0.2s ease both;
+  backdrop-filter: blur(3px);
+  overflow: hidden;
+`
+
+const ModalContent = styled.div`
+  background: var(--bg-card, #161b27);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 20px;
+  padding: 2rem;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: ${dropIn} 0.25s ease both;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`
+
+const ModalHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`
+
+const ModalIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f87171;
+  font-size: 1.5rem;
+`
+
+const ModalTitle = styled.h2`
+  font-family: 'DM Sans', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #e2e8f0);
+  margin: 0;
+  line-height: 1.3;
+`
+
+const ModalDescription = styled.div`
+  color: var(--text-muted, #64748b);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`
+
+const ModalActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+`
+
+const ModalBtn = styled.button`
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  ${({ $variant }) => {
+    if ($variant === 'danger') {
+      return css`
+        background: #f87171;
+        color: white;
+        border-color: #f87171;
+        &:hover:not(:disabled) {
+          background: #ef4444;
+          box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3);
+          transform: translateY(-1px);
+        }
+      `
+    }
+    return css`
+      background: rgba(59, 130, 246, 0.08);
+      color: #3b82f6;
+      border-color: rgba(59, 130, 246, 0.2);
+      &:hover:not(:disabled) {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+      }
+    `
+  }}
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+  
+  svg { width: 16px; height: 16px; }
+`
+
+/* ══════════════════════════════════
    ROLE OPTIONS CONFIG
 ══════════════════════════════════ */
 const ROLES = [
@@ -631,6 +756,7 @@ const AdminUsers = () => {
   const [updating, setUpdating] = useState(null)
   const [search, setSearch] = useState('')
   const [view, setView]     = useState('grid')
+  const [deleteModal, setDeleteModal] = useState({ open: false, userId: null, step: 1 })
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
@@ -663,16 +789,32 @@ const AdminUsers = () => {
     finally { setUpdating(null) }
   }
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return
+  const handleDelete = (userId) => {
+    setDeleteModal({ open: true, userId, step: 1 })
+  }
+
+  const handleConfirmDelete = async () => {
+    const { userId } = deleteModal
     setDeleting(userId)
     try {
       const res  = await fetch(`${API_URL}/admin/users/${userId}`, { method: 'DELETE', credentials: 'include' })
       const data = await res.json()
-      if (data.success) { toast.success('User deleted'); fetchUsers() }
+      if (data.success) { 
+        toast.success('User and all associated data deleted successfully')
+        setDeleteModal({ open: false, userId: null, step: 1 })
+        fetchUsers() 
+      }
       else toast.error(data.message)
     } catch { toast.error('Failed to delete user') }
     finally { setDeleting(null) }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteModal({ open: false, userId: null, step: 1 })
+  }
+
+  const handleNextStep = () => {
+    setDeleteModal(prev => ({ ...prev, step: 2 }))
   }
 
   const filtered = users.filter(u => {
@@ -842,6 +984,74 @@ const AdminUsers = () => {
           </GridView>
         )}
       </SCard>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.open && (
+        <ModalOverlay onClick={handleCancelDelete}>
+          <ModalContent onClick={e => e.stopPropagation()}>
+            {deleteModal.step === 1 ? (
+              <>
+                <ModalHeader>
+                  <ModalIcon>⚠️</ModalIcon>
+                  <ModalTitle>Delete User Account?</ModalTitle>
+                </ModalHeader>
+                <ModalDescription>
+                  <span>Are you sure you want to delete this user account?</span>
+                  <span style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'rgba(239, 68, 68, 0.8)' }}>
+                    This action will permanently delete the user and ALL associated data from the database.
+                  </span>
+                </ModalDescription>
+                <ModalActions>
+                  <ModalBtn onClick={handleCancelDelete}>Cancel</ModalBtn>
+                  <ModalBtn $variant="danger" onClick={handleNextStep}>
+                    Yes, Delete
+                  </ModalBtn>
+                </ModalActions>
+              </>
+            ) : (
+              <>
+                <ModalHeader>
+                  <ModalIcon style={{ background: 'rgba(239, 68, 68, 0.15)' }}>
+                    <AlertTriangle size={24} />
+                  </ModalIcon>
+                  <ModalTitle>Confirm Deletion</ModalTitle>
+                </ModalHeader>
+                <ModalDescription>
+                  <span>This is the final step. Click "Permanently Delete" to confirm deletion of:</span>
+                  <span style={{ marginTop: '0.5rem', fontWeight: 600, color: '#fbbf24' }}>
+                    • User Account
+                  </span>
+                  <span style={{ color: '#94a3b8' }}>
+                    • Portfolio Data
+                  </span>
+                  <span style={{ color: '#94a3b8' }}>
+                    • Resume Files
+                  </span>
+                  <span style={{ color: '#94a3b8' }}>
+                    • Vault Items
+                  </span>
+                  <span style={{ color: '#94a3b8' }}>
+                    • Reviews & Ratings
+                  </span>
+                </ModalDescription>
+                <ModalActions>
+                  <ModalBtn onClick={() => setDeleteModal(prev => ({ ...prev, step: 1 }))}>
+                    Go Back
+                  </ModalBtn>
+                  <ModalBtn 
+                    $variant="danger" 
+                    onClick={handleConfirmDelete}
+                    disabled={deleting === deleteModal.userId}
+                  >
+                    {deleting === deleteModal.userId ? <Loader size={16} /> : <Trash2 size={16} />}
+                    {deleting === deleteModal.userId ? 'Deleting...' : 'Permanently Delete'}
+                  </ModalBtn>
+                </ModalActions>
+              </>
+            )}
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Page>
   )
 }

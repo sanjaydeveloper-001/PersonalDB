@@ -90,6 +90,13 @@ const userSchema = new mongoose.Schema(
         expiresAt: { type: Date, default: null }, // Token expiration time
       },
     },
+
+    // Deletion Warning Tracking
+    deletionWarning: {
+      emailSentAt: { type: Date, default: null }, // When warning email was sent
+      deletionScheduledFor: { type: Date, default: null }, // Scheduled deletion date (7 days from email)
+      becameActiveAfter: { type: Boolean, default: false }, // Did user become active after warning
+    },
   },
   { timestamps: true }
 );

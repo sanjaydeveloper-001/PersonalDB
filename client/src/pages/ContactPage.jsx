@@ -19,7 +19,7 @@ const fadeIn = keyframes`
 /* ── Main wrapper ───────────────────────────────────────── */
 
 const Wrapper = styled.div`
-  max-width: 1060px;
+  max-width: 100%;
   margin: 0 auto;
 `;
 
@@ -44,7 +44,7 @@ const PageTop = styled.div`
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 380px 1fr;
   gap: 24px;
   align-items: start;
 
@@ -104,6 +104,9 @@ const InfoBody = styled.div`
     color: #374151;
     margin: 0;
     text-decoration: none;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    display: block;
   }
   a:hover { color: #1e40af; text-decoration: underline; }
 `;
@@ -196,6 +199,9 @@ const inputCss = `
   background: #f9fafb;
   transition: all 0.15s ease;
   line-height: 1.5;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -355,7 +361,7 @@ export default function ContactPage() {
             <IcoBg><Mail size={17} /></IcoBg>
             <InfoBody>
               <label>Email Support</label>
-              <a href="mailto:support@personaldb.josan.tech">support@personaldb.josan.tech</a>
+              <a href="mailto:noreply.josantechnologies@gmail.com">noreply.josantechnologies@gmail.com</a>
             </InfoBody>
           </InfoCard>
 
@@ -363,7 +369,7 @@ export default function ContactPage() {
             <IcoBg><Shield size={17} /></IcoBg>
             <InfoBody>
               <label>Security Issues</label>
-              <a href="mailto:security@personaldb.josan.tech">security@personaldb.josan.tech</a>
+              <a href="mailto:noreply.josantechnologies@gmail.com">noreply.josantechnologies@gmail.com</a>
             </InfoBody>
           </InfoCard>
 
@@ -387,7 +393,7 @@ export default function ContactPage() {
             <div className="head"><Shield size={15} /> Security First</div>
             <p>
               For urgent security vulnerabilities, email{' '}
-              <a href="mailto:security@personaldb.josan.tech">security@personaldb.josan.tech</a>{' '}
+              <a href="mailto:noreply.josantechnologies@gmail.com">noreply.josantechnologies@gmail.com</a>{' '}
               directly — we treat these with the highest priority.
             </p>
           </SecurityBox>

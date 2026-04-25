@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import styled from 'styled-components'
-import { LayoutGrid, Users, Settings, LogOut, MessageSquare } from 'lucide-react'
+import { LayoutGrid, Users, Settings, LogOut, MessageSquare, AlertTriangle } from 'lucide-react'
 import AdminTemplates from '../components/Admin/AdminTemplates'
 import AdminUsers from '../components/Admin/AdminUsers'
+import AdminUnusedUsers from '../pages/admin/AdminUnusedUsers'
 import PendingReviewsPanel from '../components/Admin/PendingReviewsPanel'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -137,6 +138,14 @@ const AdminDashboard = () => {
           Reviews
         </NavItem>
 
+        <NavItem
+          $active={activeSection === 'unused'}
+          onClick={() => setActiveSection('unused')}
+        >
+          <AlertTriangle />
+          Unused Users
+        </NavItem>
+
         <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
           <NavItem onClick={handleLogout}>
             <LogOut />
@@ -150,6 +159,7 @@ const AdminDashboard = () => {
         {activeSection === 'templates' && <AdminTemplates />}
         {activeSection === 'users' && <AdminUsers />}
         {activeSection === 'reviews' && <PendingReviewsPanel />}
+        {activeSection === 'unused' && <AdminUnusedUsers />}
       </MainContent>
     </Root>
   )

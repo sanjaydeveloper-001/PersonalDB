@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import {
   Lock, Briefcase, Globe, Settings, User,
   Database, ChevronLeft, ChevronDown, Terminal, BarChart3, X,
-  LayoutGrid, Users, Mail, MessageSquare
+  LayoutGrid, Users, Mail, MessageSquare, AlertTriangle
 } from 'lucide-react'
 import { RiUserSettingsLine } from "react-icons/ri"
 import { MdOutlineDashboard } from "react-icons/md"
@@ -168,8 +168,9 @@ const sections = [
     key: 'developer',
     label: 'Developer',
     icon: Terminal,
-    height: 108,
+    height: 144,
     links: [
+      { name: 'Docs',      path: '/dashboard/developer/docs' },
       { name: 'Keys',      path: '/dashboard/developer/keys' },
       { name: 'Analytics', path: '/dashboard/developer/analytics' },
     ],
@@ -646,7 +647,7 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
                     {collapsed && <Tooltip>Admin Panel</Tooltip>}
                   </button>
 
-                  <div style={getSubMenuStyle(openKey === 'admin', 80)}>
+                  <div style={getSubMenuStyle(openKey === 'admin', 110)}>
                     <div style={subInnerStyle}>
                       <NavLink to="/dashboard/admin/templates" className="sidebar-sub-link" onClick={handleLinkClick}>
                         <LayoutGrid size={13} style={{ marginRight: '3px' }} />
@@ -659,6 +660,10 @@ const Sidebar = ({ isMobileOpen, onCloseMobile, onOpenMobile }) => {
                       <NavLink to="/dashboard/admin/reviews" className="sidebar-sub-link" onClick={handleLinkClick}>
                         <MessageSquare size={13} style={{ marginRight: '3px' }} />
                         Pending Reviews
+                      </NavLink>
+                      <NavLink to="/dashboard/admin/unused" className="sidebar-sub-link" onClick={handleLinkClick}>
+                        <AlertTriangle size={13} style={{ marginRight: '3px' }} />
+                        Unused Users
                       </NavLink>
                     </div>
                   </div>

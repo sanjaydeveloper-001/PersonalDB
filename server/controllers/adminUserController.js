@@ -1,4 +1,14 @@
 import User from '../models/common/User.js';
+import Review from '../models/common/Review.js';
+import Resume from '../models/vault/Resume.js';
+import Item from '../models/vault/Item.js';
+import Profile from '../models/portfolio/Profile.js';
+import Experience from '../models/portfolio/Experience.js';
+import Education from '../models/portfolio/Education.js';
+import Certification from '../models/portfolio/Certification.js';
+import Skill from '../models/portfolio/Skill.js';
+import Project from '../models/portfolio/Project.js';
+import Interest from '../models/portfolio/Interest.js';
 import { generateSignedUrl } from './vault/uploadController.js';
 
 // Get all users with stats
@@ -6,7 +16,20 @@ export const getAllUsersAdmin = async (req, res) => {
   try {
     const users = await User.find()
       .select('-password')
-      .sort({ createdAt: -1 });
+      .lean();
+
+    // Sort: admins/superadmins first, then regular users, each group by creation date descending
+    users.sort((a, b) => {
+      const aIsAdmin = a.role === 'admin' || a.role === 'superadmin' ? 0 : 1;
+      const bIsAdmin = b.role === 'admin' || b.role === 'superadmin' ? 0 : 1;
+      
+      if (aIsAdmin !== bIsAdmin) {
+        return aIsAdmin - bIsAdmin; // Admins first (0 before 1)
+      }
+      
+      // Within same role group, sort by creation date descending
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
     // Generate signed URLs for profile images
     for (let user of users) {
@@ -135,7 +158,7 @@ export const updateUserRoleAdmin = async (req, res) => {
   }
 };
 
-// Delete user
+// Delete user with cascade delete of all related data
 export const deleteUserAdmin = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -148,8 +171,8 @@ export const deleteUserAdmin = async (req, res) => {
       });
     }
 
-    const user = await User.findByIdAndDelete(userId);
-
+    // Verify user exists before cascading delete
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ 
         success: false, 
@@ -157,9 +180,30 @@ export const deleteUserAdmin = async (req, res) => {
       });
     }
 
+    // Cascade delete: Portfolio DB
+    await Promise.all([
+      Review.deleteMany({ userId }),
+      Profile.deleteOne({ user: userId }),
+      Experience.deleteMany({ user: userId }),
+      Education.deleteMany({ user: userId }),
+      Certification.deleteMany({ user: userId }),
+      Skill.deleteOne({ user: userId }),
+      Project.deleteMany({ user: userId }),
+      Interest.deleteOne({ user: userId }),
+    ]);
+
+    // Cascade delete: Vault DB
+    await Promise.all([
+      Resume.deleteMany({ user: userId }),
+      Item.deleteMany({ user: userId }),
+    ]);
+
+    // Finally delete the user
+    await User.findByIdAndDelete(userId);
+
     res.json({
       success: true,
-      message: 'User deleted successfully',
+      message: 'User and all associated data deleted successfully',
     });
   } catch (error) {
     console.error('deleteUserAdmin error:', error);
