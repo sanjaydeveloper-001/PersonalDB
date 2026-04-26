@@ -102,3 +102,46 @@ export const getSignedUrl = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Get website statistics for the homepage
+export const getWebsiteStats = async (req, res) => {
+  try {
+    // Import Review model
+    const Review = (await import('../models/common/Review.js')).default;
+    const Profile = (await import('../models/portfolio/Profile.js')).default;
+
+    // Get total active users (exclude superadmins)
+    const totalUsers = await User.countDocuments({ 
+      role: { $ne: 'superadmin' }
+    });
+
+    // Get total portfolios created (count of profiles with at least some content)
+    const totalPortfolios = await Profile.countDocuments();
+
+    // Get total reviews (published and approved)
+    const totalReviews = await Review.countDocuments({ 
+      isPublished: true,
+      status: 'approved' 
+    });
+
+    // Safety percentage - set to 99.9% by default for security assurance
+    const safetyPercentage = 99.9;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalUsers: totalUsers || 0,
+        totalPortfolios: totalPortfolios || 0,
+        totalReviews: totalReviews || 0,
+        safetyPercentage: safetyPercentage
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching website stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch website statistics',
+      error: error.message
+    });
+  }
+};

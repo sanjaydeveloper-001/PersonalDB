@@ -631,7 +631,7 @@ const HelpCenterPage = () => {
               <CardBody>
                 <H2>Your Secure Storage Solution</H2>
                 <Prose>
-                  Your Personal Vault is a completely private, encrypted storage space designed to keep your sensitive information safe and organized. Unlike traditional cloud storage services, PersonalDB ensures complete privacy through end-to-end encryption. Only you have access to your vault.
+                  Your Personal Vault is a completely private, encrypted storage space for any file type you want to secure and organize. Unlike traditional cloud storage services, PersonalDB ensures complete privacy through end-to-end encryption. Only you have access to your vault.
                 </Prose>
 
                 <H2>What You Can Store</H2>
@@ -703,7 +703,7 @@ const HelpCenterPage = () => {
                     { Icon: Upload, text: 'Drag and drop files to upload' },
                     { Icon: Download, text: 'Download files directly to your device' },
                     { Icon: Share, text: 'Share files with specific people via secure links' },
-                    { Icon: Lock, text: 'Set password protection on sensitive files' },
+                    { Icon: Lock, text: 'Set password protection on any file for extra security' },
                     { Icon: Eye, text: 'Control visibility of each file' },
                   ].map(({ Icon, text }) => (
                     <BulletRow key={text}>
@@ -721,7 +721,7 @@ const HelpCenterPage = () => {
                   'Enable two-factor authentication for added security.',
                   'Regularly back up important files outside your vault.',
                   'Review your shared file links periodically and revoke access as needed.',
-                  'Use the trash folder before permanently deleting sensitive files.',
+                  'Use the trash folder before permanently deleting important files.',
                   'Keep your encryption keys and recovery codes safe.',
                   'Never share your master password with anyone.',
                 ].map((tip, i) => (

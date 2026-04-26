@@ -157,7 +157,7 @@ const WelcomeBadge = styled.span`
 `;
 
 const HeroSection = styled.section`
-  padding: 80px 2rem 100px;
+  padding: 100px 2rem 120px;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -170,7 +170,7 @@ const HeroSection = styled.section`
     right: -10%;
     width: 800px;
     height: 800px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
   }
@@ -230,17 +230,17 @@ const ExperienceSelector = styled.div`
 `;
 
 const HeroHeadline = styled.h1`
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 1.5rem;
-  line-height: 1.1;
+  margin-bottom: 2rem;
+  line-height: 1.15;
   letter-spacing: -0.02em;
   position: relative;
   z-index: 1;
 
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
 
   .accent {
@@ -252,16 +252,19 @@ const HeroHeadline = styled.h1`
 `;
 
 const HeroSubtitle = styled.p`
-  font-size: 1.3rem;
-  color: #64748b;
-  max-width: 800px;
-  margin: 0 auto 2.5rem;
-  line-height: 1.8;
+  font-size: 1.6rem;
+  color: #475569;
+  max-width: 900px;
+  margin: 0 auto 3rem;
+  line-height: 1.9;
   position: relative;
   z-index: 1;
+  font-weight: 400;
+  letter-spacing: 0.2px;
 
   @media (max-width: 768px) {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
   }
 `;
 
@@ -1150,14 +1153,14 @@ const Home = () => {
           {activeTab === 'portfolio' ? (
             <>Build Your Professional <span className="accent">Portfolio</span></>
           ) : (
-            <>Protect Your Most Sensitive <span className="accent">Information</span></>
+            <>Store Any File Type with <span className="accent">Military-Grade Security</span></>
           )}
         </HeroHeadline>
 
         <HeroSubtitle>
           {activeTab === 'portfolio'
             ? 'Showcase your skills, projects, and experience to impress employers and clients'
-            : 'Military-grade encryption for complete peace of mind and data security'}
+            : 'Store documents, files, photos, and personal data - all protected with military-grade encryption'}
         </HeroSubtitle>
 
         <ButtonGroup>
@@ -1215,12 +1218,12 @@ const Home = () => {
               <FeatureCard>
                 <Lock className="icon" size={56} strokeWidth={1.5} />
                 <h3>Military-Grade Encryption</h3>
-                <p>Your sensitive data is protected with the highest level of encryption security available.</p>
+                <p>All your files - any type, any size - are protected with the highest level of encryption security available.</p>
               </FeatureCard>
               <FeatureCard>
                 <Shield className="icon" size={56} strokeWidth={1.5} />
-                <h3>Secure Storage</h3>
-                <p>Store and protect all your important files, documents, and sensitive information safely.</p>
+                <h3>Secure Storage for Everything</h3>
+                <p>Store any type of file - documents, photos, videos, archives - all encrypted and secured in one place.</p>
               </FeatureCard>
               <FeatureCard>
                 <Folder className="icon" size={56} strokeWidth={1.5} />

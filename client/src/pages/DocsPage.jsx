@@ -721,13 +721,13 @@ export default function DocsPage() {
 
                   <H2>Organizing Your Vault</H2>
                   <Prose>
-                    The Personal Vault is your secure storage space for important documents, memories, and sensitive information. Unlike your public portfolio, the vault is completely private and encrypted.
+                    The Personal Vault is your secure storage space for documents, photos, files, and personal data - any file type you want to keep private and encrypted.
                   </Prose>
                   <BulletList>
                     {[
                       { Icon: Archive, text: 'Create folders and subfolders to organize your files logically' },
                       { Icon: Image, text: 'Upload documents, images, videos, and other file types securely' },
-                      { Icon: Lock, text: 'Set custom access controls and protect sensitive files with passwords' },
+                      { Icon: Lock, text: 'Set custom access controls and protect any file with passwords' },
                       { Icon: Search, text: 'Use our powerful search to quickly find files by name or content' },
                     ].map(({ Icon, text }) => (
                       <BulletRow key={text}>
@@ -1013,7 +1013,7 @@ export default function DocsPage() {
                 <CardBody>
                   <H2>Your Secure Storage Solution</H2>
                   <Prose>
-                    Your Personal Vault is a completely private, encrypted storage space designed to keep your sensitive information safe and organized. Unlike cloud storage services that may analyze your data, PersonalDB ensures complete privacy through end-to-end encryption.
+                    Your Personal Vault is a completely private, encrypted storage space designed to keep any file type safe and organized. Unlike cloud storage services that may analyze your data, PersonalDB ensures complete privacy through end-to-end encryption.
                   </Prose>
 
                   <H2>What You Can Store</H2>
